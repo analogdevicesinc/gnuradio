@@ -248,7 +248,6 @@ void thread_bind_to_processor(gr_thread_t thread, int n)
 void thread_bind_to_processor(gr_thread_t thread, const std::vector<int>& mask)
 {
     cpu_set_t set;
-    size_t len = sizeof(cpu_set_t);
     std::vector<int> _mask = mask;
     std::vector<int>::iterator itr;
 
@@ -256,7 +255,12 @@ void thread_bind_to_processor(gr_thread_t thread, const std::vector<int>& mask)
     for (itr = _mask.begin(); itr != _mask.end(); itr++)
         CPU_SET(*itr, &set);
 
+#if !ANDROID
+    size_t len = sizeof(cpu_set_t);
     int ret = pthread_setaffinity_np(thread, len, &set);
+#else
+    int ret = 0;
+#endif
     if (ret != 0) {
         std::stringstream s;
         s << "thread_bind_to_processor failed with error: " << ret << std::endl;
@@ -269,7 +273,6 @@ void thread_unbind() { thread_unbind(get_current_thread_id()); }
 void thread_unbind(gr_thread_t thread)
 {
     cpu_set_t set;
-    size_t len = sizeof(cpu_set_t);
 
     CPU_ZERO(&set);
     long ncpus = sysconf(_SC_NPROCESSORS_ONLN);
@@ -277,7 +280,12 @@ void thread_unbind(gr_thread_t thread)
         CPU_SET(n, &set);
     }
 
+#if !ANDROID
+    size_t len = sizeof(cpu_set_t);
     int ret = pthread_setaffinity_np(thread, len, &set);
+#else
+    int ret = 0;
+#endif
     if (ret != 0) {
         std::stringstream s;
         s << "thread_unbind failed with error: " << ret << std::endl;
