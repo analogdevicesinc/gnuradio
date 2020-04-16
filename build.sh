@@ -32,6 +32,8 @@ pacman --noconfirm -Sy ${DEPENDENCIES}
 
 build_log4cpp() {
 	git clone https://github.com/orocos-toolchain/log4cpp ${WORKDIR}/log4cpp
+	cd ${WORKDIR}/log4cpp
+	git reset 359be7d88eb8a87f618620918c73ef1fc6e87242 --hard
 	mkdir ${WORKDIR}/log4cpp/build-${ARCH}
 	cd ${WORKDIR}/log4cpp/build-${ARCH}
 
