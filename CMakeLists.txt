@@ -464,7 +464,9 @@ if (Volk_VERSION VERSION_EQUAL "2.0.0")
 endif()
 
 # Handle logging
-find_package(LOG4CPP REQUIRED)
+if(!ANDROID)
+    find_package(LOG4CPP REQUIRED)
+endif()
 
 ########################################################################
 # Distribute the README file

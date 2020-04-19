@@ -37,18 +37,211 @@ typedef int mode_t;
 
 #include <gnuradio/api.h>
 #include <assert.h>
-#include <log4cpp/Category.hh>
-#include <log4cpp/FileAppender.hh>
-#include <log4cpp/OstreamAppender.hh>
-#include <log4cpp/PatternLayout.hh>
-#include <log4cpp/PropertyConfigurator.hh>
-#include <log4cpp/RollingFileAppender.hh>
 #include <pmt/pmt.h>
 #include <time.h>
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
 #include <boost/thread.hpp>
 #include <iostream>
+
+#ifdef ANDROID
+
+#include <android/log.h>
+
+namespace gr {
+typedef void* logger_ptr;
+}
+
+#define LOG_LEVEL ANDROID_LOG_INFO
+
+#define GR_LOG_DECLARE_LOGPTR(logger)
+#define GR_LOG_ASSIGN_LOGPTR(logger,name)
+#define GR_CONFIG_LOGGER(config)
+#define GR_CONFIG_AND_WATCH_LOGGER(config,period)
+#define GR_LOG_GETLOGGER(logger, name)
+#define GR_SET_LEVEL(name, level)
+#define GR_LOG_SET_LEVEL(logger, level)
+#define GR_GET_LEVEL(name, level)
+#define GR_LOG_GET_LEVEL(logger, level)
+#define GR_ADD_APPENDER(name,appender)
+#define GR_LOG_ADD_APPENDER(logger,appender)
+#define GR_SET_APPENDER(name,appender)
+#define GR_LOG_SET_APPENDER(logger,appender)
+#define GR_ADD_CONSOLE_APPENDER(logger,target,pattern)
+#define GR_LOG_ADD_CONSOLE_APPENDER(logger,target,pattern)
+#define GR_SET_CONSOLE_APPENDER(logger,target,pattern)
+#define GR_LOG_SET_CONSOLE_APPENDER(logger,target,pattern)
+#define GR_ADD_FILE_APPENDER(name,filename,append,pattern)
+#define GR_LOG_ADD_FILE_APPENDER(logger,filename,append,pattern)
+#define GR_SET_FILE_APPENDER(name,filename,append,pattern)
+#define GR_LOG_SET_FILE_APPENDER(logger,filename,append,pattern)
+#define GR_ADD_ROLLINGFILE_APPENDER(name,filename,filesize,bkup_index,append,mode,pattern)
+#define GR_LOG_ADD_ROLLINGFILE_APPENDER(logger,filename,filesize,bkup_index,append,mode,pattern)
+#define GR_GET_LOGGER_NAMES(names)
+#define GR_RESET_CONFIGURATION()
+
+#define GR_DEBUG(name, msg) {                                           \
+    if(LOG_LEVEL <= ANDROID_LOG_DEBUG) {                                \
+      std::stringstream __s;                                              \
+      __s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_DEBUG, name, "%s", __s.str().c_str()); \
+    }}
+
+#define GR_INFO(name, msg)  {                                           \
+    if(LOG_LEVEL <= ANDROID_LOG_INFO) {                                 \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_INFO, name, "%s", s.str().c_str()); \
+    }}
+
+#define GR_NOTICE(name, msg) {                                          \
+    if(LOG_LEVEL <= ANDROID_LOG_VERBOSE) {                              \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_VERBOSE, name, "%s", s.str().c_str()); \
+    }}
+
+#define GR_WARN(name, msg)  {                                           \
+    if(LOG_LEVEL <= ANDROID_LOG_WARN) {                                 \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_WARN, name, "%s", s.str().c_str()); \
+    }}
+
+#define GR_ERROR(name, msg) {                                           \
+    if(LOG_LEVEL <= ANDROID_LOG_ERROR) {                                \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_ERROR, name, "%s", s.str().c_str()); \
+    }}
+
+#define GR_ALERT(name, msg) {                                           \
+    if(LOG_LEVEL <= ANDROID_LOG_ERROR) {                                \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_ERROR, name, "%s", s.str().c_str()); \
+    }}
+
+#define GR_CRIT(name, msg)  {                                           \
+    if(LOG_LEVEL <= ANDROID_LOG_ERROR) {                                \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_ERROR, name, "%s", s.str().c_str()); \
+    }}
+
+#define GR_FATAL(name, msg) {                                           \
+    if(LOG_LEVEL <= ANDROID_LOG_FATAL) {                                \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_FATAL, name, "%s", s.str().c_str()); \
+    }}
+
+#define GR_EMERG(name, msg) {                                           \
+    if(LOG_LEVEL <= ANDROID_LOG_FATAL) {                                \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_FATAL, name, "%s", s.str().c_str()); \
+    }}
+
+#define GR_ERRORIF(name, cond, msg)
+#define GR_ASSERT(name, cond, msg)
+
+#define GR_LOG_DEBUG(logger, msg) {                                     \
+    if(LOG_LEVEL <= ANDROID_LOG_DEBUG) {                                \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_DEBUG, "logger", "%s", s.str().c_str()); \
+    }}
+
+#define GR_LOG_INFO(logger, msg) {                                      \
+    if(LOG_LEVEL <= ANDROID_LOG_INFO) {                                 \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_INFO, "logger", "%s", s.str().c_str()); \
+    }}
+
+#define GR_LOG_NOTICE(logger, msg) {                                    \
+    if(LOG_LEVEL <= ANDROID_LOG_VERBOSE) {                              \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_VERBOSE, "logger", "%s", s.str().c_str()); \
+    }}
+
+#define GR_LOG_WARN(logger, msg) {                                     \
+    if(LOG_LEVEL <= ANDROID_LOG_WARN) {                                 \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_WARN, "logger", "%s", s.str().c_str()); \
+    }}
+
+#define GR_LOG_ERROR(logger, msg) {                                     \
+    if(LOG_LEVEL <= ANDROID_LOG_ERROR) {                                \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_ERROR, "logger", "%s", s.str().c_str()); \
+    }}
+
+#define GR_LOG_ALERT(logger, msg) {                                     \
+    if(LOG_LEVEL <= ANDROID_LOG_ERROR) {                                \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_ERROR, "logger", "%s", s.str().c_str()); \
+    }}
+
+#define GR_LOG_CRIT(logger, msg) {                                      \
+    if(LOG_LEVEL <= ANDROID_LOG_ERROR) {                                \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_ERROR, "logger", "%s", s.str().c_str()); \
+    }}
+
+#define GR_LOG_FATAL(logger, msg) {                                     \
+    if(LOG_LEVEL <= ANDROID_LOG_FATAL) {                                \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_FATAL, "logger", "%s", s.str().c_str()); \
+    }}
+
+#define GR_LOG_EMERG(logger, msg) {                                     \
+    if(LOG_LEVEL <= ANDROID_LOG_FATAL) {                                \
+      std::stringstream s;                                              \
+      s << msg;                                                         \
+      __android_log_print(ANDROID_LOG_FATAL, "logger", "%s", s.str().c_str()); \
+    }}
+
+#define GR_LOG_ERRORIF(logger, cond, msg)
+#define GR_LOG_ASSERT(logger, cond, msg)
+
+
+namespace gr {
+/*!
+ * Function to use the GR prefs files to get and setup the two
+ * default loggers defined there. The loggers are unique to the
+ * class in which they are called, and we pass it the \p name to
+ * identify where the log message originates from. For a GNU Radio
+ * block, we use 'alias()' for this value, and this is set up for us
+ * automatically in gr::block.
+ */
+GR_RUNTIME_API bool
+configure_default_loggers(gr::logger_ptr& l, gr::logger_ptr& d, const std::string name);
+
+GR_RUNTIME_API bool update_logger_alias(const std::string& name,
+                                        const std::string& alias);
+
+GR_RUNTIME_API void logger_set_level(logger_ptr logger, const std::string& level);
+
+GR_RUNTIME_API void logger_get_level(logger_ptr logger, std::string& level);
+
+} /* namespace gr */
+
+#else /* ANDROID */
+
+#include <log4cpp/Category.hh>
+#include <log4cpp/FileAppender.hh>
+#include <log4cpp/OstreamAppender.hh>
+#include <log4cpp/PatternLayout.hh>
+#include <log4cpp/PropertyConfigurator.hh>
+#include <log4cpp/RollingFileAppender.hh>
 
 namespace gr {
 
@@ -71,6 +264,7 @@ namespace gr {
 typedef log4cpp::Category* logger_ptr;
 
 } /* namespace gr */
+
 
 /* Macros for Programmatic Configuration */
 #define GR_LOG_DECLARE_LOGPTR(logger) gr::logger_ptr logger
@@ -755,5 +949,7 @@ GR_RUNTIME_API bool update_logger_alias(const std::string& name,
                                         const std::string& alias);
 
 } /* namespace gr */
+#endif
+
 
 #endif /* INCLUDED_GR_LOGGER_H */

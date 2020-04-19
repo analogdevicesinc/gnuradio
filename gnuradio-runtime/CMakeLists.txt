@@ -35,13 +35,22 @@ GR_CHECK_LINUX_SCHED_AVAIL()
 # Register component
 ########################################################################
 include(GrComponent)
-GR_REGISTER_COMPONENT("gnuradio-runtime" ENABLE_GNURADIO_RUNTIME
+if(ANDROID)
+  GR_REGISTER_COMPONENT("gnuradio-runtime" ENABLE_GNURADIO_RUNTIME
+    Boost_FOUND
+    ENABLE_VOLK
+    PYTHONINTERP_FOUND
+    MPLIB_FOUND
+    )
+else()
+  GR_REGISTER_COMPONENT("gnuradio-runtime" ENABLE_GNURADIO_RUNTIME
     Boost_FOUND
     ENABLE_VOLK
     PYTHONINTERP_FOUND
     MPLIB_FOUND
     LOG4CPP_FOUND
-)
+    )
+endif()
 
 get_filename_component(GNURADIO_RUNTIME_PYTHONPATH
     ${CMAKE_SOURCE_DIR}/python ABSOLUTE

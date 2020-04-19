@@ -31,6 +31,25 @@
 #endif
 
 #include <gnuradio/logger.h>
+
+#ifdef ANDROID
+namespace gr {
+
+bool configure_default_loggers(gr::logger_ptr& l, gr::logger_ptr& d, const std::string name) { return true;}
+
+bool update_logger_alias(const std::string& name,
+                                        const std::string& alias) {return true;}
+
+void logger_set_level(logger_ptr logger, const std::string& level) {}
+
+void logger_get_level(logger_ptr logger, std::string& level) {
+    level = "foo";
+}
+
+}
+
+#else
+
 #include <gnuradio/prefs.h>
 #include <algorithm>
 #include <stdexcept>
@@ -392,3 +411,5 @@ bool update_logger_alias(const std::string& name, const std::string& alias)
 }
 
 } /* namespace gr */
+
+#endif

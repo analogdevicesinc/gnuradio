@@ -208,9 +208,18 @@ target_link_libraries(gnuradio-runtime PUBLIC
   Boost::system
   Boost::regex
   Boost::thread
-  Log4Cpp::log4cpp
   MPLib::mplib
   )
+
+if(ANDROID)
+  target_link_libraries(gnuradio-runtime PUBLIC
+    log android
+  )
+else()
+  target_link_libraries(gnuradio-runtime PUBLIC
+    Log4Cpp::log4cpp
+  )
+endif()
 
 target_include_directories(gnuradio-runtime
   PUBLIC
