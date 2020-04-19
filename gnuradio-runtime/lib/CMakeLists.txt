@@ -99,6 +99,12 @@ add_library(gnuradio-runtime
   vmcircbuf_sysv_shm.cc
   )
 
+if(ANDROID)
+  target_sources(gnuradio-runtime PRIVATE
+    vmcircbuf_android_shm.cc
+    )
+endif()
+
 # Messages
 target_sources(gnuradio-runtime PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/messages/msg_accepter.cc

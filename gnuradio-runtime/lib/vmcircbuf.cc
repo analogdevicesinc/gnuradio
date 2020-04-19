@@ -33,12 +33,14 @@
 #include <boost/format.hpp>
 #include <stdexcept>
 #include <vector>
+#include <gnuradio/logger.h>
 
 // all the factories we know about
 #include "vmcircbuf_createfilemapping.h"
 #include "vmcircbuf_mmap_shm_open.h"
 #include "vmcircbuf_mmap_tmpfile.h"
 #include "vmcircbuf_sysv_shm.h"
+#include "vmcircbuf_android_shm.h"
 
 gr::thread::mutex s_vm_mutex;
 
@@ -59,7 +61,7 @@ vmcircbuf_factory* vmcircbuf_sysconfig::get_default_factory()
     if (s_default_factory)
         return s_default_factory;
 
-    bool verbose = false;
+    bool verbose = true;
 
     std::vector<gr::vmcircbuf_factory*> all = all_factories();
 
@@ -68,10 +70,12 @@ vmcircbuf_factory* vmcircbuf_sysconfig::get_default_factory()
         for (unsigned int i = 0; i < all.size(); i++) {
             if (strncmp(name, all[i]->name(), strlen(all[i]->name())) == 0) {
                 s_default_factory = all[i];
-                if (verbose)
+                if (verbose) {
+                    GR_DEBUG("gnuradio", boost::format("found circbuf: %s") % s_default_factory->name());
                     fprintf(stderr,
                             "gr::vmcircbuf_sysconfig: using %s\n",
                             s_default_factory->name());
+                }
                 return s_default_factory;
             }
         }
@@ -80,8 +84,9 @@ vmcircbuf_factory* vmcircbuf_sysconfig::get_default_factory()
     // either we don't have a default, or the default named is not in our
     // list of factories.  Find the first factory that works.
 
-    if (verbose)
-        fprintf(stderr, "gr::vmcircbuf_sysconfig: finding a working factory...\n");
+    if (verbose) {
+        GR_DEBUG("gnuradio", "gr::vmcircbuf_sysconfig: finding a working factory...\n");
+    }
 
     for (unsigned int i = 0; i < all.size(); i++) {
         if (test_factory(all[i], verbose)) {
@@ -92,12 +97,17 @@ vmcircbuf_factory* vmcircbuf_sysconfig::get_default_factory()
 
     // We're screwed!
     fprintf(stderr, "gr::vmcircbuf_sysconfig: unable to find a working factory!\n");
+    GR_DEBUG("gnuradio", "gr::vmcircbuf_sysconfig: unable to find a working factory!");
     throw std::runtime_error("gr::vmcircbuf_sysconfig");
 }
 
 std::vector<vmcircbuf_factory*> vmcircbuf_sysconfig::all_factories()
 {
     std::vector<vmcircbuf_factory*> result;
+
+#ifdef ANDROID
+    result.push_back(gr::vmcircbuf_android_shm_factory::singleton());
+#endif
 
     result.push_back(gr::vmcircbuf_createfilemapping_factory::singleton());
 #ifdef TRY_SHM_VMCIRCBUF
@@ -155,9 +165,8 @@ check_mapping(vmcircbuf* c, int counter, int size, const char* msg, bool verbose
         }
     }
 
-    if (ok && verbose) {
-        fprintf(stderr, "  OK\n");
-    }
+    GR_LOG_DEBUG("shm", "check mapping result: " << ok);
+
     return ok;
 }
 
@@ -186,13 +195,15 @@ test_a_bunch(vmcircbuf_factory* factory, int n, int size, int* start_ptr, bool v
         counter[i] = *start_ptr;
         *start_ptr += size;
         if ((c[i] = factory->make(size)) == 0) {
-            if (verbose)
+            if (verbose) {
+                GR_LOG_DEBUG("shm", "failed to allocate");
                 fprintf(
                     stderr,
                     "Failed to allocate gr::vmcircbuf number %d of size %d (cum = %s)\n",
                     i + 1,
                     size,
                     memsize(cum_size));
+            }
             return false;
         }
         init_buffer(c[i], counter[i], size);
