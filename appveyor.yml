@@ -1,5 +1,6 @@
 clone_depth: 1
 
+image: Visual Studio 2019
 environment:
     matrix:
         - MINGW_VERSION: mingw64
@@ -12,8 +13,6 @@ matrix:
 
 build_script:
     - cd C:\projects\gnuradio
-    # TODO: Check when the latest pacman version is fixed and revert this commit.
-    - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -U http://repo.msys2.org/msys/x86_64/pacman-5.2.1-6-x86_64.pkg.tar.xz"
     - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Syu"
     - C:\msys64\usr\bin\bash build.sh
     - appveyor PushArtifact c:\projects\gnuradio\gnuradio-%MINGW_VERSION%-deps.txt
