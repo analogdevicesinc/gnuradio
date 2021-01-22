@@ -25,11 +25,12 @@ DEPENDENCIES="
 	python3 \
 	python3-mako \
 	python3-six \
+	mingw-w64-${ARCH}-boost \
 	"
 
 $CC --version
 pacman --needed --noconfirm -Sy ${DEPENDENCIES}
-pacman -U --noconfirm http://repo.msys2.org/mingw/$ARCH/mingw-w64-$ARCH-boost-1.72.0-3-any.pkg.tar.zst
+#pacman -U --noconfirm http://repo.msys2.org/mingw/$ARCH/mingw-w64-$ARCH-boost-1.72.0-3-any.pkg.tar.zst
 
 build_log4cpp() {
 	git clone https://github.com/orocos-toolchain/log4cpp ${WORKDIR}/log4cpp
@@ -52,6 +53,12 @@ build_log4cpp() {
 	# LOG4CPP puts dll in wrong file for MINGW - it should be in bin, but it puts it in lib so we copy it
 	mkdir -p ${WORKDIR}/msys64/${MINGW_VERSION}/bin
 	cp ${WORKDIR}/msys64/${MINGW_VERSION}/lib/liblog4cpp.dll ${WORKDIR}/msys64/${MINGW_VERSION}/bin/liblog4cpp.dll
+	#cp ${WORKDIR}/msys64/${MINGW_VERSION}/lib/liborocos-log4cpp.dll ${WORKDIR}/msys64/${MINGW_VERSION}/bin/liborocos-log4cpp.dll
+	#cp ${WORKDIR}/msys64/${MINGW_VERSION}/lib/liborocos-log4cpp.dll ${WORKDIR}/msys64/${MINGW_VERSION}/bin/orocos-log4cpp.dll
+       	#cp ${WORKDIR}/msys64/${MINGW_VERSION}/lib/liborocos-log4cpp.dll ${WORKDIR}/msys64/${MINGW_VERSION}/bin/liblog4cpp.dll
+
+	#cp ${WORKDIR}/msys64/${MINGW_VERSION}/lib/liborocos-log4cpp.dll ${WORKDIR}/msys64/${MINGW_VERSION}/lib/liblog4cpp.dll
+	#cp ${WORKDIR}/msys64/${MINGW_VERSION}/lib/liborocos-log4cpp.dll ${WORKDIR}/msys64/${MINGW_VERSION}/lib/blog4cpp.dll
 }
 
 build_gnuradio() {
