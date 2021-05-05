@@ -19,6 +19,7 @@ CMAKE_OPTS="-DCMAKE_BUILD_TYPE=Release \
 	-DPKG_CONFIG_EXECUTABLE:FILEPATH=/${MINGW_VERSION}/bin/pkg-config.exe"
 
 DEPENDENCIES="
+	mingw-w64-${ARCH}-gcc \
 	mingw-w64-${ARCH}-cmake \
 	mingw-w64-${ARCH}-fftw \
 	mingw-w64-${ARCH}-orc \
@@ -29,7 +30,7 @@ DEPENDENCIES="
 	"
 
 $CC --version
-pacman --needed --noconfirm -Sy ${DEPENDENCIES}
+pacman --needed --noconfirm -S ${DEPENDENCIES}
 
 build_log4cpp() {
 	git clone https://github.com/orocos-toolchain/log4cpp ${WORKDIR}/log4cpp

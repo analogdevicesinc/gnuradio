@@ -13,7 +13,14 @@ matrix:
 
 build_script:
     - cd C:\projects\gnuradio
-    - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Syu"
-    - C:\msys64\usr\bin\bash build.sh
+    # Update MSYS2 - https://www.msys2.org/docs/ci/#appveyor
+    - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Syuu"  # Core update (in case any core packages are outdated)
+    - C:\msys64\usr\bin\bash -lc "pacman --noconfirm -Syuu"  # Normal update
+
+    # Then run your code
+    - set CHERE_INVOKING='yes'  # Preserve the current working directory
+    - set MSYSTEM='MINGW64'  # Start a 64 bit Mingw environment
+
+    - C:\msys64\usr\bin\bash -lc "./build.sh"
     - appveyor PushArtifact c:\projects\gnuradio\gnuradio-%MINGW_VERSION%-deps.txt
     - appveyor PushArtifact c:\projects\gnuradio\gnuradio-%MINGW_VERSION%.tar.xz
