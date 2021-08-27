@@ -18,11 +18,12 @@ CMAKE_OPTS="-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_C_STANDARD=11 \
 	-DPKG_CONFIG_EXECUTABLE:FILEPATH=/${MINGW_VERSION}/bin/pkg-config.exe"
 
+
 DEPENDENCIES="
 	mingw-w64-${ARCH}-gcc \
-	mingw-w64-${ARCH}-cmake \
 	mingw-w64-${ARCH}-fftw \
 	mingw-w64-${ARCH}-orc \
+	mingw-w64-${ARCH}-cmake \
 	python3 \
 	python3-mako \
 	python3-six \
@@ -31,6 +32,9 @@ DEPENDENCIES="
 
 $CC --version
 pacman --needed --noconfirm -S ${DEPENDENCIES}
+pacman --needed --noconfirm -U https://repo.msys2.org/mingw/x86_64/mingw-w64-x86_64-cmake-3.19.3-3-any.pkg.tar.zst
+which cmake
+cmake --version
 
 build_log4cpp() {
 	git clone https://github.com/orocos-toolchain/log4cpp ${WORKDIR}/log4cpp
@@ -56,7 +60,8 @@ build_log4cpp() {
 }
 
 build_gnuradio() {
-	git clone --recurse-submodules --depth 1 https://github.com/gnuradio/gnuradio.git -b maint-3.8 ${WORKDIR}/gnuradio
+	cmake --version
+	git clone --recurse-submodules --depth 1 https://github.com/gnuradio/gnuradio.git -b v3.8.2.0 ${WORKDIR}/gnuradio
 
 	mkdir ${WORKDIR}/gnuradio/build-${ARCH}
 	cd ${WORKDIR}/gnuradio/build-${ARCH}
