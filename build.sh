@@ -3,7 +3,7 @@
 # Exit immediately if an error occurs
 set -e
 
-export PATH=/bin:/usr/bin:/${MINGW_VERSION}/bin:/c/Program\ Files/Git/cmd:/c/Windows/System32
+export PATH=/bin:/usr/bin:/${MINGW_VERSION}/bin:/c/Program\ Files/Git/cmd:/c/Windows/System32:$PATH
 
 WORKDIR=${PWD}
 
@@ -23,14 +23,22 @@ DEPENDENCIES="
 	mingw-w64-${ARCH}-cmake \
 	mingw-w64-${ARCH}-fftw \
 	mingw-w64-${ARCH}-orc \
-	python3 \
-	python3-mako \
-	python3-six \
 	mingw-w64-${ARCH}-boost \
 	"
 
-$CC --version
+#	mingw-w64-${ARCH}-python3 \
+#	mingw-w64-${ARCH}-python-markupsafe \
+#	mingw-w64-${ARCH}-python-pip \
+#	mingw-w64-${ARCH}-python-mako \
+#	mingw-w64-${ARCH}-python-six \
+
 pacman --needed --noconfirm -S ${DEPENDENCIES}
+pacman --noconfirm -U https://repo.msys2.org/msys/x86_64/python-3.8.2-1-x86_64.pkg.tar.xz
+pacman --noconfirm -U https://repo.msys2.org/msys/x86_64/python-six-1.15.0-2-any.pkg.tar.zst
+pacman --noconfirm -U https://repo.msys2.org/msys/x86_64/python-mako-1.1.3-1-x86_64.pkg.tar.zst
+
+cmake --version
+$CC --version
 
 build_log4cpp() {
 	git clone https://github.com/orocos-toolchain/log4cpp ${WORKDIR}/log4cpp
@@ -58,6 +66,7 @@ build_log4cpp() {
 build_gnuradio() {
 	git clone --recurse-submodules --depth 1 https://github.com/gnuradio/gnuradio.git -b maint-3.8 ${WORKDIR}/gnuradio
 
+	rm -rf ${WORKDIR}/gnuradio/build-${ARCH}
 	mkdir ${WORKDIR}/gnuradio/build-${ARCH}
 	cd ${WORKDIR}/gnuradio/build-${ARCH}
 
@@ -79,6 +88,7 @@ build_gnuradio() {
 		-DENABLE_INTERNAL_VOLK:BOOL=ON \
 		-DCMAKE_C_FLAGS=-fno-asynchronous-unwind-tables \
 		${WORKDIR}/gnuradio
+#		-DPYTHON_EXECUTABLE="/mingw64/bin/python3" \
 
 
 	make ${JOBS} install
