@@ -18,27 +18,20 @@ CMAKE_OPTS="-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_C_STANDARD=11 \
 	-DPKG_CONFIG_EXECUTABLE:FILEPATH=/${MINGW_VERSION}/bin/pkg-config.exe"
 
-DEPENDENCIES="
-	mingw-w64-${ARCH}-gcc \
-	mingw-w64-${ARCH}-cmake \
-	mingw-w64-${ARCH}-fftw \
-	mingw-w64-${ARCH}-orc \
-	mingw-w64-${ARCH}-boost \
-	"
+install_deps() {
+wget https://swdownloads.analog.com/cse/scopydeps/mingw/mingw_deps
+FILES=$(cat mingw_deps)
+for file in $FILES;
+do
+        wget -nv https://swdownloads.analog.com/cse/scopydeps/mingw/$file
+done;
 
-#	mingw-w64-${ARCH}-python3 \
-#	mingw-w64-${ARCH}-python-markupsafe \
-#	mingw-w64-${ARCH}-python-pip \
-#	mingw-w64-${ARCH}-python-mako \
-#	mingw-w64-${ARCH}-python-six \
-
-pacman --needed --noconfirm -S ${DEPENDENCIES}
-pacman --noconfirm -U https://repo.msys2.org/msys/x86_64/python-3.8.2-1-x86_64.pkg.tar.xz
-pacman --noconfirm -U https://repo.msys2.org/msys/x86_64/python-six-1.15.0-2-any.pkg.tar.zst
-pacman --noconfirm -U https://repo.msys2.org/msys/x86_64/python-mako-1.1.3-1-x86_64.pkg.tar.zst
+rm -rf *.sig
+pacman --noconfirm -U $FILES
 
 cmake --version
 $CC --version
+}
 
 build_log4cpp() {
 	git clone https://github.com/orocos-toolchain/log4cpp ${WORKDIR}/log4cpp
@@ -95,6 +88,7 @@ build_gnuradio() {
 	DESTDIR=${WORKDIR} make ${JOBS} install
 }
 
+install_deps
 build_log4cpp
 build_gnuradio
 
