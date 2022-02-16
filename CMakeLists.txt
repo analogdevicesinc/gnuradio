@@ -464,7 +464,7 @@ if (Volk_VERSION VERSION_EQUAL "2.0.0")
 endif()
 
 # Handle logging
-if(!ANDROID)
+if(NOT ANDROID)
     find_package(LOG4CPP REQUIRED)
 endif()
 
