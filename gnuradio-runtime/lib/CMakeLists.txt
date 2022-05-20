@@ -95,6 +95,13 @@ add_library(
     vmcircbuf_mmap_tmpfile.cc
     vmcircbuf_prefs.cc
     vmcircbuf_sysv_shm.cc)
+ 
+    if(ANDROID)
+  target_sources(gnuradio-runtime PRIVATE
+    vmcircbuf_android_shm.cc
+    )
+endif()
+
 
 # Messages
 target_sources(
@@ -130,6 +137,10 @@ target_link_libraries(
     PRIVATE
         Boost::program_options
         libunwind::libunwind)
+
+if(ANDROID)
+   target_link_libraries(gnuradio-runtime PUBLIC android)
+endif()
 
 # Address linker issues with std::filesystem on Centos 8 and Debian
 target_link_libraries(
