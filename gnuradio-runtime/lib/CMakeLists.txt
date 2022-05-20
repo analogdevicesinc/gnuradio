@@ -98,6 +98,12 @@ add_library(gnuradio-runtime
   vmcircbuf_sysv_shm.cc
   )
 
+if(ANDROID)
+  target_sources(gnuradio-runtime PRIVATE
+    vmcircbuf_android_shm.cc
+    )
+endif()
+
 if (ENABLE_PYTHON)
   target_sources(gnuradio-runtime PRIVATE
     block_gateway_impl.cc
@@ -141,6 +147,12 @@ target_link_libraries(gnuradio-runtime PUBLIC
   PRIVATE
     libunwind::libunwind
   )
+
+if(ANDROID)
+  target_link_libraries(gnuradio-runtime PUBLIC
+    android
+  )
+endif()
 
 if (ENABLE_PYTHON)
 target_link_libraries(gnuradio-runtime

@@ -24,6 +24,7 @@
 #include "vmcircbuf_mmap_shm_open.h"
 #include "vmcircbuf_mmap_tmpfile.h"
 #include "vmcircbuf_sysv_shm.h"
+#include "vmcircbuf_android_shm.h"
 
 gr::thread::mutex s_vm_mutex;
 
@@ -83,7 +84,11 @@ std::vector<vmcircbuf_factory*> vmcircbuf_sysconfig::all_factories()
 {
     std::vector<vmcircbuf_factory*> result;
 
+#if defined(ANDROID) || defined(__ANDROID__)
+    result.push_back(gr::vmcircbuf_android_shm_factory::singleton());
+#endif
     result.push_back(gr::vmcircbuf_createfilemapping_factory::singleton());
+
 #ifdef TRY_SHM_VMCIRCBUF
     result.push_back(gr::vmcircbuf_sysv_shm_factory::singleton());
     result.push_back(gr::vmcircbuf_mmap_shm_open_factory::singleton());
