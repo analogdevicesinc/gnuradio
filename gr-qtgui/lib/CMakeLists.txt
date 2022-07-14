@@ -69,12 +69,21 @@ target_include_directories(gnuradio-qtgui
   PRIVATE
   ${CMAKE_CURRENT_BINARY_DIR}
   )
+
+#if(ANDROID)
+	#find_library(Qwt qwt_${ANDROID_ABI})
+	#else()
+	#	find_package(Qwt)
+	#endif()
+
+message("qtgui/lib: QWT libs" ${Qwt})
 target_link_libraries(gnuradio-qtgui PUBLIC
     gnuradio-runtime
     gnuradio-fft
     gnuradio-filter
     Volk::volk
-    qwt::qwt
+    ${Qwt}
+    #    qwt::qwt
     Qt5::Widgets
 )
 if (WIN32)

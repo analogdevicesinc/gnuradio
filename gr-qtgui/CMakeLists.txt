@@ -17,7 +17,18 @@ set(QT_FOUND ${Qt5Widgets_FOUND})
 
 GR_PYTHON_CHECK_MODULE("PyQt5" PyQt5 True PYQT5_FOUND)
 
-find_package(Qwt)
+if(ANDROID)
+	find_library(Qwt qwt_${ANDROID_ABI})
+	message(${Qwt} 1)
+	if(${Qwt} STREQUAL "Qwt-NOTFOUND")
+		set(QWT_FOUND 0)
+	else()
+		set(QWT_FOUND 1)
+	endif()	
+else()
+	find_package(Qwt)
+endif()
+
 
 ########################################################################
 # Register component

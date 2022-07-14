@@ -78,6 +78,11 @@ else()
             INTERFACE_LINK_OPTIONS "LINKER:-undefined,dynamic_lookup"
         )
     endif(APPLE)
+    if(ANDROID)
+	    set_target_properties(Python::Module PROPERTIES
+		    INTERFACE_LINK_LIBRARIES "${PYTHON_LIBRARIES}"
+		    )
+    endif(ANDROID)
 endif(WIN32)
 
 # Find NumPy but duplicate behavior/variable names of FindPython in CMake 3.14+
