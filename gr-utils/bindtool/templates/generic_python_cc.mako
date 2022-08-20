@@ -164,7 +164,7 @@ if 'bases' in cls:
 ,
 % endif\
  
-        std::shared_ptr<${cls['name']}>>(${modvar}, "${cls['name']}", D(${doc_prefix}${cls['name']}))
+        PYBIND11_SH_DEF(${cls['name']})>(${modvar}, "${cls['name']}", D(${doc_prefix}${cls['name']}))
 
 % if make_function: ## override constructors with make function
 <%
