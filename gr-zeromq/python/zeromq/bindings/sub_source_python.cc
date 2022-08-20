@@ -37,7 +37,7 @@ void bind_sub_source(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<sub_source>>(m, "sub_source", D(sub_source))
+               PYBIND11_SH_DEF(sub_source)>(m, "sub_source", D(sub_source))
 
         .def(py::init(&sub_source::make),
              py::arg("itemsize"),

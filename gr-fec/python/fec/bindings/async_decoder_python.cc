@@ -33,7 +33,7 @@ void bind_async_decoder(py::module& m)
     using async_decoder = ::gr::fec::async_decoder;
 
 
-    py::class_<async_decoder, gr::block, gr::basic_block, std::shared_ptr<async_decoder>>(
+    py::class_<async_decoder, gr::block, gr::basic_block, PYBIND11_SH_DEF(async_decoder)>(
         m, "async_decoder", D(async_decoder))
 
         .def(py::init(&async_decoder::make),

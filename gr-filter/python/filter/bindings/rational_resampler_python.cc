@@ -33,7 +33,7 @@ void bind_rational_resampler_template(py::module& m, const char* classname)
     py::class_<rational_resampler,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<rational_resampler>>(m, classname)
+               PYBIND11_SH_DEF(rational_resampler)>(m, classname)
         .def(py::init(&gr::filter::rational_resampler<IN_T, OUT_T, TAP_T>::make),
              py::arg("interpolation"),
              py::arg("decimation"),

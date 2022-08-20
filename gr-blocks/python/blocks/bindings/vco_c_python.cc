@@ -33,7 +33,7 @@ void bind_vco_c(py::module& m)
     using vco_c = ::gr::blocks::vco_c;
 
 
-    py::class_<vco_c, gr::sync_block, gr::block, gr::basic_block, std::shared_ptr<vco_c>>(
+    py::class_<vco_c, gr::sync_block, gr::block, gr::basic_block, PYBIND11_SH_DEF(vco_c)>(
         m, "vco_c", D(vco_c))
 
         .def(py::init(&vco_c::make),

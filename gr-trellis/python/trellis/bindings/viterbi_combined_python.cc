@@ -35,7 +35,7 @@ void bind_viterbi_combined_template(py::module& m, const char* classname)
     py::class_<viterbi_combined,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<viterbi_combined>>(m, classname)
+               PYBIND11_SH_DEF(viterbi_combined)>(m, classname)
         .def(py::init(&gr::trellis::viterbi_combined<IN_T, OUT_T>::make),
              py::arg("FSM"),
              py::arg("K"),

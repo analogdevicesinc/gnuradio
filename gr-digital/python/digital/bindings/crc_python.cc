@@ -33,7 +33,7 @@ void bind_crc(py::module& m)
     using crc = ::gr::digital::crc;
 
 
-    py::class_<crc, std::shared_ptr<crc>>(m, "crc", D(crc))
+    py::class_<crc, PYBIND11_SH_DEF(crc)>(m, "crc", D(crc))
 
         .def(py::init<unsigned int, uint64_t, uint64_t, uint64_t, bool, bool>(),
              py::arg("num_bits"),

@@ -37,7 +37,7 @@ void bind_fmdet_cf(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<fmdet_cf>>(m, "fmdet_cf", D(fmdet_cf))
+               PYBIND11_SH_DEF(fmdet_cf)>(m, "fmdet_cf", D(fmdet_cf))
 
         .def(py::init(&fmdet_cf::make),
              py::arg("samplerate"),

@@ -33,7 +33,7 @@ void bind_keep_m_in_n(py::module& m)
     using keep_m_in_n = ::gr::blocks::keep_m_in_n;
 
 
-    py::class_<keep_m_in_n, gr::block, gr::basic_block, std::shared_ptr<keep_m_in_n>>(
+    py::class_<keep_m_in_n, gr::block, gr::basic_block, PYBIND11_SH_DEF(keep_m_in_n)>(
         m, "keep_m_in_n", D(keep_m_in_n))
 
         .def(py::init(&keep_m_in_n::make),

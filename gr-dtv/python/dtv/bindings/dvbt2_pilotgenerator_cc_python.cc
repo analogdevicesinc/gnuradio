@@ -36,7 +36,7 @@ void bind_dvbt2_pilotgenerator_cc(py::module& m)
     py::class_<dvbt2_pilotgenerator_cc,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt2_pilotgenerator_cc>>(
+               PYBIND11_SH_DEF(dvbt2_pilotgenerator_cc)>(
         m, "dvbt2_pilotgenerator_cc", D(dvbt2_pilotgenerator_cc))
 
         .def(py::init(&dvbt2_pilotgenerator_cc::make),

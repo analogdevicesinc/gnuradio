@@ -37,7 +37,7 @@ void bind_phase_modulator_fc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<phase_modulator_fc>>(
+               PYBIND11_SH_DEF(phase_modulator_fc)>(
         m, "phase_modulator_fc", D(phase_modulator_fc))
 
         .def(py::init(&phase_modulator_fc::make),

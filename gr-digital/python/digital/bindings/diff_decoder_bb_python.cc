@@ -37,7 +37,7 @@ void bind_diff_decoder_bb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<diff_decoder_bb>>(m, "diff_decoder_bb", D(diff_decoder_bb))
+               PYBIND11_SH_DEF(diff_decoder_bb)>(m, "diff_decoder_bb", D(diff_decoder_bb))
 
         .def(py::init(&diff_decoder_bb::make),
              py::arg("modulus"),

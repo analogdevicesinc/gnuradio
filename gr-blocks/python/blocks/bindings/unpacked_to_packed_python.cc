@@ -33,7 +33,7 @@ void bind_unpacked_to_packed_template(py::module& m, const char* classname)
     py::class_<unpacked_to_packed,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<unpacked_to_packed>>(m, classname)
+               PYBIND11_SH_DEF(unpacked_to_packed)>(m, classname)
         .def(py::init(&gr::blocks::unpacked_to_packed<T>::make),
              py::arg("bits_per_chunk"),
              py::arg("endianness"));

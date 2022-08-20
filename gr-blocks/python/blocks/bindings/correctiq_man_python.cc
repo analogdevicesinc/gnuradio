@@ -37,7 +37,7 @@ void bind_correctiq_man(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<correctiq_man>>(m, "correctiq_man", D(correctiq_man))
+               PYBIND11_SH_DEF(correctiq_man)>(m, "correctiq_man", D(correctiq_man))
 
         .def(py::init(&correctiq_man::make),
              py::arg("real"),

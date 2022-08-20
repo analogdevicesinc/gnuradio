@@ -37,7 +37,7 @@ void bind_attr_source(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<attr_source>>(m, "attr_source", D(attr_source))
+               PYBIND11_SH_DEF(attr_source)>(m, "attr_source", D(attr_source))
 
         .def(py::init(&attr_source::make),
              py::arg("uri"),

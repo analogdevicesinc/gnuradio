@@ -36,7 +36,7 @@ void bind_fft_filter(py::module& m)
     using fft_filter_ccf = gr::filter::kernel::fft_filter_ccf;
 
 
-    py::class_<fft_filter_fff, std::shared_ptr<fft_filter_fff>>(
+    py::class_<fft_filter_fff, PYBIND11_SH_DEF(fft_filter_fff)>(
         m_kernel, "fft_filter_fff", D(kernel, fft_filter_fff))
 
         .def(py::init<int, std::vector<float, std::allocator<float>> const&, int>(),
@@ -71,7 +71,7 @@ void bind_fft_filter(py::module& m)
              D(kernel, fft_filter_fff, filter));
 
 
-    py::class_<fft_filter_ccc, std::shared_ptr<fft_filter_ccc>>(
+    py::class_<fft_filter_ccc, PYBIND11_SH_DEF(fft_filter_ccc)>(
         m_kernel, "fft_filter_ccc", D(kernel, fft_filter_ccc))
 
         .def(py::init<int,
@@ -110,7 +110,7 @@ void bind_fft_filter(py::module& m)
              D(kernel, fft_filter_ccc, filter));
 
 
-    py::class_<fft_filter_ccf, std::shared_ptr<fft_filter_ccf>>(
+    py::class_<fft_filter_ccf, PYBIND11_SH_DEF(fft_filter_ccf)>(
         m_kernel, "fft_filter_ccf", D(kernel, fft_filter_ccf))
 
         .def(py::init<int, std::vector<float, std::allocator<float>> const&, int>(),

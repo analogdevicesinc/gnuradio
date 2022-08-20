@@ -37,7 +37,7 @@ void bind_float_to_char(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<float_to_char>>(m, "float_to_char", D(float_to_char))
+               PYBIND11_SH_DEF(float_to_char)>(m, "float_to_char", D(float_to_char))
 
         .def(py::init(&float_to_char::make),
              py::arg("vlen") = 1,

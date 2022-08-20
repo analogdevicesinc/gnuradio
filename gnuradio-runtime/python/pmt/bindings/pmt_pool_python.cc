@@ -25,7 +25,7 @@ void bind_pmt_pool(py::module& m)
     using pmt_pool = ::pmt::pmt_pool;
 
 
-    py::class_<pmt_pool, std::shared_ptr<pmt_pool>>(m, "pmt_pool", D(pmt_pool))
+    py::class_<pmt_pool, PYBIND11_SH_DEF(pmt_pool)>(m, "pmt_pool", D(pmt_pool))
 
         .def(py::init<size_t, size_t, size_t, size_t>(),
              py::arg("itemsize"),

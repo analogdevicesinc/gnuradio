@@ -35,7 +35,7 @@ void bind_packet_header_ofdm(py::module& m)
 
     py::class_<packet_header_ofdm,
                gr::digital::packet_header_default,
-               std::shared_ptr<packet_header_ofdm>>(
+               PYBIND11_SH_DEF(packet_header_ofdm)>(
         m, "packet_header_ofdm", D(packet_header_ofdm))
 
         .def(py::init(&packet_header_ofdm::make),

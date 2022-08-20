@@ -35,7 +35,7 @@ void bind_sccc_decoder_blk_template(py::module& m, const char* classname)
     py::class_<sccc_decoder_blk,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<sccc_decoder_blk>>(m, classname)
+               PYBIND11_SH_DEF(sccc_decoder_blk)>(m, classname)
         .def(py::init(&gr::trellis::sccc_decoder_blk<T>::make),
              py::arg("FSMo"),
              py::arg("FSMi"),

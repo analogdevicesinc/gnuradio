@@ -36,7 +36,7 @@ void bind_atsc_fs_checker(py::module& m)
     py::class_<atsc_fs_checker,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<atsc_fs_checker>>(m, "atsc_fs_checker", D(atsc_fs_checker))
+               PYBIND11_SH_DEF(atsc_fs_checker)>(m, "atsc_fs_checker", D(atsc_fs_checker))
 
         .def(py::init(&atsc_fs_checker::make), D(atsc_fs_checker, make))
 

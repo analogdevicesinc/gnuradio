@@ -37,7 +37,7 @@ void bind_cfo_model(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<cfo_model>>(m, "cfo_model", D(cfo_model))
+               PYBIND11_SH_DEF(cfo_model)>(m, "cfo_model", D(cfo_model))
 
         .def(py::init(&cfo_model::make),
              py::arg("sample_rate_hz"),

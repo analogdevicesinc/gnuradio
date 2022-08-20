@@ -34,7 +34,7 @@ void bind_mute_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<mute_blk>>(m, classname)
+               PYBIND11_SH_DEF(mute_blk)>(m, classname)
         .def(py::init(&gr::blocks::mute_blk<T>::make), py::arg("mute") = false)
         .def("mute", &mute_blk::mute)
         .def("set_mute", &mute_blk::set_mute, py::arg("mute") = false);

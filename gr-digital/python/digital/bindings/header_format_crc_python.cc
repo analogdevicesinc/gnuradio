@@ -34,7 +34,7 @@ void bind_header_format_crc(py::module& m)
 
     py::class_<header_format_crc,
                gr::digital::header_format_base,
-               std::shared_ptr<header_format_crc>>(
+               PYBIND11_SH_DEF(header_format_crc)>(
         m, "header_format_crc", D(header_format_crc))
 
 

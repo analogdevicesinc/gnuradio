@@ -37,7 +37,7 @@ void bind_add_const_ss(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<add_const_ss>>(m, "add_const_ss", D(add_const_ss))
+               PYBIND11_SH_DEF(add_const_ss)>(m, "add_const_ss", D(add_const_ss))
 
         .def(py::init(&add_const_ss::make), py::arg("k"), D(add_const_ss, make))
 

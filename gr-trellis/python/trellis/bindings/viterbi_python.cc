@@ -32,7 +32,7 @@ void bind_viterbi_template(py::module& m, const char* classname)
 {
     using viterbi = gr::trellis::viterbi<T>;
 
-    py::class_<viterbi, gr::block, gr::basic_block, std::shared_ptr<viterbi>>(m,
+    py::class_<viterbi, gr::block, gr::basic_block, PYBIND11_SH_DEF(viterbi)>(m,
                                                                               classname)
         .def(py::init(&gr::trellis::viterbi<T>::make),
              py::arg("FSM"),

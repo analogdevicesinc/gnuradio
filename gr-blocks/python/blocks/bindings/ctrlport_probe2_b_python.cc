@@ -37,7 +37,7 @@ void bind_ctrlport_probe2_b(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<ctrlport_probe2_b>>(
+               PYBIND11_SH_DEF(ctrlport_probe2_b)>(
         m, "ctrlport_probe2_b", D(ctrlport_probe2_b))
 
         .def(py::init(&ctrlport_probe2_b::make),

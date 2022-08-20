@@ -37,7 +37,7 @@ void bind_udp_source(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<udp_source>>(m, "udp_source", D(udp_source))
+               PYBIND11_SH_DEF(udp_source)>(m, "udp_source", D(udp_source))
 
         .def(py::init(&udp_source::make),
              py::arg("itemsize"),

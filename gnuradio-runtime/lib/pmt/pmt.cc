@@ -977,7 +977,8 @@ pmt_t assoc(pmt_t obj, pmt_t alist)
     return PMT_F;
 }
 
-pmt_t map(pmt_t proc(const pmt_t&), pmt_t list)
+//pmt_t map(pmt_t proc(const pmt_t&), pmt_t list)
+pmt_t map(const std::function<pmt_t(pmt_t)> &proc, pmt_t list)
 {
     pmt_t r = PMT_NIL;
 

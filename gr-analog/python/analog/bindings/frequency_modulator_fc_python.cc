@@ -37,7 +37,7 @@ void bind_frequency_modulator_fc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<frequency_modulator_fc>>(
+               PYBIND11_SH_DEF(frequency_modulator_fc)>(
         m, "frequency_modulator_fc", D(frequency_modulator_fc))
 
         .def(py::init(&frequency_modulator_fc::make),

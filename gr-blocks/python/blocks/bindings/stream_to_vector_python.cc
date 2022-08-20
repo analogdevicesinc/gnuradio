@@ -38,7 +38,7 @@ void bind_stream_to_vector(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<stream_to_vector>>(
+               PYBIND11_SH_DEF(stream_to_vector)>(
         m, "stream_to_vector", D(stream_to_vector))
 
         .def(py::init(&stream_to_vector::make),

@@ -73,7 +73,7 @@ void bind_top_block(py::module& m)
     using top_block = gr::top_block;
 
 
-    py::class_<top_block, gr::hier_block2, gr::basic_block, std::shared_ptr<top_block>>(
+    py::class_<top_block, gr::hier_block2, gr::basic_block, PYBIND11_SH_DEF(top_block)>(
         m, "top_block_pb", D(top_block))
 
 

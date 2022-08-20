@@ -33,7 +33,7 @@ void bind_tuntap_pdu(py::module& m)
     using tuntap_pdu = gr::network::tuntap_pdu;
 
 
-    py::class_<tuntap_pdu, gr::block, gr::basic_block, std::shared_ptr<tuntap_pdu>>(
+    py::class_<tuntap_pdu, gr::block, gr::basic_block, PYBIND11_SH_DEF(tuntap_pdu)>(
         m, "tuntap_pdu", D(tuntap_pdu))
 
         .def(py::init(&tuntap_pdu::make),

@@ -37,7 +37,7 @@ void bind_rfnoc_rx_streamer(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<rfnoc_rx_streamer>>(
+               PYBIND11_SH_DEF(rfnoc_rx_streamer)>(
         m, "rfnoc_rx_streamer", D(rfnoc_rx_streamer))
 
         .def(py::init(&rfnoc_rx_streamer::make),

@@ -33,7 +33,7 @@ void bind_pub_msg_sink(py::module& m)
     using pub_msg_sink = ::gr::zeromq::pub_msg_sink;
 
 
-    py::class_<pub_msg_sink, gr::block, gr::basic_block, std::shared_ptr<pub_msg_sink>>(
+    py::class_<pub_msg_sink, gr::block, gr::basic_block, PYBIND11_SH_DEF(pub_msg_sink)>(
         m, "pub_msg_sink", D(pub_msg_sink))
 
         .def(py::init(&pub_msg_sink::make),

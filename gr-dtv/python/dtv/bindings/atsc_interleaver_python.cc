@@ -37,7 +37,7 @@ void bind_atsc_interleaver(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<atsc_interleaver>>(
+               PYBIND11_SH_DEF(atsc_interleaver)>(
         m, "atsc_interleaver", D(atsc_interleaver))
 
         .def(py::init(&atsc_interleaver::make), D(atsc_interleaver, make))

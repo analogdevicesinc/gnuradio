@@ -36,7 +36,7 @@ void bind_dvbt2_p1insertion_cc(py::module& m)
     py::class_<dvbt2_p1insertion_cc,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt2_p1insertion_cc>>(
+               PYBIND11_SH_DEF(dvbt2_p1insertion_cc)>(
         m, "dvbt2_p1insertion_cc", D(dvbt2_p1insertion_cc))
 
         .def(py::init(&dvbt2_p1insertion_cc::make),

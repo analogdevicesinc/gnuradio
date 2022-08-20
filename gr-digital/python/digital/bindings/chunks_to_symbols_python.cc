@@ -35,7 +35,7 @@ void bind_chunks_to_symbols_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<chunks_to_symbols>>(m, classname)
+               PYBIND11_SH_DEF(chunks_to_symbols)>(m, classname)
         .def(py::init(&gr::digital::chunks_to_symbols<IN_T, OUT_T>::make),
              py::arg("symbol_table"),
              py::arg("D") = 1)

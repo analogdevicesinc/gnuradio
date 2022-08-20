@@ -36,7 +36,7 @@ void bind_atsc_field_sync_mux(py::module& m)
     py::class_<atsc_field_sync_mux,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<atsc_field_sync_mux>>(
+               PYBIND11_SH_DEF(atsc_field_sync_mux)>(
         m, "atsc_field_sync_mux", D(atsc_field_sync_mux))
 
         .def(py::init(&atsc_field_sync_mux::make), D(atsc_field_sync_mux, make))

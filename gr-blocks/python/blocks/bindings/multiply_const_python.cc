@@ -34,7 +34,7 @@ void bind_multiply_const_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<multiply_const>>(m, classname)
+               PYBIND11_SH_DEF(multiply_const)>(m, classname)
         .def(py::init(&gr::blocks::multiply_const<T>::make),
              py::arg("k"),
              py::arg("vlen") = 1)

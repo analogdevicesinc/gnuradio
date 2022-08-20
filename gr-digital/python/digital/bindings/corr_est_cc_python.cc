@@ -43,7 +43,7 @@ void bind_corr_est_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<corr_est_cc>>(m, "corr_est_cc", D(corr_est_cc))
+               PYBIND11_SH_DEF(corr_est_cc)>(m, "corr_est_cc", D(corr_est_cc))
 
         .def(py::init(&corr_est_cc::make),
              py::arg("symbols"),

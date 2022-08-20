@@ -33,7 +33,7 @@ void bind_attr_sink(py::module& m)
     using attr_sink = gr::iio::attr_sink;
 
 
-    py::class_<attr_sink, gr::block, gr::basic_block, std::shared_ptr<attr_sink>>(
+    py::class_<attr_sink, gr::block, gr::basic_block, PYBIND11_SH_DEF(attr_sink)>(
         m, "attr_sink", D(attr_sink))
 
         .def(py::init(&attr_sink::make),

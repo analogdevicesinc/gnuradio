@@ -37,7 +37,7 @@ void bind_correctiq(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<correctiq>>(m, "correctiq", D(correctiq))
+               PYBIND11_SH_DEF(correctiq)>(m, "correctiq", D(correctiq))
 
         .def(py::init(&correctiq::make), D(correctiq, make))
 

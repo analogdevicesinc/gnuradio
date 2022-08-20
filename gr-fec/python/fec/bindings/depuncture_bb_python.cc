@@ -33,7 +33,7 @@ void bind_depuncture_bb(py::module& m)
     using depuncture_bb = ::gr::fec::depuncture_bb;
 
 
-    py::class_<depuncture_bb, gr::block, gr::basic_block, std::shared_ptr<depuncture_bb>>(
+    py::class_<depuncture_bb, gr::block, gr::basic_block, PYBIND11_SH_DEF(depuncture_bb)>(
         m, "depuncture_bb", D(depuncture_bb))
 
         .def(py::init(&depuncture_bb::make),

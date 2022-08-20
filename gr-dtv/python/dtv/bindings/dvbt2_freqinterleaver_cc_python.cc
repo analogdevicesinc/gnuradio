@@ -37,7 +37,7 @@ void bind_dvbt2_freqinterleaver_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt2_freqinterleaver_cc>>(
+               PYBIND11_SH_DEF(dvbt2_freqinterleaver_cc)>(
         m, "dvbt2_freqinterleaver_cc", D(dvbt2_freqinterleaver_cc))
 
         .def(py::init(&dvbt2_freqinterleaver_cc::make),

@@ -33,7 +33,7 @@ void bind_generic_decoder(py::module& m)
     using generic_decoder = ::gr::fec::generic_decoder;
 
 
-    py::class_<generic_decoder, std::shared_ptr<generic_decoder>>(
+    py::class_<generic_decoder, PYBIND11_SH_DEF(generic_decoder)>(
         m, "generic_decoder", D(generic_decoder))
 
         // .def(py::init<>(),D(generic_decoder,generic_decoder,0))

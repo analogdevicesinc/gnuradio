@@ -37,7 +37,7 @@ void bind_short_to_float(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<short_to_float>>(m, "short_to_float", D(short_to_float))
+               PYBIND11_SH_DEF(short_to_float)>(m, "short_to_float", D(short_to_float))
 
         .def(py::init(&short_to_float::make),
              py::arg("vlen") = 1,

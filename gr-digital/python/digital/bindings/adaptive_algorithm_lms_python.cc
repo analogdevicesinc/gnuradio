@@ -35,7 +35,7 @@ void bind_adaptive_algorithm_lms(py::module& m)
 
     py::class_<adaptive_algorithm_lms,
                gr::digital::adaptive_algorithm,
-               std::shared_ptr<adaptive_algorithm_lms>>(
+               PYBIND11_SH_DEF(adaptive_algorithm_lms)>(
         m, "adaptive_algorithm_lms", D(adaptive_algorithm_lms))
 
         .def(py::init(&adaptive_algorithm_lms::make),

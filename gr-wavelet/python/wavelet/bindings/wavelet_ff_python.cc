@@ -37,7 +37,7 @@ void bind_wavelet_ff(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<wavelet_ff>>(m, "wavelet_ff", D(wavelet_ff))
+               PYBIND11_SH_DEF(wavelet_ff)>(m, "wavelet_ff", D(wavelet_ff))
 
         .def(py::init(&wavelet_ff::make),
              py::arg("size") = 1024,

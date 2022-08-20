@@ -37,7 +37,7 @@ void bind_complex_to_float(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<complex_to_float>>(
+               PYBIND11_SH_DEF(complex_to_float)>(
         m, "complex_to_float", D(complex_to_float))
 
         .def(py::init(&complex_to_float::make),

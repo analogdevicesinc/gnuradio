@@ -35,7 +35,7 @@ void bind_adaptive_algorithm_cma(py::module& m)
 
     py::class_<adaptive_algorithm_cma,
                gr::digital::adaptive_algorithm,
-               std::shared_ptr<adaptive_algorithm_cma>>(
+               PYBIND11_SH_DEF(adaptive_algorithm_cma)>(
         m, "adaptive_algorithm_cma", D(adaptive_algorithm_cma))
 
         .def(py::init(&adaptive_algorithm_cma::make),

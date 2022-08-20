@@ -33,7 +33,7 @@ void bind_rotator(py::module& m)
     using rotator = ::gr::blocks::rotator;
 
 
-    py::class_<rotator, std::shared_ptr<rotator>>(m, "rotator", D(rotator))
+    py::class_<rotator, PYBIND11_SH_DEF(rotator)>(m, "rotator", D(rotator))
 
         .def(py::init<>(), D(rotator, rotator, 0))
         .def(py::init<gr::blocks::rotator const&>(),

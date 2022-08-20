@@ -33,7 +33,7 @@ void bind_sink_c(py::module& m)
     using sink_c = ::gr::qtgui::sink_c;
 
 
-    py::class_<sink_c, gr::block, gr::basic_block, std::shared_ptr<sink_c>>(
+    py::class_<sink_c, gr::block, gr::basic_block, PYBIND11_SH_DEF(sink_c)>(
         m, "sink_c", D(sink_c))
 
         .def(py::init(&sink_c::make),

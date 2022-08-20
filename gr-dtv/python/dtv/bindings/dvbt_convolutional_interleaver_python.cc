@@ -38,7 +38,7 @@ void bind_dvbt_convolutional_interleaver(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt_convolutional_interleaver>>(
+               PYBIND11_SH_DEF(dvbt_convolutional_interleaver)>(
         m, "dvbt_convolutional_interleaver", D(dvbt_convolutional_interleaver))
 
         .def(py::init(&dvbt_convolutional_interleaver::make),

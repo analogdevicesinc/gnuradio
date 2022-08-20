@@ -33,7 +33,7 @@ void bind_skiphead(py::module& m)
     using skiphead = ::gr::blocks::skiphead;
 
 
-    py::class_<skiphead, gr::block, gr::basic_block, std::shared_ptr<skiphead>>(
+    py::class_<skiphead, gr::block, gr::basic_block, PYBIND11_SH_DEF(skiphead)>(
         m, "skiphead", D(skiphead))
 
         .def(py::init(&skiphead::make),

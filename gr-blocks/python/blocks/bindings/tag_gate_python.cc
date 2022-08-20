@@ -37,7 +37,7 @@ void bind_tag_gate(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<tag_gate>>(m, "tag_gate", D(tag_gate))
+               PYBIND11_SH_DEF(tag_gate)>(m, "tag_gate", D(tag_gate))
 
         .def(py::init(&tag_gate::make),
              py::arg("item_size"),

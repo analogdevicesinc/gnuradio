@@ -38,7 +38,7 @@ void bind_ival_decimator(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<ival_decimator>>(m, "ival_decimator", D(ival_decimator))
+               PYBIND11_SH_DEF(ival_decimator)>(m, "ival_decimator", D(ival_decimator))
 
         .def(py::init(&ival_decimator::make),
              py::arg("decimation"),

@@ -36,7 +36,7 @@ void bind_atsc_equalizer(py::module& m)
     py::class_<atsc_equalizer,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<atsc_equalizer>>(m, "atsc_equalizer", D(atsc_equalizer))
+               PYBIND11_SH_DEF(atsc_equalizer)>(m, "atsc_equalizer", D(atsc_equalizer))
 
         .def(py::init(&atsc_equalizer::make), D(atsc_equalizer, make))
 

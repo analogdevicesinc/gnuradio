@@ -29,7 +29,7 @@ void bind_alaw_encode_sb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<alaw_encode_sb>>(m, "alaw_encode_sb", D(alaw_encode_sb))
+               PYBIND11_SH_DEF(alaw_encode_sb)>(m, "alaw_encode_sb", D(alaw_encode_sb))
 
         .def(py::init(&alaw_encode_sb::make), D(alaw_encode_sb, make))
 

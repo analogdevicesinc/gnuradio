@@ -37,7 +37,7 @@ void bind_tagged_stream_to_pdu(py::module& m)
                gr::tagged_stream_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<tagged_stream_to_pdu>>(
+               PYBIND11_SH_DEF(tagged_stream_to_pdu)>(
         m, "tagged_stream_to_pdu", D(tagged_stream_to_pdu))
 
         .def(py::init(&tagged_stream_to_pdu::make),

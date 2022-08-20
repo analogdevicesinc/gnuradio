@@ -33,7 +33,7 @@ void bind_pdu_remove(py::module& m)
     using pdu_remove = ::gr::pdu::pdu_remove;
 
 
-    py::class_<pdu_remove, gr::block, gr::basic_block, std::shared_ptr<pdu_remove>>(
+    py::class_<pdu_remove, gr::block, gr::basic_block, PYBIND11_SH_DEF(pdu_remove)>(
         m, "pdu_remove", D(pdu_remove))
 
         .def(py::init(&pdu_remove::make), py::arg("k"), D(pdu_remove, make))

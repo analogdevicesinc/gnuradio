@@ -34,7 +34,7 @@ void bind_divide_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<divide>>(m, classname)
+               PYBIND11_SH_DEF(divide)>(m, classname)
         .def(py::init(&gr::blocks::divide<T>::make), py::arg("vlen") = 1);
 }
 

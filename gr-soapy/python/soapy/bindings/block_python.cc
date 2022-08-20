@@ -54,7 +54,7 @@ void bind_block(py::module& m)
     using block = ::gr::soapy::block;
 
 
-    py::class_<block, gr::block, gr::basic_block, std::shared_ptr<block>>(
+    py::class_<block, gr::block, gr::basic_block, PYBIND11_SH_DEF(block)>(
         m, "block", D(block))
 
 

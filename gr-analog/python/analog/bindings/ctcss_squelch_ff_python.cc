@@ -35,7 +35,7 @@ void bind_ctcss_squelch_ff(py::module& m)
 
     py::class_<ctcss_squelch_ff,
                gr::analog::squelch_base_ff,
-               std::shared_ptr<ctcss_squelch_ff>>(
+               PYBIND11_SH_DEF(ctcss_squelch_ff)>(
         m, "ctcss_squelch_ff", D(ctcss_squelch_ff))
 
         .def(py::init(&ctcss_squelch_ff::make),

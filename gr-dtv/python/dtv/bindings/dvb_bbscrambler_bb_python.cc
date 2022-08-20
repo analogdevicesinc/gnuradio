@@ -37,7 +37,7 @@ void bind_dvb_bbscrambler_bb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvb_bbscrambler_bb>>(
+               PYBIND11_SH_DEF(dvb_bbscrambler_bb)>(
         m, "dvb_bbscrambler_bb", D(dvb_bbscrambler_bb))
 
         .def(py::init(&dvb_bbscrambler_bb::make),

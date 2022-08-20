@@ -37,7 +37,7 @@ void bind_selective_fading_model(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<selective_fading_model>>(
+               PYBIND11_SH_DEF(selective_fading_model)>(
         m, "selective_fading_model", D(selective_fading_model))
 
         .def(py::init(&selective_fading_model::make),

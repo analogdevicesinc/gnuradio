@@ -37,7 +37,7 @@ void bind_exponentiate_const_cci(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<exponentiate_const_cci>>(
+               PYBIND11_SH_DEF(exponentiate_const_cci)>(
         m, "exponentiate_const_cci", D(exponentiate_const_cci))
 
         .def(py::init(&exponentiate_const_cci::make),

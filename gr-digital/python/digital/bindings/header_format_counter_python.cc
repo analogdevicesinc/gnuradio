@@ -34,7 +34,7 @@ void bind_header_format_counter(py::module& m)
 
     py::class_<header_format_counter,
                gr::digital::header_format_default,
-               std::shared_ptr<header_format_counter>>(
+               PYBIND11_SH_DEF(header_format_counter)>(
         m, "header_format_counter", D(header_format_counter))
 
         // The make function returns a _base pointer, which is incompatible according to

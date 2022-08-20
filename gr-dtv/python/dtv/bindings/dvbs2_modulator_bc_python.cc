@@ -36,7 +36,7 @@ void bind_dvbs2_modulator_bc(py::module& m)
     py::class_<dvbs2_modulator_bc,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbs2_modulator_bc>>(
+               PYBIND11_SH_DEF(dvbs2_modulator_bc)>(
         m, "dvbs2_modulator_bc", D(dvbs2_modulator_bc))
 
         .def(py::init(&dvbs2_modulator_bc::make),

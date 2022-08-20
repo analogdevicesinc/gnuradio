@@ -33,7 +33,7 @@ void bind_crc_append(py::module& m)
     using crc_append = ::gr::digital::crc_append;
 
 
-    py::class_<crc_append, gr::block, gr::basic_block, std::shared_ptr<crc_append>>(
+    py::class_<crc_append, gr::block, gr::basic_block, PYBIND11_SH_DEF(crc_append)>(
         m, "crc_append", D(crc_append))
 
         .def(py::init(&crc_append::make),

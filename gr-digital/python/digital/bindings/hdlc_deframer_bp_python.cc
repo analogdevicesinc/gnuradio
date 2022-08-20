@@ -37,7 +37,7 @@ void bind_hdlc_deframer_bp(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<hdlc_deframer_bp>>(
+               PYBIND11_SH_DEF(hdlc_deframer_bp)>(
         m, "hdlc_deframer_bp", D(hdlc_deframer_bp))
 
         .def(py::init(&hdlc_deframer_bp::make),

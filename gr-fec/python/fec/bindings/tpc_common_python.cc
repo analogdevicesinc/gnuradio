@@ -33,7 +33,7 @@ void bind_tpc_common(py::module& m)
     using tpc_common = ::gr::fec::tpc_common;
 
 
-    py::class_<tpc_common, std::shared_ptr<tpc_common>>(m, "tpc_common", D(tpc_common))
+    py::class_<tpc_common, PYBIND11_SH_DEF(tpc_common)>(m, "tpc_common", D(tpc_common))
 
         .def_static("parity_counter",
                     &tpc_common::parity_counter,

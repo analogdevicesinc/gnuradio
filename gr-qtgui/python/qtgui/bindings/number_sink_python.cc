@@ -43,7 +43,7 @@ void bind_number_sink(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<number_sink>>(m, "number_sink", D(number_sink))
+               PYBIND11_SH_DEF(number_sink)>(m, "number_sink", D(number_sink))
 
         .def(py::init(&number_sink::make),
              py::arg("itemsize"),

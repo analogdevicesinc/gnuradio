@@ -35,7 +35,7 @@ void bind_tags(py::module& m)
     using tag_t = ::gr::tag_t;
 
 
-    py::class_<tag_t, std::shared_ptr<tag_t>>(m, "tag_t", D(tag_t))
+    py::class_<tag_t, PYBIND11_SH_DEF(tag_t)>(m, "tag_t", D(tag_t))
 
         .def(py::init<>(), D(tag_t, tag_t, 0))
         .def(py::init<gr::tag_t const&>(), py::arg("rhs"), D(tag_t, tag_t, 1))

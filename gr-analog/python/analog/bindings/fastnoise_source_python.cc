@@ -34,7 +34,7 @@ void bind_fastnoise_source_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<fastnoise_source>>(m, classname)
+               PYBIND11_SH_DEF(fastnoise_source)>(m, classname)
         .def(py::init(&gr::analog::fastnoise_source<T>::make),
              py::arg("type"),
              py::arg("ampl"),

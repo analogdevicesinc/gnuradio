@@ -37,7 +37,7 @@ void bind_file_descriptor_sink(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<file_descriptor_sink>>(
+               PYBIND11_SH_DEF(file_descriptor_sink)>(
         m, "file_descriptor_sink", D(file_descriptor_sink))
 
         .def(py::init(&file_descriptor_sink::make),

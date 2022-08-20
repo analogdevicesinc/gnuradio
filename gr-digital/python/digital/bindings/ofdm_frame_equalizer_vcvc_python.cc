@@ -37,7 +37,7 @@ void bind_ofdm_frame_equalizer_vcvc(py::module& m)
                gr::tagged_stream_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<ofdm_frame_equalizer_vcvc>>(
+               PYBIND11_SH_DEF(ofdm_frame_equalizer_vcvc)>(
         m, "ofdm_frame_equalizer_vcvc", D(ofdm_frame_equalizer_vcvc))
 
         .def(py::init(&ofdm_frame_equalizer_vcvc::make),

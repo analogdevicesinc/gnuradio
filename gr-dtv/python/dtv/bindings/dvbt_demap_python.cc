@@ -33,7 +33,7 @@ void bind_dvbt_demap(py::module& m)
     using dvbt_demap = ::gr::dtv::dvbt_demap;
 
 
-    py::class_<dvbt_demap, gr::block, gr::basic_block, std::shared_ptr<dvbt_demap>>(
+    py::class_<dvbt_demap, gr::block, gr::basic_block, PYBIND11_SH_DEF(dvbt_demap)>(
         m, "dvbt_demap", D(dvbt_demap))
 
         .def(py::init(&dvbt_demap::make),

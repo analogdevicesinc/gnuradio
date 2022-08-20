@@ -37,7 +37,7 @@ void bind_catv_randomizer_bb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<catv_randomizer_bb>>(
+               PYBIND11_SH_DEF(catv_randomizer_bb)>(
         m, "catv_randomizer_bb", D(catv_randomizer_bb))
 
         .def(py::init(&catv_randomizer_bb::make),

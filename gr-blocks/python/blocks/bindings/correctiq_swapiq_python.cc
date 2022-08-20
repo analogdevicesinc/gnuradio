@@ -37,7 +37,7 @@ void bind_correctiq_swapiq(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<swap_iq>>(m, "swap_iq", D(swap_iq))
+               PYBIND11_SH_DEF(swap_iq)>(m, "swap_iq", D(swap_iq))
 
         .def(py::init(&swap_iq::make),
              py::arg("datatype"),

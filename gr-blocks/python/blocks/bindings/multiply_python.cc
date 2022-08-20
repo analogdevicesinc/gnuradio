@@ -34,7 +34,7 @@ void bind_multiply_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<multiply>>(m, classname)
+               PYBIND11_SH_DEF(multiply)>(m, classname)
         .def(py::init(&gr::blocks::multiply<T>::make), py::arg("vlen") = 1);
 }
 

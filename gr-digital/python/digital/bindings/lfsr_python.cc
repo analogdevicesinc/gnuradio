@@ -33,7 +33,7 @@ void bind_lfsr(py::module& m)
     using lfsr = ::gr::digital::lfsr;
 
 
-    py::class_<lfsr, std::shared_ptr<lfsr>>(m, "lfsr", D(lfsr))
+    py::class_<lfsr, PYBIND11_SH_DEF(lfsr)>(m, "lfsr", D(lfsr))
 
         .def(py::init<uint64_t, uint64_t, uint32_t>(),
              py::arg("mask"),

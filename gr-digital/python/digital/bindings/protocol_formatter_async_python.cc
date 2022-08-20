@@ -36,7 +36,7 @@ void bind_protocol_formatter_async(py::module& m)
     py::class_<protocol_formatter_async,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<protocol_formatter_async>>(
+               PYBIND11_SH_DEF(protocol_formatter_async)>(
         m, "protocol_formatter_async", D(protocol_formatter_async))
 
         .def(py::init(&protocol_formatter_async::make),

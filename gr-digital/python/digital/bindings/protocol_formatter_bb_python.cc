@@ -37,7 +37,7 @@ void bind_protocol_formatter_bb(py::module& m)
                gr::tagged_stream_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<protocol_formatter_bb>>(
+               PYBIND11_SH_DEF(protocol_formatter_bb)>(
         m, "protocol_formatter_bb", D(protocol_formatter_bb))
 
         .def(py::init(&protocol_formatter_bb::make),

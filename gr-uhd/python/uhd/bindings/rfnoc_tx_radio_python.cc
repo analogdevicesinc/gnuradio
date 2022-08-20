@@ -37,7 +37,7 @@ void bind_rfnoc_tx_radio(py::module& m)
                gr::uhd::rfnoc_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<rfnoc_tx_radio>>(m, "rfnoc_tx_radio", D(rfnoc_tx_radio))
+               PYBIND11_SH_DEF(rfnoc_tx_radio)>(m, "rfnoc_tx_radio", D(rfnoc_tx_radio))
 
         .def(py::init(&rfnoc_tx_radio::make),
              py::arg("graph"),

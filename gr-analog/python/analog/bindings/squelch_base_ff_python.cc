@@ -36,7 +36,7 @@ void bind_squelch_base_ff(py::module& m)
     py::class_<squelch_base_ff,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<squelch_base_ff>>(m, "squelch_base_ff", D(squelch_base_ff))
+               PYBIND11_SH_DEF(squelch_base_ff)>(m, "squelch_base_ff", D(squelch_base_ff))
 
         // .def(py::init<>(),D(squelch_base_ff,squelch_base_ff,0))
         // .def(py::init<gr::analog::squelch_base_ff const &>(), py::arg("arg0"),

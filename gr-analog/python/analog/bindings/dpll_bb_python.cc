@@ -37,7 +37,7 @@ void bind_dpll_bb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dpll_bb>>(m, "dpll_bb", D(dpll_bb))
+               PYBIND11_SH_DEF(dpll_bb)>(m, "dpll_bb", D(dpll_bb))
 
         .def(py::init(&dpll_bb::make),
              py::arg("period"),

@@ -37,7 +37,7 @@ void bind_rail_ff(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<rail_ff>>(m, "rail_ff", D(rail_ff))
+               PYBIND11_SH_DEF(rail_ff)>(m, "rail_ff", D(rail_ff))
 
         .def(py::init(&rail_ff::make), py::arg("lo"), py::arg("hi"), D(rail_ff, make))
 

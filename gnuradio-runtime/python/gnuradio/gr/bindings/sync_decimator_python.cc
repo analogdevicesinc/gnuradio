@@ -37,7 +37,7 @@ void bind_sync_decimator(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<sync_decimator>>(m, "sync_decimator", D(sync_decimator))
+               PYBIND11_SH_DEF(sync_decimator)>(m, "sync_decimator", D(sync_decimator))
 
 
         .def("decimation", &sync_decimator::decimation, D(sync_decimator, decimation))

@@ -34,7 +34,7 @@ void bind_sig_source_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<sig_source>>(m, classname)
+               PYBIND11_SH_DEF(sig_source)>(m, classname)
         .def(py::init(&gr::analog::sig_source<T>::make),
              py::arg("sampling_freq"),
              py::arg("waveform"),

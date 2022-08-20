@@ -34,7 +34,7 @@ void bind_moving_average_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<moving_average>>(m, classname)
+               PYBIND11_SH_DEF(moving_average)>(m, classname)
         .def(py::init(&gr::blocks::moving_average<T>::make),
              py::arg("length"),
              py::arg("scale"),

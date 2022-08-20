@@ -36,7 +36,7 @@ void bind_sccc_encoder_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<sccc_encoder>>(m, classname)
+               PYBIND11_SH_DEF(sccc_encoder)>(m, classname)
         .def(py::init(&gr::trellis::sccc_encoder<IN_T, OUT_T>::make),
              py::arg("FSMo"),
              py::arg("STo"),

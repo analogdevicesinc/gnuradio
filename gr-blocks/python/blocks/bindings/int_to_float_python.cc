@@ -37,7 +37,7 @@ void bind_int_to_float(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<int_to_float>>(m, "int_to_float", D(int_to_float))
+               PYBIND11_SH_DEF(int_to_float)>(m, "int_to_float", D(int_to_float))
 
         .def(py::init(&int_to_float::make),
              py::arg("vlen") = 1,

@@ -39,7 +39,7 @@ void bind_ber_sink_b(py::module& m)
     using ber_sink_b = ::gr::qtgui::ber_sink_b;
 
 
-    py::class_<ber_sink_b, gr::block, gr::basic_block, std::shared_ptr<ber_sink_b>>(
+    py::class_<ber_sink_b, gr::block, gr::basic_block, PYBIND11_SH_DEF(ber_sink_b)>(
         m, "ber_sink_b", D(ber_sink_b))
 
         .def(py::init(&ber_sink_b::make),

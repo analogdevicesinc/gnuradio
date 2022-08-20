@@ -37,7 +37,7 @@ void bind_check_lfsr_32k_s(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<check_lfsr_32k_s>>(
+               PYBIND11_SH_DEF(check_lfsr_32k_s)>(
         m, "check_lfsr_32k_s", D(check_lfsr_32k_s))
 
         .def(py::init(&check_lfsr_32k_s::make), D(check_lfsr_32k_s, make))

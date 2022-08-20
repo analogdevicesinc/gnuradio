@@ -33,7 +33,7 @@ void bind_stream_demux(py::module& m)
     using stream_demux = ::gr::blocks::stream_demux;
 
 
-    py::class_<stream_demux, gr::block, gr::basic_block, std::shared_ptr<stream_demux>>(
+    py::class_<stream_demux, gr::block, gr::basic_block, PYBIND11_SH_DEF(stream_demux)>(
         m, "stream_demux", D(stream_demux))
 
         .def(py::init(&stream_demux::make),

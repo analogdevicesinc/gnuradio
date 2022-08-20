@@ -33,7 +33,7 @@ void bind_crc_check(py::module& m)
     using crc_check = ::gr::digital::crc_check;
 
 
-    py::class_<crc_check, gr::block, gr::basic_block, std::shared_ptr<crc_check>>(
+    py::class_<crc_check, gr::block, gr::basic_block, PYBIND11_SH_DEF(crc_check)>(
         m, "crc_check", D(crc_check))
 
         .def(py::init(&crc_check::make),

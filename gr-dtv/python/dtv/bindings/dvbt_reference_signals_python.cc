@@ -36,7 +36,7 @@ void bind_dvbt_reference_signals(py::module& m)
     py::class_<dvbt_reference_signals,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt_reference_signals>>(
+               PYBIND11_SH_DEF(dvbt_reference_signals)>(
         m, "dvbt_reference_signals", D(dvbt_reference_signals))
 
         .def(py::init(&dvbt_reference_signals::make),

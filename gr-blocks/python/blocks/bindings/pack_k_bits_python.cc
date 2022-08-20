@@ -36,7 +36,7 @@ void bind_pack_k_bits(py::module& m)
     using pack_k_bits = ::gr::blocks::kernel::pack_k_bits;
 
 
-    py::class_<pack_k_bits, std::shared_ptr<pack_k_bits>>(
+    py::class_<pack_k_bits, PYBIND11_SH_DEF(pack_k_bits)>(
         m_kernel, "pack_k_bits", D(kernel, pack_k_bits))
 
         .def(py::init<unsigned int>(),

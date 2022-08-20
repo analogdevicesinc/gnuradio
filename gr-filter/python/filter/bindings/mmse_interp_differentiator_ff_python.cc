@@ -34,7 +34,7 @@ void bind_mmse_interp_differentiator_ff(py::module& m)
 
 
     py::class_<mmse_interp_differentiator_ff,
-               std::shared_ptr<mmse_interp_differentiator_ff>>(
+               PYBIND11_SH_DEF(mmse_interp_differentiator_ff)>(
         m, "mmse_interp_differentiator_ff", D(mmse_interp_differentiator_ff))
 
         .def(py::init<>(),

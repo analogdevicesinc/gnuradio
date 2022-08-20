@@ -31,7 +31,7 @@ void bind_window(py::module& m)
 {
     using window = gr::fft::window;
 
-    py::class_<window, std::shared_ptr<window>> window_class(m, "window", D(window));
+    py::class_<window, PYBIND11_SH_DEF(window)> window_class(m, "window", D(window));
 
     py::enum_<gr::fft::window::win_type>(window_class, "win_type")
         .value("WIN_HAMMING", gr::fft::window::WIN_HAMMING)                   // 0

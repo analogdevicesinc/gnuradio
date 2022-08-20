@@ -38,7 +38,7 @@ void bind_atsc_depad(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<atsc_depad>>(m, "atsc_depad", D(atsc_depad))
+               PYBIND11_SH_DEF(atsc_depad)>(m, "atsc_depad", D(atsc_depad))
 
         .def(py::init(&atsc_depad::make), D(atsc_depad, make))
 

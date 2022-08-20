@@ -37,7 +37,7 @@ void bind_probe_density_b(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<probe_density_b>>(m, "probe_density_b", D(probe_density_b))
+               PYBIND11_SH_DEF(probe_density_b)>(m, "probe_density_b", D(probe_density_b))
 
         .def(py::init(&probe_density_b::make), py::arg("alpha"), D(probe_density_b, make))
 

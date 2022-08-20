@@ -22,7 +22,7 @@ void bind_messages_msg_queue(py::module& m)
     using msg_queue = gr::messages::msg_queue;
 
 
-    py::class_<msg_queue, std::shared_ptr<msg_queue>>(m, "messages_msg_queue")
+    py::class_<msg_queue, PYBIND11_SH_DEF(msg_queue)>(m, "messages_msg_queue")
 
         .def(py::init<unsigned int>(), py::arg("limit"))
 

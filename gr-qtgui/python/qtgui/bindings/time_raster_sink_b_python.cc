@@ -43,7 +43,7 @@ void bind_time_raster_sink_b(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<time_raster_sink_b>>(
+               PYBIND11_SH_DEF(time_raster_sink_b)>(
         m, "time_raster_sink_b", D(time_raster_sink_b))
 
         .def(py::init(&time_raster_sink_b::make),

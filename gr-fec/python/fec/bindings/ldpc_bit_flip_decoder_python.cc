@@ -38,7 +38,7 @@ void bind_ldpc_bit_flip_decoder(py::module& m)
 
     py::class_<ldpc_bit_flip_decoder,
                gr::fec::generic_decoder,
-               std::shared_ptr<ldpc_bit_flip_decoder>>(
+               PYBIND11_SH_DEF(ldpc_bit_flip_decoder)>(
         m_code, "ldpc_bit_flip_decoder", D(code, ldpc_bit_flip_decoder))
 
         .def_static("make",

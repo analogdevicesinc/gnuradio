@@ -36,7 +36,7 @@ void bind_channel_model2(py::module& m)
     py::class_<channel_model2,
                gr::hier_block2,
                gr::basic_block,
-               std::shared_ptr<channel_model2>>(m, "channel_model2", D(channel_model2))
+               PYBIND11_SH_DEF(channel_model2)>(m, "channel_model2", D(channel_model2))
 
         .def(py::init(&channel_model2::make),
              py::arg("noise_voltage") = 0.,

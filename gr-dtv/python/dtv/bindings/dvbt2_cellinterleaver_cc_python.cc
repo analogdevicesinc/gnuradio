@@ -37,7 +37,7 @@ void bind_dvbt2_cellinterleaver_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt2_cellinterleaver_cc>>(
+               PYBIND11_SH_DEF(dvbt2_cellinterleaver_cc)>(
         m, "dvbt2_cellinterleaver_cc", D(dvbt2_cellinterleaver_cc))
 
         .def(py::init(&dvbt2_cellinterleaver_cc::make),

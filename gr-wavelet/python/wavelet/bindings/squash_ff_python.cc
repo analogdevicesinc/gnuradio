@@ -37,7 +37,7 @@ void bind_squash_ff(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<squash_ff>>(m, "squash_ff", D(squash_ff))
+               PYBIND11_SH_DEF(squash_ff)>(m, "squash_ff", D(squash_ff))
 
         .def(py::init(&squash_ff::make),
              py::arg("igrid"),

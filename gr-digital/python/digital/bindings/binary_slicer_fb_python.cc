@@ -37,7 +37,7 @@ void bind_binary_slicer_fb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<binary_slicer_fb>>(
+               PYBIND11_SH_DEF(binary_slicer_fb)>(
         m, "binary_slicer_fb", D(binary_slicer_fb))
 
         .def(py::init(&binary_slicer_fb::make), D(binary_slicer_fb, make))

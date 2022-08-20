@@ -35,7 +35,7 @@ void bind_decision_feedback_equalizer(py::module& m)
 
     py::class_<decision_feedback_equalizer,
                gr::sync_decimator,
-               std::shared_ptr<decision_feedback_equalizer>>(
+               PYBIND11_SH_DEF(decision_feedback_equalizer)>(
         m, "decision_feedback_equalizer", D(decision_feedback_equalizer))
 
         .def(py::init(&decision_feedback_equalizer::make),

@@ -31,7 +31,7 @@ template <class T>
 void bind_metrics_template(py::module& m, const char* classname)
 {
     using metrics = gr::trellis::metrics<T>;
-    py::class_<metrics, gr::block, gr::basic_block, std::shared_ptr<metrics>>(m,
+    py::class_<metrics, gr::block, gr::basic_block, PYBIND11_SH_DEF(metrics)>(m,
                                                                               classname)
         .def(py::init(&gr::trellis::metrics<T>::make),
              py::arg("O"),

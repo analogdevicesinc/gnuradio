@@ -38,7 +38,7 @@ void bind_pn_correlator_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<pn_correlator_cc>>(
+               PYBIND11_SH_DEF(pn_correlator_cc)>(
         m, "pn_correlator_cc", D(pn_correlator_cc))
 
         .def(py::init(&pn_correlator_cc::make),

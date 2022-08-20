@@ -36,7 +36,7 @@ void bind_tagged_stream_align(py::module& m)
     py::class_<tagged_stream_align,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<tagged_stream_align>>(
+               PYBIND11_SH_DEF(tagged_stream_align)>(
         m, "tagged_stream_align", D(tagged_stream_align))
 
         .def(py::init(&tagged_stream_align::make),

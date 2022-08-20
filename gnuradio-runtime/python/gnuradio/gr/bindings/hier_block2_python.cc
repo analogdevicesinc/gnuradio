@@ -35,7 +35,7 @@ void bind_hier_block2(py::module& m)
     py::class_<hier_block2,
                gr::basic_block,
                gr::msg_accepter,
-               std::shared_ptr<hier_block2>>(m, "hier_block2_pb", D(hier_block2))
+               PYBIND11_SH_DEF(hier_block2)>(m, "hier_block2_pb", D(hier_block2))
 
         .def(py::init(&gr::make_hier_block2),
              py::arg("name"),

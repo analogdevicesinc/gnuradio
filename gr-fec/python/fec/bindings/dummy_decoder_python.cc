@@ -36,7 +36,7 @@ void bind_dummy_decoder(py::module& m)
     using dummy_decoder = ::gr::fec::code::dummy_decoder;
 
 
-    py::class_<dummy_decoder, gr::fec::generic_decoder, std::shared_ptr<dummy_decoder>>(
+    py::class_<dummy_decoder, gr::fec::generic_decoder, PYBIND11_SH_DEF(dummy_decoder)>(
         m_code, "dummy_decoder", D(code, dummy_decoder))
 
         .def_static("make",

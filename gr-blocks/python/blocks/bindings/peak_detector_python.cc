@@ -34,7 +34,7 @@ void bind_peak_detector_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<peak_detector>>(m, classname)
+               PYBIND11_SH_DEF(peak_detector)>(m, classname)
         .def(py::init(&gr::blocks::peak_detector<T>::make),
              py::arg("threshold_factor_rise") = .25,
              py::arg("threshold_factor_fall") = .40,

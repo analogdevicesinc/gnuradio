@@ -38,7 +38,7 @@ void bind_mpsk_snr_est(py::module& m)
     using mpsk_snr_est_svr = ::gr::digital::mpsk_snr_est_svr;
 
 
-    py::class_<mpsk_snr_est, std::shared_ptr<mpsk_snr_est>>(
+    py::class_<mpsk_snr_est, PYBIND11_SH_DEF(mpsk_snr_est)>(
         m, "mpsk_snr_est", D(mpsk_snr_est))
 
         .def(py::init<double>(), py::arg("alpha"), D(mpsk_snr_est, mpsk_snr_est, 0))
@@ -76,7 +76,7 @@ void bind_mpsk_snr_est(py::module& m)
 
     py::class_<mpsk_snr_est_simple,
                gr::digital::mpsk_snr_est,
-               std::shared_ptr<mpsk_snr_est_simple>>(
+               PYBIND11_SH_DEF(mpsk_snr_est_simple)>(
         m, "mpsk_snr_est_simple", D(mpsk_snr_est_simple))
 
         .def(py::init<double>(),
@@ -101,7 +101,7 @@ void bind_mpsk_snr_est(py::module& m)
 
     py::class_<mpsk_snr_est_skew,
                gr::digital::mpsk_snr_est,
-               std::shared_ptr<mpsk_snr_est_skew>>(
+               PYBIND11_SH_DEF(mpsk_snr_est_skew)>(
         m, "mpsk_snr_est_skew", D(mpsk_snr_est_skew))
 
         .def(py::init<double>(),
@@ -126,7 +126,7 @@ void bind_mpsk_snr_est(py::module& m)
 
     py::class_<mpsk_snr_est_m2m4,
                gr::digital::mpsk_snr_est,
-               std::shared_ptr<mpsk_snr_est_m2m4>>(
+               PYBIND11_SH_DEF(mpsk_snr_est_m2m4)>(
         m, "mpsk_snr_est_m2m4", D(mpsk_snr_est_m2m4))
 
         .def(py::init<double>(),
@@ -149,7 +149,7 @@ void bind_mpsk_snr_est(py::module& m)
         ;
 
 
-    py::class_<snr_est_m2m4, gr::digital::mpsk_snr_est, std::shared_ptr<snr_est_m2m4>>(
+    py::class_<snr_est_m2m4, gr::digital::mpsk_snr_est, PYBIND11_SH_DEF(snr_est_m2m4)>(
         m, "snr_est_m2m4", D(snr_est_m2m4))
 
         .def(py::init<double, double, double>(),
@@ -176,7 +176,7 @@ void bind_mpsk_snr_est(py::module& m)
 
     py::class_<mpsk_snr_est_svr,
                gr::digital::mpsk_snr_est,
-               std::shared_ptr<mpsk_snr_est_svr>>(
+               PYBIND11_SH_DEF(mpsk_snr_est_svr)>(
         m, "mpsk_snr_est_svr", D(mpsk_snr_est_svr))
 
         .def(py::init<double>(),

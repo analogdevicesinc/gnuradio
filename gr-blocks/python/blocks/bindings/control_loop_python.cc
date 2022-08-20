@@ -33,7 +33,7 @@ void bind_control_loop(py::module& m)
     using control_loop = ::gr::blocks::control_loop;
 
 
-    py::class_<control_loop, std::shared_ptr<control_loop>>(
+    py::class_<control_loop, PYBIND11_SH_DEF(control_loop)>(
         m, "control_loop", D(control_loop))
 
         .def(py::init<>(), D(control_loop, control_loop, 0))

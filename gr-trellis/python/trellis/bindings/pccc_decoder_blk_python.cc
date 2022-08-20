@@ -35,7 +35,7 @@ void bind_pccc_decoder_blk_template(py::module& m, const char* classname)
     py::class_<pccc_decoder_blk,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<pccc_decoder_blk>>(m, classname)
+               PYBIND11_SH_DEF(pccc_decoder_blk)>(m, classname)
         .def(py::init(&gr::trellis::pccc_decoder_blk<T>::make),
              py::arg("FSM1"),
              py::arg("FSM2"),

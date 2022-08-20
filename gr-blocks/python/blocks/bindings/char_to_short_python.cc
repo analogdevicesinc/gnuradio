@@ -37,7 +37,7 @@ void bind_char_to_short(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<char_to_short>>(m, "char_to_short", D(char_to_short))
+               PYBIND11_SH_DEF(char_to_short)>(m, "char_to_short", D(char_to_short))
 
         .def(py::init(&char_to_short::make), py::arg("vlen") = 1, D(char_to_short, make))
 

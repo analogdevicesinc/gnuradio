@@ -37,7 +37,7 @@ void bind_agc_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<agc_cc>>(m, "agc_cc", D(agc_cc))
+               PYBIND11_SH_DEF(agc_cc)>(m, "agc_cc", D(agc_cc))
 
         .def(py::init(&agc_cc::make),
              py::arg("rate") = 1.0E-4,

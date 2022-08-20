@@ -33,7 +33,7 @@ void bind_file_sink_base(py::module& m)
     using file_sink_base = ::gr::blocks::file_sink_base;
 
 
-    py::class_<file_sink_base, std::shared_ptr<file_sink_base>>(
+    py::class_<file_sink_base, PYBIND11_SH_DEF(file_sink_base)>(
         m, "file_sink_base", D(file_sink_base))
 
         .def(py::init<>(), D(file_sink_base, file_sink_base))

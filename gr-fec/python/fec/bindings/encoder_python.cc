@@ -33,7 +33,7 @@ void bind_encoder(py::module& m)
     using encoder = ::gr::fec::encoder;
 
 
-    py::class_<encoder, gr::block, gr::basic_block, std::shared_ptr<encoder>>(
+    py::class_<encoder, gr::block, gr::basic_block, PYBIND11_SH_DEF(encoder)>(
         m, "encoder", D(encoder))
 
         .def(py::init(&encoder::make),

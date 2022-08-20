@@ -35,7 +35,7 @@ void bind_sink(py::module& m)
     using sink = ::gr::soapy::sink;
 
 
-    py::class_<sink, gr::soapy::block, gr::block, gr::basic_block, std::shared_ptr<sink>>(
+    py::class_<sink, gr::soapy::block, gr::block, gr::basic_block, PYBIND11_SH_DEF(sink)>(
         m, "sink", D(sink))
 
         .def(py::init(&sink::make),

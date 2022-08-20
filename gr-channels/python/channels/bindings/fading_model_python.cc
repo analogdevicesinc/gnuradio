@@ -37,7 +37,7 @@ void bind_fading_model(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<fading_model>>(m, "fading_model", D(fading_model))
+               PYBIND11_SH_DEF(fading_model)>(m, "fading_model", D(fading_model))
 
         .def(py::init(&fading_model::make),
              py::arg("N"),

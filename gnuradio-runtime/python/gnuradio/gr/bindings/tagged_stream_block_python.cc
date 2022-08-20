@@ -36,7 +36,7 @@ void bind_tagged_stream_block(py::module& m)
     py::class_<tagged_stream_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<tagged_stream_block>>(
+               PYBIND11_SH_DEF(tagged_stream_block)>(
         m, "tagged_stream_block", D(tagged_stream_block))
 
 

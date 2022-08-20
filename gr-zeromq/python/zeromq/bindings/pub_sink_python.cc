@@ -37,7 +37,7 @@ void bind_pub_sink(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<pub_sink>>(m, "pub_sink", D(pub_sink))
+               PYBIND11_SH_DEF(pub_sink)>(m, "pub_sink", D(pub_sink))
 
         .def(py::init(&pub_sink::make),
              py::arg("itemsize"),

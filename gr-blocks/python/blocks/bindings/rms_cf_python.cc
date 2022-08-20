@@ -37,7 +37,7 @@ void bind_rms_cf(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<rms_cf>>(m, "rms_cf", D(rms_cf))
+               PYBIND11_SH_DEF(rms_cf)>(m, "rms_cf", D(rms_cf))
 
         .def(py::init(&rms_cf::make), py::arg("alpha") = 1.0E-4, D(rms_cf, make))
 

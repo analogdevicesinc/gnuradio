@@ -39,7 +39,7 @@ void bind_edit_box_msg(py::module& m)
     using edit_box_msg = ::gr::qtgui::edit_box_msg;
 
 
-    py::class_<edit_box_msg, gr::block, gr::basic_block, std::shared_ptr<edit_box_msg>>(
+    py::class_<edit_box_msg, gr::block, gr::basic_block, PYBIND11_SH_DEF(edit_box_msg)>(
         m, "edit_box_msg", D(edit_box_msg))
 
         .def(py::init(&edit_box_msg::make),

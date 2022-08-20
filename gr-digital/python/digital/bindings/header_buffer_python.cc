@@ -33,7 +33,7 @@ void bind_header_buffer(py::module& m)
     using header_buffer = ::gr::digital::header_buffer;
 
 
-    py::class_<header_buffer, std::shared_ptr<header_buffer>>(
+    py::class_<header_buffer, PYBIND11_SH_DEF(header_buffer)>(
         m, "header_buffer", D(header_buffer))
 
         .def(py::init<uint8_t*>(),

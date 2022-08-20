@@ -33,7 +33,7 @@ void bind_head(py::module& m)
     using head = ::gr::blocks::head;
 
 
-    py::class_<head, gr::sync_block, gr::block, gr::basic_block, std::shared_ptr<head>>(
+    py::class_<head, gr::sync_block, gr::block, gr::basic_block, PYBIND11_SH_DEF(head)>(
         m, "head", D(head))
 
         .def(py::init(&head::make),

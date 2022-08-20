@@ -46,7 +46,7 @@ void bind_time_sink_c(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<time_sink_c>>(m, "time_sink_c", D(time_sink_c))
+               PYBIND11_SH_DEF(time_sink_c)>(m, "time_sink_c", D(time_sink_c))
 
         .def(py::init(&time_sink_c::make),
              py::arg("size"),

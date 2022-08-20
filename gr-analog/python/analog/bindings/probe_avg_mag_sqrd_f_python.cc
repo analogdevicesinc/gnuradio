@@ -37,7 +37,7 @@ void bind_probe_avg_mag_sqrd_f(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<probe_avg_mag_sqrd_f>>(
+               PYBIND11_SH_DEF(probe_avg_mag_sqrd_f)>(
         m, "probe_avg_mag_sqrd_f", D(probe_avg_mag_sqrd_f))
 
         .def(py::init(&probe_avg_mag_sqrd_f::make),

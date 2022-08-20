@@ -36,7 +36,7 @@ void bind_constellation_decoder_cb(py::module& m)
     py::class_<constellation_decoder_cb,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<constellation_decoder_cb>>(
+               PYBIND11_SH_DEF(constellation_decoder_cb)>(
         m, "constellation_decoder_cb", D(constellation_decoder_cb))
 
         .def(py::init(&constellation_decoder_cb::make),

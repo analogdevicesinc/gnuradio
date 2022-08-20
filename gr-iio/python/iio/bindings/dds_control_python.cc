@@ -33,7 +33,7 @@ void bind_dds_control(py::module& m)
     using dds_control = gr::iio::dds_control;
 
 
-    py::class_<dds_control, gr::block, gr::basic_block, std::shared_ptr<dds_control>>(
+    py::class_<dds_control, gr::block, gr::basic_block, PYBIND11_SH_DEF(dds_control)>(
         m, "dds_control", D(dds_control))
 
         .def(py::init(&dds_control::make),

@@ -33,7 +33,7 @@ void bind_decoder(py::module& m)
     using decoder = ::gr::fec::decoder;
 
 
-    py::class_<decoder, gr::block, gr::basic_block, std::shared_ptr<decoder>>(
+    py::class_<decoder, gr::block, gr::basic_block, PYBIND11_SH_DEF(decoder)>(
         m, "decoder", D(decoder))
 
         .def(py::init(&decoder::make),

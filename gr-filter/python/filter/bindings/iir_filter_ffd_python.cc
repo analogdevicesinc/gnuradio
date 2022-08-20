@@ -37,7 +37,7 @@ void bind_iir_filter_ffd(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<iir_filter_ffd>>(m, "iir_filter_ffd", D(iir_filter_ffd))
+               PYBIND11_SH_DEF(iir_filter_ffd)>(m, "iir_filter_ffd", D(iir_filter_ffd))
 
         .def(py::init(&iir_filter_ffd::make),
              py::arg("fftaps"),

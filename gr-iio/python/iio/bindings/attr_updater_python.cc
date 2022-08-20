@@ -33,7 +33,7 @@ void bind_attr_updater(py::module& m)
     using attr_updater = gr::iio::attr_updater;
 
 
-    py::class_<attr_updater, gr::block, gr::basic_block, std::shared_ptr<attr_updater>>(
+    py::class_<attr_updater, gr::block, gr::basic_block, PYBIND11_SH_DEF(attr_updater)>(
         m, "attr_updater", D(attr_updater))
 
         .def(py::init(&attr_updater::make),

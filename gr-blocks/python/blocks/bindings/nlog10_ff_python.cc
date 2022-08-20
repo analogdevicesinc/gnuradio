@@ -37,7 +37,7 @@ void bind_nlog10_ff(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<nlog10_ff>>(m, "nlog10_ff", D(nlog10_ff))
+               PYBIND11_SH_DEF(nlog10_ff)>(m, "nlog10_ff", D(nlog10_ff))
 
         .def(py::init(&nlog10_ff::make),
              py::arg("n") = 1.,

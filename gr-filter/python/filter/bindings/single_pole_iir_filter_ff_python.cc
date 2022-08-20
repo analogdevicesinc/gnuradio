@@ -37,7 +37,7 @@ void bind_single_pole_iir_filter_ff(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<single_pole_iir_filter_ff>>(
+               PYBIND11_SH_DEF(single_pole_iir_filter_ff)>(
         m, "single_pole_iir_filter_ff", D(single_pole_iir_filter_ff))
 
         .def(py::init(&single_pole_iir_filter_ff::make),

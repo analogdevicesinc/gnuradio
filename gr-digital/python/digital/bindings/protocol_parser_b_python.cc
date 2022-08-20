@@ -37,7 +37,7 @@ void bind_protocol_parser_b(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<protocol_parser_b>>(
+               PYBIND11_SH_DEF(protocol_parser_b)>(
         m, "protocol_parser_b", D(protocol_parser_b))
 
         .def(py::init(&protocol_parser_b::make),

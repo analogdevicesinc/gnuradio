@@ -37,7 +37,7 @@ void bind_stretch_ff(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<stretch_ff>>(m, "stretch_ff", D(stretch_ff))
+               PYBIND11_SH_DEF(stretch_ff)>(m, "stretch_ff", D(stretch_ff))
 
         .def(py::init(&stretch_ff::make),
              py::arg("lo"),

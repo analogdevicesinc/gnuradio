@@ -36,7 +36,7 @@ void bind_tags_to_pdu_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<tags_to_pdu>>(m, classname)
+               PYBIND11_SH_DEF(tags_to_pdu)>(m, classname)
         .def(py::init(&gr::pdu::tags_to_pdu<T>::make),
              py::arg("start_tag"),
              py::arg("end_tag"),

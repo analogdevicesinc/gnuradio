@@ -33,7 +33,7 @@ void bind_push_msg_sink(py::module& m)
     using push_msg_sink = ::gr::zeromq::push_msg_sink;
 
 
-    py::class_<push_msg_sink, gr::block, gr::basic_block, std::shared_ptr<push_msg_sink>>(
+    py::class_<push_msg_sink, gr::block, gr::basic_block, PYBIND11_SH_DEF(push_msg_sink)>(
         m, "push_msg_sink", D(push_msg_sink))
 
         .def(py::init(&push_msg_sink::make),

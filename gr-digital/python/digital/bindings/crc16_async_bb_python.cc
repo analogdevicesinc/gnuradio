@@ -37,7 +37,7 @@ void bind_crc16_async_bb(py::module& m)
     py::class_<crc16_async_bb,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<crc16_async_bb>>(m, "crc16_async_bb", D(crc16_async_bb))
+               PYBIND11_SH_DEF(crc16_async_bb)>(m, "crc16_async_bb", D(crc16_async_bb))
 
         .def(py::init(&crc16_async_bb::make),
              py::arg("check") = false,

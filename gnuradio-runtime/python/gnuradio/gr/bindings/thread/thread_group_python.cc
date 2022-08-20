@@ -22,7 +22,7 @@ void bind_thread_group(py::module& m)
     using thread_group = gr::thread_group;
 
 
-    py::class_<thread_group, std::shared_ptr<thread_group>>(m, "thread_group")
+    py::class_<thread_group, PYBIND11_SH_DEF(thread_group)>(m, "thread_group")
 
         .def(py::init<>())
 

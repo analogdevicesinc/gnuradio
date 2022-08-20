@@ -30,7 +30,7 @@ void bind_codec2_decode_ps(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<codec2_decode_ps>>(
+               PYBIND11_SH_DEF(codec2_decode_ps)>(
         m, "codec2_decode_ps", D(codec2_decode_ps))
 
         .def(py::init(&codec2_decode_ps::make),

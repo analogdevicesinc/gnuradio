@@ -38,7 +38,7 @@ void bind_take_skip_to_pdu_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<take_skip_to_pdu>>(m, classname)
+               PYBIND11_SH_DEF(take_skip_to_pdu)>(m, classname)
 
         .def(py::init(&gr::pdu::take_skip_to_pdu<T>::make),
              py::arg("take"),

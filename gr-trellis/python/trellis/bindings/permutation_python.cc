@@ -37,7 +37,7 @@ void bind_permutation(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<permutation>>(m, "permutation", D(permutation))
+               PYBIND11_SH_DEF(permutation)>(m, "permutation", D(permutation))
 
         .def(py::init(&permutation::make),
              py::arg("K"),

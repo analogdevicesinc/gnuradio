@@ -36,7 +36,7 @@ void bind_pfb_arb_resampler_fff(py::module& m)
     py::class_<pfb_arb_resampler_fff,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<pfb_arb_resampler_fff>>(
+               PYBIND11_SH_DEF(pfb_arb_resampler_fff)>(
         m, "pfb_arb_resampler_fff", D(pfb_arb_resampler_fff))
 
         .def(py::init(&pfb_arb_resampler_fff::make),

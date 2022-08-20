@@ -37,7 +37,7 @@ void bind_endian_swap(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<endian_swap>>(m, "endian_swap", D(endian_swap))
+               PYBIND11_SH_DEF(endian_swap)>(m, "endian_swap", D(endian_swap))
 
         .def(py::init(&endian_swap::make),
              py::arg("item_size_bytes") = 1,

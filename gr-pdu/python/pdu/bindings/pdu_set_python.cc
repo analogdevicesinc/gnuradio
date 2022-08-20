@@ -33,7 +33,7 @@ void bind_pdu_set(py::module& m)
     using pdu_set = ::gr::pdu::pdu_set;
 
 
-    py::class_<pdu_set, gr::block, gr::basic_block, std::shared_ptr<pdu_set>>(
+    py::class_<pdu_set, gr::block, gr::basic_block, PYBIND11_SH_DEF(pdu_set)>(
         m, "pdu_set", D(pdu_set))
 
         .def(py::init(&pdu_set::make), py::arg("k"), py::arg("v"), D(pdu_set, make))

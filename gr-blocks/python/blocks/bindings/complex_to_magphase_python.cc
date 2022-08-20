@@ -37,7 +37,7 @@ void bind_complex_to_magphase(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<complex_to_magphase>>(
+               PYBIND11_SH_DEF(complex_to_magphase)>(
         m, "complex_to_magphase", D(complex_to_magphase))
 
         .def(py::init(&complex_to_magphase::make),

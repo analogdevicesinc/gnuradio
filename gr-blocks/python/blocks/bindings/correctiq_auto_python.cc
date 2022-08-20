@@ -37,7 +37,7 @@ void bind_correctiq_auto(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<correctiq_auto>>(m, "correctiq_auto", D(correctiq_auto))
+               PYBIND11_SH_DEF(correctiq_auto)>(m, "correctiq_auto", D(correctiq_auto))
 
         .def(py::init(&correctiq_auto::make),
              py::arg("samp_rate"),

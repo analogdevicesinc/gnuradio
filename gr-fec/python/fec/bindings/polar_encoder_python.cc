@@ -36,7 +36,7 @@ void bind_polar_encoder(py::module& m)
     using polar_encoder = ::gr::fec::code::polar_encoder;
 
 
-    py::class_<polar_encoder, gr::fec::generic_encoder, std::shared_ptr<polar_encoder>>(
+    py::class_<polar_encoder, gr::fec::generic_encoder, PYBIND11_SH_DEF(polar_encoder)>(
         m_code, "polar_encoder", D(code, polar_encoder))
 
         .def_static("make",

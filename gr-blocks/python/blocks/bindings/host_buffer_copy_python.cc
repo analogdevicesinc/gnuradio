@@ -37,7 +37,7 @@ void bind_host_buffer_copy(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<host_buffer_copy>>(
+               PYBIND11_SH_DEF(host_buffer_copy)>(
         m, "host_buffer_copy", D(host_buffer_copy))
 
         .def(py::init(&host_buffer_copy::make),

@@ -36,7 +36,7 @@ void bind_clock_recovery_mm_ff(py::module& m)
     py::class_<clock_recovery_mm_ff,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<clock_recovery_mm_ff>>(
+               PYBIND11_SH_DEF(clock_recovery_mm_ff)>(
         m, "clock_recovery_mm_ff", D(clock_recovery_mm_ff))
 
         .def(py::init(&clock_recovery_mm_ff::make),

@@ -33,7 +33,7 @@ void bind_ldpc_encoder(py::module& m)
     using ldpc_encoder = ::gr::fec::ldpc_encoder;
 
 
-    py::class_<ldpc_encoder, gr::fec::generic_encoder, std::shared_ptr<ldpc_encoder>>(
+    py::class_<ldpc_encoder, gr::fec::generic_encoder, PYBIND11_SH_DEF(ldpc_encoder)>(
         m, "ldpc_encoder", D(ldpc_encoder))
 
         .def_static(

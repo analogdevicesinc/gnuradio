@@ -31,7 +31,7 @@ void bind_wavfile(py::module& m)
 {
     using wav_header_info = ::gr::blocks::wav_header_info;
 
-    py::class_<wav_header_info, std::shared_ptr<wav_header_info>>(m, "wav_header_info")
+    py::class_<wav_header_info, PYBIND11_SH_DEF(wav_header_info)>(m, "wav_header_info")
         .def_readwrite("sample_rate", &wav_header_info::sample_rate)
         .def_readwrite("nchans", &wav_header_info::nchans)
         .def_readwrite("bytes_per_sample", &wav_header_info::bytes_per_sample)

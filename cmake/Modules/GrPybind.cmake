@@ -42,7 +42,7 @@ target_include_directories(${name}_python PRIVATE
 target_link_libraries(${name}_python PRIVATE ${Boost_LIBRARIES} pybind11::pybind11 Python::Module Python::NumPy gnuradio-${MODULE_NAME})
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
    CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(${name}_python PRIVATE -Wno-unused-variable) # disable warnings for docstring templates
+    target_compile_options(${name}_python PRIVATE -Wno-unused-variable -DPYBIND11_USE_SMART_HOLDER_AS_DEFAULT ) # disable warnings for docstring templates
 endif(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
       CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 add_dependencies(${name}_python ${name}_docstrings)
@@ -172,7 +172,7 @@ endif()
 target_link_libraries(${name}_python PRIVATE ${Boost_LIBRARIES} pybind11::pybind11 Python::Module Python::NumPy gnuradio-${MODULE_NAME})
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
    CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(${name}_python PRIVATE -Wno-unused-variable) # disable warnings for docstring templates
+    target_compile_options(${name}_python PRIVATE -Wno-unused-variable -DPYBIND11_USE_SMART_HOLDER_AS_DEFAULT) # disable warnings for docstring templates
 endif(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
       CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 if(NOT SNDFILE_FOUND AND ${name} STREQUAL blocks)
@@ -306,7 +306,7 @@ target_include_directories(${name}_python PRIVATE
 target_link_libraries(${name}_python PRIVATE ${Boost_LIBRARIES} pybind11::pybind11 Python::Module Python::NumPy gnuradio-${MODULE_NAME})
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
    CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(${name}_python PRIVATE -Wno-unused-variable) # disable warnings for docstring templates
+    target_compile_options(${name}_python PRIVATE -Wno-unused-variable -DPYBIND11_USE_SMART_HOLDER_AS_DEFAULT ) # disable warnings for docstring templates
 endif(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR
       CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 add_dependencies(${name}_python ${name}_docstrings ${regen_targets})

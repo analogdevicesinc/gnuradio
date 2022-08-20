@@ -36,7 +36,7 @@ void bind_dvbt_reed_solomon_enc(py::module& m)
     py::class_<dvbt_reed_solomon_enc,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt_reed_solomon_enc>>(
+               PYBIND11_SH_DEF(dvbt_reed_solomon_enc)>(
         m, "dvbt_reed_solomon_enc", D(dvbt_reed_solomon_enc))
 
         .def(py::init(&dvbt_reed_solomon_enc::make),

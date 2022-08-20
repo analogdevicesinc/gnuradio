@@ -37,7 +37,7 @@ void bind_diff_encoder_bb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<diff_encoder_bb>>(m, "diff_encoder_bb", D(diff_encoder_bb))
+               PYBIND11_SH_DEF(diff_encoder_bb)>(m, "diff_encoder_bb", D(diff_encoder_bb))
 
         .def(py::init(&diff_encoder_bb::make),
              py::arg("modulus"),

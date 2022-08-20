@@ -36,7 +36,7 @@ void bind_catv_reed_solomon_enc_bb(py::module& m)
     py::class_<catv_reed_solomon_enc_bb,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<catv_reed_solomon_enc_bb>>(
+               PYBIND11_SH_DEF(catv_reed_solomon_enc_bb)>(
         m, "catv_reed_solomon_enc_bb", D(catv_reed_solomon_enc_bb))
 
         .def(py::init(&catv_reed_solomon_enc_bb::make), D(catv_reed_solomon_enc_bb, make))

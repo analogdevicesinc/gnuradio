@@ -36,7 +36,7 @@ void bind_polyphase_filterbank(py::module& m)
     using polyphase_filterbank = ::gr::filter::kernel::polyphase_filterbank;
 
 
-    py::class_<polyphase_filterbank, std::shared_ptr<polyphase_filterbank>>(
+    py::class_<polyphase_filterbank, PYBIND11_SH_DEF(polyphase_filterbank)>(
         m_kernel, "polyphase_filterbank", D(kernel, polyphase_filterbank))
 
         .def(py::init<unsigned int, std::vector<float, std::allocator<float>> const&>(),

@@ -36,7 +36,7 @@ void bind_constellation_metrics_cf(py::module& m)
     py::class_<constellation_metrics_cf,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<constellation_metrics_cf>>(
+               PYBIND11_SH_DEF(constellation_metrics_cf)>(
         m, "constellation_metrics_cf", D(constellation_metrics_cf))
 
         .def(py::init(&constellation_metrics_cf::make),

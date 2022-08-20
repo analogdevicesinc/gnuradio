@@ -36,7 +36,7 @@ void bind_header_payload_demux(py::module& m)
     py::class_<header_payload_demux,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<header_payload_demux>>(
+               PYBIND11_SH_DEF(header_payload_demux)>(
         m, "header_payload_demux", D(header_payload_demux))
 
         .def(py::init(&header_payload_demux::make),

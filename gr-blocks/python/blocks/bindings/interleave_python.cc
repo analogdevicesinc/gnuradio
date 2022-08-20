@@ -33,7 +33,7 @@ void bind_interleave(py::module& m)
     using interleave = ::gr::blocks::interleave;
 
 
-    py::class_<interleave, gr::block, gr::basic_block, std::shared_ptr<interleave>>(
+    py::class_<interleave, gr::block, gr::basic_block, PYBIND11_SH_DEF(interleave)>(
         m, "interleave", D(interleave))
 
         .def(py::init(&interleave::make),

@@ -35,7 +35,7 @@ void bind_wavfile_sink(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<wavfile_sink>>(m, "wavfile_sink", D(wavfile_sink))
+               PYBIND11_SH_DEF(wavfile_sink)>(m, "wavfile_sink", D(wavfile_sink))
 
         .def(py::init(&wavfile_sink::make),
              py::arg("filename"),

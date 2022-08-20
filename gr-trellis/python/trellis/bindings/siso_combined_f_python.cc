@@ -36,7 +36,7 @@ void bind_siso_combined_f(py::module& m)
     py::class_<siso_combined_f,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<siso_combined_f>>(m, "siso_combined_f", D(siso_combined_f))
+               PYBIND11_SH_DEF(siso_combined_f)>(m, "siso_combined_f", D(siso_combined_f))
 
         .def(py::init(&siso_combined_f::make),
              py::arg("FSM"),

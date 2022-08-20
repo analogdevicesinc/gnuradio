@@ -33,7 +33,7 @@ void bind_ber_bf(py::module& m)
     using ber_bf = ::gr::fec::ber_bf;
 
 
-    py::class_<ber_bf, gr::block, gr::basic_block, std::shared_ptr<ber_bf>>(
+    py::class_<ber_bf, gr::block, gr::basic_block, PYBIND11_SH_DEF(ber_bf)>(
         m, "ber_bf", D(ber_bf))
 
         .def(py::init(&ber_bf::make),

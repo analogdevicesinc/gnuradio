@@ -37,7 +37,7 @@ void bind_add_const_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<add_const_cc>>(m, "add_const_cc", D(add_const_cc))
+               PYBIND11_SH_DEF(add_const_cc)>(m, "add_const_cc", D(add_const_cc))
 
         .def(py::init(&add_const_cc::make), py::arg("k"), D(add_const_cc, make))
 

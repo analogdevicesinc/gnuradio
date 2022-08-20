@@ -36,7 +36,7 @@ void bind_dvbt_energy_dispersal(py::module& m)
     py::class_<dvbt_energy_dispersal,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt_energy_dispersal>>(
+               PYBIND11_SH_DEF(dvbt_energy_dispersal)>(
         m, "dvbt_energy_dispersal", D(dvbt_energy_dispersal))
 
         .def(py::init(&dvbt_energy_dispersal::make),

@@ -30,7 +30,7 @@ void bind_sub_template(py::module& m, const char* classname)
 {
     using sub = gr::blocks::sub<T>;
 
-    py::class_<sub, gr::sync_block, gr::block, gr::basic_block, std::shared_ptr<sub>>(
+    py::class_<sub, gr::sync_block, gr::block, gr::basic_block, PYBIND11_SH_DEF(sub)>(
         m, classname)
         .def(py::init(&gr::blocks::sub<T>::make), py::arg("vlen") = 1);
 }

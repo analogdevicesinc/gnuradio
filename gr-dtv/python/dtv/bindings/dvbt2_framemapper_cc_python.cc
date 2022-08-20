@@ -36,7 +36,7 @@ void bind_dvbt2_framemapper_cc(py::module& m)
     py::class_<dvbt2_framemapper_cc,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt2_framemapper_cc>>(
+               PYBIND11_SH_DEF(dvbt2_framemapper_cc)>(
         m, "dvbt2_framemapper_cc", D(dvbt2_framemapper_cc))
 
         .def(py::init(&dvbt2_framemapper_cc::make),

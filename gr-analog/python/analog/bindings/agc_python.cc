@@ -37,7 +37,7 @@ void bind_agc(py::module& m)
     using agc_ff = ::gr::analog::kernel::agc_ff;
 
 
-    py::class_<agc_cc, std::shared_ptr<agc_cc>>(m_kernel, "agc_cc", D(kernel, agc_cc))
+    py::class_<agc_cc, PYBIND11_SH_DEF(agc_cc)>(m_kernel, "agc_cc", D(kernel, agc_cc))
 
         .def(py::init<float, float, float, float>(),
              py::arg("rate") = 1.0E-4,
@@ -93,7 +93,7 @@ void bind_agc(py::module& m)
         ;
 
 
-    py::class_<agc_ff, std::shared_ptr<agc_ff>>(m_kernel, "agc_ff", D(kernel, agc_ff))
+    py::class_<agc_ff, PYBIND11_SH_DEF(agc_ff)>(m_kernel, "agc_ff", D(kernel, agc_ff))
 
         .def(py::init<float, float, float, float>(),
              py::arg("rate") = 1.0E-4,

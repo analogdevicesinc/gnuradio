@@ -37,7 +37,7 @@ void bind_iir_filter_ccf(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<iir_filter_ccf>>(m, "iir_filter_ccf", D(iir_filter_ccf))
+               PYBIND11_SH_DEF(iir_filter_ccf)>(m, "iir_filter_ccf", D(iir_filter_ccf))
 
         .def(py::init(&iir_filter_ccf::make),
              py::arg("fftaps"),

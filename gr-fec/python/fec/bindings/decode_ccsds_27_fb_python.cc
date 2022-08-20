@@ -38,7 +38,7 @@ void bind_decode_ccsds_27_fb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<decode_ccsds_27_fb>>(
+               PYBIND11_SH_DEF(decode_ccsds_27_fb)>(
         m, "decode_ccsds_27_fb", D(decode_ccsds_27_fb))
 
         .def(py::init(&decode_ccsds_27_fb::make), D(decode_ccsds_27_fb, make))

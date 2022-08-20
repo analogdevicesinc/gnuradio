@@ -33,7 +33,7 @@ void bind_basic_block(py::module& m)
     using basic_block = ::gr::basic_block;
 
 
-    py::class_<basic_block, gr::msg_accepter, std::shared_ptr<basic_block>>(
+    py::class_<basic_block, gr::msg_accepter, PYBIND11_SH_DEF(basic_block)>(
         m, "basic_block", D(basic_block))
 
 

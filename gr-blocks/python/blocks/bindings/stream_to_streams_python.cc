@@ -38,7 +38,7 @@ void bind_stream_to_streams(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<stream_to_streams>>(
+               PYBIND11_SH_DEF(stream_to_streams)>(
         m, "stream_to_streams", D(stream_to_streams))
 
         .def(py::init(&stream_to_streams::make),

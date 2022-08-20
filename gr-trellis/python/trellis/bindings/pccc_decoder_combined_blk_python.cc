@@ -35,7 +35,7 @@ void bind_pccc_decoder_combined_blk_template(py::module& m, const char* classnam
     py::class_<pccc_decoder_combined_blk,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<pccc_decoder_combined_blk>>(m, classname)
+               PYBIND11_SH_DEF(pccc_decoder_combined_blk)>(m, classname)
         .def(py::init(&gr::trellis::pccc_decoder_combined_blk<IN_T, OUT_T>::make),
              py::arg("FSMo"),
              py::arg("STo0"),

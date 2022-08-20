@@ -33,7 +33,7 @@ void bind_prefs(py::module& m)
     using prefs = ::gr::prefs;
 
 
-    py::class_<prefs, std::shared_ptr<prefs>>(m, "prefs", D(prefs))
+    py::class_<prefs, PYBIND11_SH_DEF(prefs)>(m, "prefs", D(prefs))
 
         .def(py::init<>(), D(prefs, prefs))
 

@@ -37,7 +37,7 @@ void bind_throttle(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<throttle>>(m, "throttle", D(throttle))
+               PYBIND11_SH_DEF(throttle)>(m, "throttle", D(throttle))
 
         .def(py::init(&throttle::make),
              py::arg("itemsize"),

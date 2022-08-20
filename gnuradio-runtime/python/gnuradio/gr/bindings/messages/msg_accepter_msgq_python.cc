@@ -22,7 +22,7 @@ void bind_messages_msg_accepter_msgq(py::module& m)
     using msg_accepter_msgq = gr::messages::msg_accepter_msgq;
 
 
-    py::class_<msg_accepter_msgq, std::shared_ptr<msg_accepter_msgq>>(
+    py::class_<msg_accepter_msgq, PYBIND11_SH_DEF(msg_accepter_msgq)>(
         m, "messages_msg_accepter_msgq")
 
         .def(py::init<gr::messages::msg_queue_sptr>(), py::arg("msgq"))

@@ -36,7 +36,7 @@ void bind_pfb_clock_sync_fff(py::module& m)
     py::class_<pfb_clock_sync_fff,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<pfb_clock_sync_fff>>(
+               PYBIND11_SH_DEF(pfb_clock_sync_fff)>(
         m, "pfb_clock_sync_fff", D(pfb_clock_sync_fff))
 
         .def(py::init(&pfb_clock_sync_fff::make),

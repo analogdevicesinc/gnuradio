@@ -34,7 +34,7 @@ void bind_blockinterleaver_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<blockinterleaver>>(m, classname)
+               PYBIND11_SH_DEF(blockinterleaver)>(m, classname)
         .def(py::init(&gr::blocks::blockinterleaver_xx<T>::make),
              py::arg("interleaver_indices"),
              py::arg("interleaver_mode"),

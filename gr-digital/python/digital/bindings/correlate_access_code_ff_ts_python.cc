@@ -36,7 +36,7 @@ void bind_correlate_access_code_ff_ts(py::module& m)
     py::class_<correlate_access_code_ff_ts,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<correlate_access_code_ff_ts>>(
+               PYBIND11_SH_DEF(correlate_access_code_ff_ts)>(
         m, "correlate_access_code_ff_ts", D(correlate_access_code_ff_ts))
 
         .def(py::init(&correlate_access_code_ff_ts::make),

@@ -29,7 +29,7 @@ void bind_ulaw_decode_bs(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<ulaw_decode_bs>>(m, "ulaw_decode_bs", D(ulaw_decode_bs))
+               PYBIND11_SH_DEF(ulaw_decode_bs)>(m, "ulaw_decode_bs", D(ulaw_decode_bs))
 
         .def(py::init(&ulaw_decode_bs::make), D(ulaw_decode_bs, make))
 

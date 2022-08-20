@@ -36,7 +36,7 @@ void bind_plateau_detector_fb(py::module& m)
     py::class_<plateau_detector_fb,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<plateau_detector_fb>>(
+               PYBIND11_SH_DEF(plateau_detector_fb)>(
         m, "plateau_detector_fb", D(plateau_detector_fb))
 
         .def(py::init(&plateau_detector_fb::make),

@@ -33,7 +33,7 @@ void bind_lfsr_15_1_0(py::module& m)
     using lfsr_15_1_0 = ::gr::blocks::lfsr_15_1_0;
 
 
-    py::class_<lfsr_15_1_0, std::shared_ptr<lfsr_15_1_0>>(
+    py::class_<lfsr_15_1_0, PYBIND11_SH_DEF(lfsr_15_1_0)>(
         m, "lfsr_15_1_0", D(lfsr_15_1_0))
 
         .def(py::init<>(), D(lfsr_15_1_0, lfsr_15_1_0, 0))

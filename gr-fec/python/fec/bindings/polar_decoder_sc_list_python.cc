@@ -38,7 +38,7 @@ void bind_polar_decoder_sc_list(py::module& m)
 
     py::class_<polar_decoder_sc_list,
                gr::fec::code::polar_decoder_common,
-               std::shared_ptr<polar_decoder_sc_list>>(
+               PYBIND11_SH_DEF(polar_decoder_sc_list)>(
         m_code, "polar_decoder_sc_list", D(code, polar_decoder_sc_list))
 
         .def_static("make",

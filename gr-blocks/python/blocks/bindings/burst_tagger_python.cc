@@ -37,7 +37,7 @@ void bind_burst_tagger(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<burst_tagger>>(m, "burst_tagger", D(burst_tagger))
+               PYBIND11_SH_DEF(burst_tagger)>(m, "burst_tagger", D(burst_tagger))
 
         .def(py::init(&burst_tagger::make), py::arg("itemsize"), D(burst_tagger, make))
 

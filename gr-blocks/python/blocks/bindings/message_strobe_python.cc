@@ -36,7 +36,7 @@ void bind_message_strobe(py::module& m)
     py::class_<message_strobe,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<message_strobe>>(m, "message_strobe", D(message_strobe))
+               PYBIND11_SH_DEF(message_strobe)>(m, "message_strobe", D(message_strobe))
 
         .def(py::init(&message_strobe::make),
              py::arg("msg"),

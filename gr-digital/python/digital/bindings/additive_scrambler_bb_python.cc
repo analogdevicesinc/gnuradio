@@ -37,7 +37,7 @@ void bind_additive_scrambler_bb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<additive_scrambler_bb>>(
+               PYBIND11_SH_DEF(additive_scrambler_bb)>(
         m, "additive_scrambler_bb", D(additive_scrambler_bb))
 
         .def(py::init(&additive_scrambler_bb::make),

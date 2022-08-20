@@ -33,7 +33,7 @@ void bind_header_format_base(py::module& m)
     using header_format_base = ::gr::digital::header_format_base;
 
 
-    py::class_<header_format_base, std::shared_ptr<header_format_base>>(
+    py::class_<header_format_base, PYBIND11_SH_DEF(header_format_base)>(
         m, "header_format_base", D(header_format_base))
 
         //.def(py::init<>(),D(header_format_base,header_format_base,0))

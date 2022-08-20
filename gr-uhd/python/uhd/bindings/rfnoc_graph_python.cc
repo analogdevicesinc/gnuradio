@@ -33,7 +33,7 @@ void bind_rfnoc_graph(py::module& m)
     using rfnoc_graph = ::gr::uhd::rfnoc_graph;
 
 
-    py::class_<rfnoc_graph, std::shared_ptr<rfnoc_graph>>(
+    py::class_<rfnoc_graph, PYBIND11_SH_DEF(rfnoc_graph)>(
         m, "rfnoc_graph", D(rfnoc_graph))
 
         .def(py::init(&rfnoc_graph::make), D(rfnoc_graph, make))

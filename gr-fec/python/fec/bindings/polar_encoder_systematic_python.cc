@@ -38,7 +38,7 @@ void bind_polar_encoder_systematic(py::module& m)
 
     py::class_<polar_encoder_systematic,
                gr::fec::generic_encoder,
-               std::shared_ptr<polar_encoder_systematic>>(
+               PYBIND11_SH_DEF(polar_encoder_systematic)>(
         m_code, "polar_encoder_systematic", D(code, polar_encoder_systematic))
 
         .def_static("make",

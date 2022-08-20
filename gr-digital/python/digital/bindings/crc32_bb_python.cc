@@ -37,7 +37,7 @@ void bind_crc32_bb(py::module& m)
                gr::tagged_stream_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<crc32_bb>>(m, "crc32_bb", D(crc32_bb))
+               PYBIND11_SH_DEF(crc32_bb)>(m, "crc32_bb", D(crc32_bb))
 
         .def(py::init(&crc32_bb::make),
              py::arg("check") = false,

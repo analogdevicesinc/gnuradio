@@ -34,7 +34,7 @@ void bind_noise_source_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<noise_source>>(m, classname)
+               PYBIND11_SH_DEF(noise_source)>(m, classname)
         .def(py::init(&gr::analog::noise_source<T>::make),
              py::arg("type"),
              py::arg("ampl"),

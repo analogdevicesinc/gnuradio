@@ -33,7 +33,7 @@ void bind_lfsr_32k(py::module& m)
     using lfsr_32k = ::gr::blocks::lfsr_32k;
 
 
-    py::class_<lfsr_32k, std::shared_ptr<lfsr_32k>>(m, "lfsr_32k", D(lfsr_32k))
+    py::class_<lfsr_32k, PYBIND11_SH_DEF(lfsr_32k)>(m, "lfsr_32k", D(lfsr_32k))
 
         .def(py::init<>(), D(lfsr_32k, lfsr_32k, 0))
         .def(py::init<gr::blocks::lfsr_32k const&>(),

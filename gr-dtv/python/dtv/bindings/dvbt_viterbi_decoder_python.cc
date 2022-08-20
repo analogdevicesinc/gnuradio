@@ -36,7 +36,7 @@ void bind_dvbt_viterbi_decoder(py::module& m)
     py::class_<dvbt_viterbi_decoder,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt_viterbi_decoder>>(
+               PYBIND11_SH_DEF(dvbt_viterbi_decoder)>(
         m, "dvbt_viterbi_decoder", D(dvbt_viterbi_decoder))
 
         .def(py::init(&dvbt_viterbi_decoder::make),

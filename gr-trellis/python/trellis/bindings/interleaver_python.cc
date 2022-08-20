@@ -33,7 +33,7 @@ void bind_interleaver(py::module& m)
     using interleaver = ::gr::trellis::interleaver;
 
 
-    py::class_<interleaver, std::shared_ptr<interleaver>>(
+    py::class_<interleaver, PYBIND11_SH_DEF(interleaver)>(
         m, "interleaver", D(interleaver))
 
         .def(py::init<>(), D(interleaver, interleaver, 0))

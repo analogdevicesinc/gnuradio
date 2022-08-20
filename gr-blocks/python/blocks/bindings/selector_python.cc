@@ -33,7 +33,7 @@ void bind_selector(py::module& m)
     using selector = ::gr::blocks::selector;
 
 
-    py::class_<selector, gr::block, gr::basic_block, std::shared_ptr<selector>>(
+    py::class_<selector, gr::block, gr::basic_block, PYBIND11_SH_DEF(selector)>(
         m, "selector", D(selector))
 
         .def(py::init(&selector::make),

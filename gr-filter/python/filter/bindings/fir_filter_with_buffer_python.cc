@@ -36,7 +36,7 @@ void bind_fir_filter_with_buffer(py::module& m)
     using fir_filter_with_buffer_ccf = gr::filter::kernel::fir_filter_with_buffer_ccf;
 
 
-    py::class_<fir_filter_with_buffer_fff, std::shared_ptr<fir_filter_with_buffer_fff>>(
+    py::class_<fir_filter_with_buffer_fff, PYBIND11_SH_DEF(fir_filter_with_buffer_fff)>(
         m_kernel, "fir_filter_with_buffer_fff", D(kernel, fir_filter_with_buffer_fff))
 
         .def(py::init<std::vector<float, std::allocator<float>> const&>(),
@@ -90,7 +90,7 @@ void bind_fir_filter_with_buffer(py::module& m)
         ;
 
 
-    py::class_<fir_filter_with_buffer_ccc, std::shared_ptr<fir_filter_with_buffer_ccc>>(
+    py::class_<fir_filter_with_buffer_ccc, PYBIND11_SH_DEF(fir_filter_with_buffer_ccc)>(
         m_kernel, "fir_filter_with_buffer_ccc", D(kernel, fir_filter_with_buffer_ccc))
 
         .def(py::init<std::vector<std::complex<float>,
@@ -146,7 +146,7 @@ void bind_fir_filter_with_buffer(py::module& m)
         ;
 
 
-    py::class_<fir_filter_with_buffer_ccf, std::shared_ptr<fir_filter_with_buffer_ccf>>(
+    py::class_<fir_filter_with_buffer_ccf, PYBIND11_SH_DEF(fir_filter_with_buffer_ccf)>(
         m_kernel, "fir_filter_with_buffer_ccf", D(kernel, fir_filter_with_buffer_ccf))
 
         .def(py::init<std::vector<float, std::allocator<float>> const&>(),

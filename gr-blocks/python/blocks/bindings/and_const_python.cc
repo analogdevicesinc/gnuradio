@@ -34,7 +34,7 @@ void bind_and_const_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<and_const>>(m, classname)
+               PYBIND11_SH_DEF(and_const)>(m, classname)
         .def(py::init(&gr::blocks::and_const<T>::make), py::arg("k"))
 
         .def("k", &and_const::k)

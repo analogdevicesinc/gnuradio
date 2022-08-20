@@ -37,7 +37,7 @@ void bind_tcp_sink(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<tcp_sink>>(m, "tcp_sink", D(tcp_sink))
+               PYBIND11_SH_DEF(tcp_sink)>(m, "tcp_sink", D(tcp_sink))
 
         .def(py::init(&tcp_sink::make),
              py::arg("itemsize"),

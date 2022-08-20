@@ -33,7 +33,7 @@ void bind_tpc_encoder(py::module& m)
     using tpc_encoder = ::gr::fec::tpc_encoder;
 
 
-    py::class_<tpc_encoder, gr::fec::generic_encoder, std::shared_ptr<tpc_encoder>>(
+    py::class_<tpc_encoder, gr::fec::generic_encoder, PYBIND11_SH_DEF(tpc_encoder)>(
         m, "tpc_encoder", D(tpc_encoder))
 
         .def_static("make",

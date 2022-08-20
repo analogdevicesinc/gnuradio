@@ -37,7 +37,7 @@ void bind_peak_detector2_fb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<peak_detector2_fb>>(
+               PYBIND11_SH_DEF(peak_detector2_fb)>(
         m, "peak_detector2_fb", D(peak_detector2_fb))
 
         .def(py::init(&peak_detector2_fb::make),

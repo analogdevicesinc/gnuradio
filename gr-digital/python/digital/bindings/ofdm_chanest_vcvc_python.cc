@@ -36,7 +36,7 @@ void bind_ofdm_chanest_vcvc(py::module& m)
     py::class_<ofdm_chanest_vcvc,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<ofdm_chanest_vcvc>>(
+               PYBIND11_SH_DEF(ofdm_chanest_vcvc)>(
         m, "ofdm_chanest_vcvc", D(ofdm_chanest_vcvc))
 
         .def(py::init(&ofdm_chanest_vcvc::make),

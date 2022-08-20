@@ -30,7 +30,7 @@ void bind_usrp_sink(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<usrp_sink>>(m, "usrp_sink", D(usrp_sink))
+               PYBIND11_SH_DEF(usrp_sink)>(m, "usrp_sink", D(usrp_sink))
 
         .def(py::init((std::shared_ptr<gr::uhd::usrp_sink>(*)(const ::uhd::device_addr_t&,
                                                               const ::uhd::stream_args_t&,

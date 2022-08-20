@@ -35,7 +35,7 @@ void bind_pwr_squelch_ff(py::module& m)
 
     py::class_<pwr_squelch_ff,
                gr::analog::squelch_base_ff,
-               std::shared_ptr<pwr_squelch_ff>>(m, "pwr_squelch_ff", D(pwr_squelch_ff))
+               PYBIND11_SH_DEF(pwr_squelch_ff)>(m, "pwr_squelch_ff", D(pwr_squelch_ff))
 
         .def(py::init(&pwr_squelch_ff::make),
              py::arg("db"),

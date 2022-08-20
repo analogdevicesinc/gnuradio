@@ -37,7 +37,7 @@ void bind_scrambler_bb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<scrambler_bb>>(m, "scrambler_bb", D(scrambler_bb))
+               PYBIND11_SH_DEF(scrambler_bb)>(m, "scrambler_bb", D(scrambler_bb))
 
         .def(py::init(&scrambler_bb::make),
              py::arg("mask"),

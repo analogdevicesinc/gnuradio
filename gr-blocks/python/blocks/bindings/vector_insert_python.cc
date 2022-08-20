@@ -30,7 +30,7 @@ void bind_vector_insert_template(py::module& m, const char* classname)
 {
     using vector_insert = gr::blocks::vector_insert<T>;
 
-    py::class_<vector_insert, gr::block, gr::basic_block, std::shared_ptr<vector_insert>>(
+    py::class_<vector_insert, gr::block, gr::basic_block, PYBIND11_SH_DEF(vector_insert)>(
         m, classname)
         .def(py::init(&gr::blocks::vector_insert<T>::make),
              py::arg("data"),

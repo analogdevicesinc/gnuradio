@@ -37,7 +37,7 @@ void bind_complex_to_mag_squared(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<complex_to_mag_squared>>(
+               PYBIND11_SH_DEF(complex_to_mag_squared)>(
         m, "complex_to_mag_squared", D(complex_to_mag_squared))
 
         .def(py::init(&complex_to_mag_squared::make),

@@ -37,7 +37,7 @@ void bind_rotator_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<rotator_cc>>(m, "rotator_cc", D(rotator_cc))
+               PYBIND11_SH_DEF(rotator_cc)>(m, "rotator_cc", D(rotator_cc))
 
         .def(py::init(&rotator_cc::make),
              py::arg("phase_inc") = 0.,

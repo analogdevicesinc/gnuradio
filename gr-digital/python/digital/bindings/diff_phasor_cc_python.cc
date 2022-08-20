@@ -37,7 +37,7 @@ void bind_diff_phasor_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<diff_phasor_cc>>(m, "diff_phasor_cc", D(diff_phasor_cc))
+               PYBIND11_SH_DEF(diff_phasor_cc)>(m, "diff_phasor_cc", D(diff_phasor_cc))
 
         .def(py::init(&diff_phasor_cc::make), D(diff_phasor_cc, make))
 

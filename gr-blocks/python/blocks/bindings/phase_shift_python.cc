@@ -37,7 +37,7 @@ void bind_phase_shift(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<phase_shift>>(m, "phase_shift", D(phase_shift))
+               PYBIND11_SH_DEF(phase_shift)>(m, "phase_shift", D(phase_shift))
 
         .def(py::init(&phase_shift::make),
              py::arg("shift"),

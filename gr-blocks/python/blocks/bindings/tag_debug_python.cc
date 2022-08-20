@@ -37,7 +37,7 @@ void bind_tag_debug(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<tag_debug>>(m, "tag_debug", D(tag_debug))
+               PYBIND11_SH_DEF(tag_debug)>(m, "tag_debug", D(tag_debug))
 
         .def(py::init(&tag_debug::make),
              py::arg("sizeof_stream_item"),

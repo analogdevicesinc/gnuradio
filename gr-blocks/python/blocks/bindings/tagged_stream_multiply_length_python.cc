@@ -36,7 +36,7 @@ void bind_tagged_stream_multiply_length(py::module& m)
     py::class_<tagged_stream_multiply_length,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<tagged_stream_multiply_length>>(
+               PYBIND11_SH_DEF(tagged_stream_multiply_length)>(
         m, "tagged_stream_multiply_length", D(tagged_stream_multiply_length))
 
         .def(py::init(&tagged_stream_multiply_length::make),

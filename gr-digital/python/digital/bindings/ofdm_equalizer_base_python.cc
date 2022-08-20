@@ -34,7 +34,7 @@ void bind_ofdm_equalizer_base(py::module& m)
     using ofdm_equalizer_1d_pilots = ::gr::digital::ofdm_equalizer_1d_pilots;
 
 
-    py::class_<ofdm_equalizer_base, std::shared_ptr<ofdm_equalizer_base>>(
+    py::class_<ofdm_equalizer_base, PYBIND11_SH_DEF(ofdm_equalizer_base)>(
         m, "ofdm_equalizer_base", D(ofdm_equalizer_base))
 
         // .def(py::init<int>(),           py::arg("fft_len"),

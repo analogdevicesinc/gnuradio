@@ -37,7 +37,7 @@ void bind_framer_sink_1(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<framer_sink_1>>(m, "framer_sink_1", D(framer_sink_1))
+               PYBIND11_SH_DEF(framer_sink_1)>(m, "framer_sink_1", D(framer_sink_1))
 
         .def(py::init(&framer_sink_1::make),
              py::arg("target_queue"),

@@ -38,7 +38,7 @@ void bind_fll_band_edge_cc(py::module& m)
                gr::block,
                gr::basic_block,
                gr::blocks::control_loop,
-               std::shared_ptr<fll_band_edge_cc>>(
+               PYBIND11_SH_DEF(fll_band_edge_cc)>(
         m, "fll_band_edge_cc", D(fll_band_edge_cc))
 
         .def(py::init(&fll_band_edge_cc::make),

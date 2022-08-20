@@ -34,7 +34,7 @@ void bind_not_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<not_blk>>(m, classname)
+               PYBIND11_SH_DEF(not_blk)>(m, classname)
         .def(py::init(&gr::blocks::not_blk<T>::make), py::arg("vlen") = 1);
 }
 

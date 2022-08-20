@@ -33,7 +33,7 @@ void bind_delay(py::module& m)
     using delay = ::gr::blocks::delay;
 
 
-    py::class_<delay, gr::block, gr::basic_block, std::shared_ptr<delay>>(
+    py::class_<delay, gr::block, gr::basic_block, PYBIND11_SH_DEF(delay)>(
         m, "delay", D(delay))
 
         .def(

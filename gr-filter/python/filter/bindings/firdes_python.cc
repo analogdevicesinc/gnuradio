@@ -31,7 +31,7 @@ void bind_firdes(py::module& m)
 {
     using firdes = gr::filter::firdes;
 
-    py::class_<firdes, std::shared_ptr<firdes>> firdes_class(m, "firdes", D(firdes));
+    py::class_<firdes, PYBIND11_SH_DEF(firdes)> firdes_class(m, "firdes", D(firdes));
 
     firdes_class
         .def_static("window",

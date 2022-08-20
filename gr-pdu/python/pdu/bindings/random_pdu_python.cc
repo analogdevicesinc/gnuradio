@@ -33,7 +33,7 @@ void bind_random_pdu(py::module& m)
     using random_pdu = ::gr::pdu::random_pdu;
 
 
-    py::class_<random_pdu, gr::block, gr::basic_block, std::shared_ptr<random_pdu>>(
+    py::class_<random_pdu, gr::block, gr::basic_block, PYBIND11_SH_DEF(random_pdu)>(
         m, "random_pdu", D(random_pdu))
 
         .def(py::init(&random_pdu::make),

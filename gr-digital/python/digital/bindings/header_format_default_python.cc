@@ -34,7 +34,7 @@ void bind_header_format_default(py::module& m)
 
     py::class_<header_format_default,
                gr::digital::header_format_base,
-               std::shared_ptr<header_format_default>>(
+               PYBIND11_SH_DEF(header_format_default)>(
         m, "header_format_default", D(header_format_default))
 
         .def(py::init(&header_format_default::make),

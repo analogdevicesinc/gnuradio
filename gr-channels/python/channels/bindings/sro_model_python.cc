@@ -33,7 +33,7 @@ void bind_sro_model(py::module& m)
     using sro_model = ::gr::channels::sro_model;
 
 
-    py::class_<sro_model, gr::block, gr::basic_block, std::shared_ptr<sro_model>>(
+    py::class_<sro_model, gr::block, gr::basic_block, PYBIND11_SH_DEF(sro_model)>(
         m, "sro_model", D(sro_model))
 
         .def(py::init(&sro_model::make),

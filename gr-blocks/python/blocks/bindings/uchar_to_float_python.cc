@@ -37,7 +37,7 @@ void bind_uchar_to_float(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<uchar_to_float>>(m, "uchar_to_float", D(uchar_to_float))
+               PYBIND11_SH_DEF(uchar_to_float)>(m, "uchar_to_float", D(uchar_to_float))
 
         .def(py::init(&uchar_to_float::make), D(uchar_to_float, make))
 

@@ -36,7 +36,7 @@ void bind_encoder_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<encoder>>(m, classname)
+               PYBIND11_SH_DEF(encoder)>(m, classname)
         .def(py::init(&gr::trellis::encoder<IN_T, OUT_T>::make),
              py::arg("FSM"),
              py::arg("ST"),

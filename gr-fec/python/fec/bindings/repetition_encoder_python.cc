@@ -38,7 +38,7 @@ void bind_repetition_encoder(py::module& m)
 
     py::class_<repetition_encoder,
                gr::fec::generic_encoder,
-               std::shared_ptr<repetition_encoder>>(
+               PYBIND11_SH_DEF(repetition_encoder)>(
         m_code, "repetition_encoder", D(code, repetition_encoder))
 
         .def_static("make",

@@ -35,7 +35,7 @@ void bind_ctrlport_probe_psd(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<ctrlport_probe_psd>>(
+               PYBIND11_SH_DEF(ctrlport_probe_psd)>(
         m, "ctrlport_probe_psd", D(ctrlport_probe_psd))
 
         .def(py::init(&ctrlport_probe_psd::make),

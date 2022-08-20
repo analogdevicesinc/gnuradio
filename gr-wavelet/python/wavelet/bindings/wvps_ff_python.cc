@@ -37,7 +37,7 @@ void bind_wvps_ff(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<wvps_ff>>(m, "wvps_ff", D(wvps_ff))
+               PYBIND11_SH_DEF(wvps_ff)>(m, "wvps_ff", D(wvps_ff))
 
         .def(py::init(&wvps_ff::make), py::arg("ilen"), D(wvps_ff, make))
 

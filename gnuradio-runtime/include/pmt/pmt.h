@@ -779,7 +779,7 @@ PMT_API pmt_t assoc(pmt_t obj, pmt_t alist);
  * \p list must be a list.  The dynamic order in which \p proc is
  * applied to the elements of \p list is unspecified.
  */
-PMT_API pmt_t map(pmt_t proc(const pmt_t&), pmt_t list);
+PMT_API pmt_t map(const std::function<pmt_t(pmt_t)> &proc, pmt_t list);
 
 /*!
  * \brief reverse \p list.

@@ -37,7 +37,7 @@ void bind_vector_source_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<gr::blocks::vector_source<T>>>(m, classname)
+               PYBIND11_SH_DEF(gr::blocks::vector_source<T)>(m, classname)
         .def(py::init(&gr::blocks::vector_source<T>::make),
              py::arg("data"),
              py::arg("repeat") = false,

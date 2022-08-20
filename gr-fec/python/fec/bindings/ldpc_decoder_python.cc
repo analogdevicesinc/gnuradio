@@ -33,7 +33,7 @@ void bind_ldpc_decoder(py::module& m)
     using ldpc_decoder = ::gr::fec::ldpc_decoder;
 
 
-    py::class_<ldpc_decoder, gr::fec::generic_decoder, std::shared_ptr<ldpc_decoder>>(
+    py::class_<ldpc_decoder, gr::fec::generic_decoder, PYBIND11_SH_DEF(ldpc_decoder)>(
         m, "ldpc_decoder", D(ldpc_decoder))
 
         .def_static("make",

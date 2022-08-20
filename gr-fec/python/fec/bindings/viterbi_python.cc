@@ -33,7 +33,7 @@ void bind_viterbi(py::module& m)
     using viterbi_state = ::gr::fec::viterbi_state;
 
 
-    py::class_<viterbi_state, std::shared_ptr<viterbi_state>>(
+    py::class_<viterbi_state, PYBIND11_SH_DEF(viterbi_state)>(
         m, "viterbi_state", D(viterbi_state))
 
         .def(py::init<>(), D(viterbi_state, viterbi_state, 0))

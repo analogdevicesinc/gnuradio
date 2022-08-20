@@ -33,7 +33,7 @@ void bind_dvbt_map(py::module& m)
     using dvbt_map = ::gr::dtv::dvbt_map;
 
 
-    py::class_<dvbt_map, gr::block, gr::basic_block, std::shared_ptr<dvbt_map>>(
+    py::class_<dvbt_map, gr::block, gr::basic_block, PYBIND11_SH_DEF(dvbt_map)>(
         m, "dvbt_map", D(dvbt_map))
 
         .def(py::init(&dvbt_map::make),

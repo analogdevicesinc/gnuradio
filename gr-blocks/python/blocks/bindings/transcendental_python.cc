@@ -37,7 +37,7 @@ void bind_transcendental(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<transcendental>>(m, "transcendental", D(transcendental))
+               PYBIND11_SH_DEF(transcendental)>(m, "transcendental", D(transcendental))
 
         .def(py::init(&transcendental::make),
              py::arg("name"),

@@ -25,7 +25,7 @@ void bind_freedv_rx_ss(py::module& m)
     using freedv_rx_ss = ::gr::vocoder::freedv_rx_ss;
 
 
-    py::class_<freedv_rx_ss, gr::block, gr::basic_block, std::shared_ptr<freedv_rx_ss>>(
+    py::class_<freedv_rx_ss, gr::block, gr::basic_block, PYBIND11_SH_DEF(freedv_rx_ss)>(
         m, "freedv_rx_ss", D(freedv_rx_ss))
 
         .def(py::init(&freedv_rx_ss::make),

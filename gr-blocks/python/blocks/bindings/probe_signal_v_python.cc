@@ -34,7 +34,7 @@ void bind_probe_signal_v_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<probe_signal_v>>(m, classname)
+               PYBIND11_SH_DEF(probe_signal_v)>(m, classname)
         .def(py::init(&gr::blocks::probe_signal_v<T>::make), py::arg("size"))
         .def("level", &probe_signal_v::level);
 }

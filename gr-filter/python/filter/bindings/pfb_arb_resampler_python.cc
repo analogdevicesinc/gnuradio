@@ -38,7 +38,7 @@ void bind_pfb_arb_resampler(py::module& m)
     using pfb_arb_resampler_fff = ::gr::filter::kernel::pfb_arb_resampler_fff;
 
 
-    py::class_<pfb_arb_resampler_ccf, std::shared_ptr<pfb_arb_resampler_ccf>>(
+    py::class_<pfb_arb_resampler_ccf, PYBIND11_SH_DEF(pfb_arb_resampler_ccf)>(
         m_kernel, "pfb_arb_resampler_ccf", D(kernel, pfb_arb_resampler_ccf))
 
         .def(py::init<float,
@@ -124,7 +124,7 @@ void bind_pfb_arb_resampler(py::module& m)
         ;
 
 
-    py::class_<pfb_arb_resampler_ccc, std::shared_ptr<pfb_arb_resampler_ccc>>(
+    py::class_<pfb_arb_resampler_ccc, PYBIND11_SH_DEF(pfb_arb_resampler_ccc)>(
         m_kernel, "pfb_arb_resampler_ccc", D(kernel, pfb_arb_resampler_ccc))
 
         .def(py::init<float,
@@ -211,7 +211,7 @@ void bind_pfb_arb_resampler(py::module& m)
         ;
 
 
-    py::class_<pfb_arb_resampler_fff, std::shared_ptr<pfb_arb_resampler_fff>>(
+    py::class_<pfb_arb_resampler_fff, PYBIND11_SH_DEF(pfb_arb_resampler_fff)>(
         m_kernel, "pfb_arb_resampler_fff", D(kernel, pfb_arb_resampler_fff))
 
         .def(py::init<float,

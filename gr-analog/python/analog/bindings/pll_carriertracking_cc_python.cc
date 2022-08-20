@@ -37,7 +37,7 @@ void bind_pll_carriertracking_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<pll_carriertracking_cc>>(
+               PYBIND11_SH_DEF(pll_carriertracking_cc)>(
         m, "pll_carriertracking_cc", D(pll_carriertracking_cc))
 
         .def(py::init(&pll_carriertracking_cc::make),

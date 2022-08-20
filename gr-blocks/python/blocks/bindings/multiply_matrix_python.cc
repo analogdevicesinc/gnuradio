@@ -34,7 +34,7 @@ void bind_multiply_matrix_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<multiply_matrix>>(m, classname)
+               PYBIND11_SH_DEF(multiply_matrix)>(m, classname)
         .def(py::init(&gr::blocks::multiply_matrix<T>::make),
              py::arg("A"),
              py::arg("tag_propagation_policy") = gr::block::TPP_ALL_TO_ALL)

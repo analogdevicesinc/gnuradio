@@ -21,7 +21,7 @@ void bind_freedv_api(py::module& m)
 {
     using freedv_api = ::gr::vocoder::freedv_api;
 
-    py::class_<freedv_api, std::shared_ptr<freedv_api>> freedv_api_class(m, "freedv_api");
+    py::class_<freedv_api, PYBIND11_SH_DEF(freedv_api)> freedv_api_class(m, "freedv_api");
 
     py::enum_<gr::vocoder::freedv_api::freedv_modes>(freedv_api_class, "freedv_modes")
 

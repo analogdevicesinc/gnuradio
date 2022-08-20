@@ -33,7 +33,7 @@ void bind_fsm(py::module& m)
     using fsm = ::gr::trellis::fsm;
 
 
-    py::class_<fsm, std::shared_ptr<fsm>>(m, "fsm", D(fsm))
+    py::class_<fsm, PYBIND11_SH_DEF(fsm)>(m, "fsm", D(fsm))
 
         .def(py::init<>(), D(fsm, fsm, 0))
         .def(py::init<gr::trellis::fsm const&>(), py::arg("FSM"), D(fsm, fsm, 1))

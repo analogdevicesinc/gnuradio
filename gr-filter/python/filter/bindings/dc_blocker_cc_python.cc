@@ -36,7 +36,7 @@ void bind_dc_blocker_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dc_blocker_cc>>(m, "dc_blocker_cc", D(dc_blocker_cc))
+               PYBIND11_SH_DEF(dc_blocker_cc)>(m, "dc_blocker_cc", D(dc_blocker_cc))
 
         .def(py::init(&dc_blocker_cc::make),
              py::arg("D"),

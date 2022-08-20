@@ -33,7 +33,7 @@ void bind_copy(py::module& m)
     using copy = ::gr::blocks::copy;
 
 
-    py::class_<copy, gr::block, gr::basic_block, std::shared_ptr<copy>>(
+    py::class_<copy, gr::block, gr::basic_block, PYBIND11_SH_DEF(copy)>(
         m, "copy", D(copy))
 
         .def(py::init(&copy::make), py::arg("itemsize"), D(copy, make))

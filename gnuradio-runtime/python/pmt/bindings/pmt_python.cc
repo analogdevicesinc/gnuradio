@@ -28,7 +28,7 @@ void bind_pmt(py::module& m)
     // using notimplemented    = pmt::notimplemented;
     using comparator = pmt::comparator;
 
-    py::class_<pmt_base, std::shared_ptr<pmt_base>>(m, "pmt_base")
+    py::class_<pmt_base, PYBIND11_SH_DEF(pmt_base)>(m, "pmt_base")
 
         .def(py::init<>(), D(pmt_base, pmt_base))
         .def("__str__", [](const pmt::pmt_t& p) { return pmt::write_string(p); })
@@ -116,7 +116,7 @@ void bind_pmt(py::module& m)
 
 
     // py::class_<exception,std::logic_error,
-    //     std::shared_ptr<exception>>(m, "exception")
+    //     PYBIND11_SH_DEF(exception)>(m, "exception")
 
     //     .def(py::init<std::string const &,pmt::pmt_t>(),           py::arg("msg"),
     //        py::arg("obj")
@@ -128,7 +128,7 @@ void bind_pmt(py::module& m)
 
 
     // py::class_<wrong_type,pmt::exception,
-    //     std::shared_ptr<wrong_type>>(m, "wrong_type")
+    //     PYBIND11_SH_DEF(wrong_type)>(m, "wrong_type")
 
     //     .def(py::init<std::string const &,pmt::pmt_t>(),           py::arg("msg"),
     //        py::arg("obj")
@@ -140,7 +140,7 @@ void bind_pmt(py::module& m)
 
 
     // py::class_<out_of_range,pmt::exception,
-    //     std::shared_ptr<out_of_range>>(m, "out_of_range")
+    //     PYBIND11_SH_DEF(out_of_range)>(m, "out_of_range")
 
     //     .def(py::init<std::string const &,pmt::pmt_t>(),           py::arg("msg"),
     //        py::arg("obj")
@@ -152,7 +152,7 @@ void bind_pmt(py::module& m)
 
 
     // py::class_<notimplemented,pmt::exception,
-    //     std::shared_ptr<notimplemented>>(m, "notimplemented")
+    //     PYBIND11_SH_DEF(notimplemented)>(m, "notimplemented")
 
     //     .def(py::init<std::string const &,pmt::pmt_t>(),           py::arg("msg"),
     //        py::arg("obj")
@@ -163,7 +163,7 @@ void bind_pmt(py::module& m)
     //     ;
 
 
-    py::class_<comparator, std::shared_ptr<comparator>>(m, "comparator")
+    py::class_<comparator, PYBIND11_SH_DEF(comparator)>(m, "comparator")
 
         .def(py::init<>())
         .def(py::init<pmt::comparator const&>(), py::arg("arg0"))

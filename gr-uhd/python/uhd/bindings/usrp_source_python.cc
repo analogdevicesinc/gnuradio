@@ -30,7 +30,7 @@ void bind_usrp_source(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<usrp_source>>(m, "usrp_source", D(usrp_source))
+               PYBIND11_SH_DEF(usrp_source)>(m, "usrp_source", D(usrp_source))
 
         .def(py::init(
                  (std::shared_ptr<gr::uhd::usrp_source>(*)(const ::uhd::device_addr_t&,

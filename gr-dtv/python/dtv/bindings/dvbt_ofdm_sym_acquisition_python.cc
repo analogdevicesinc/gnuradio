@@ -36,7 +36,7 @@ void bind_dvbt_ofdm_sym_acquisition(py::module& m)
     py::class_<dvbt_ofdm_sym_acquisition,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt_ofdm_sym_acquisition>>(
+               PYBIND11_SH_DEF(dvbt_ofdm_sym_acquisition)>(
         m, "dvbt_ofdm_sym_acquisition", D(dvbt_ofdm_sym_acquisition))
 
         .def(py::init(&dvbt_ofdm_sym_acquisition::make),

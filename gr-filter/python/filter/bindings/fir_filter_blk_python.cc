@@ -35,7 +35,7 @@ void bind_fir_filter_blk_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<fir_filter_blk>>(m, classname)
+               PYBIND11_SH_DEF(fir_filter_blk)>(m, classname)
         .def(py::init(&gr::filter::fir_filter_blk<IN_T, OUT_T, TAP_T>::make),
              py::arg("decimation"),
              py::arg("taps"))

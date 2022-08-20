@@ -33,7 +33,7 @@ void bind_cpmmod_bc(py::module& m)
     using cpmmod_bc = ::gr::digital::cpmmod_bc;
 
 
-    py::class_<cpmmod_bc, gr::hier_block2, gr::basic_block, std::shared_ptr<cpmmod_bc>>(
+    py::class_<cpmmod_bc, gr::hier_block2, gr::basic_block, PYBIND11_SH_DEF(cpmmod_bc)>(
         m, "cpmmod_bc", D(cpmmod_bc))
 
         .def(py::init(&cpmmod_bc::make),

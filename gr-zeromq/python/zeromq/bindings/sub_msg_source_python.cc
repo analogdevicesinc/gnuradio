@@ -36,7 +36,7 @@ void bind_sub_msg_source(py::module& m)
     py::class_<sub_msg_source,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<sub_msg_source>>(m, "sub_msg_source", D(sub_msg_source))
+               PYBIND11_SH_DEF(sub_msg_source)>(m, "sub_msg_source", D(sub_msg_source))
 
         .def(py::init(&sub_msg_source::make),
              py::arg("address"),

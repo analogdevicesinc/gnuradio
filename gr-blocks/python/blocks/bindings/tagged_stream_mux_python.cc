@@ -37,7 +37,7 @@ void bind_tagged_stream_mux(py::module& m)
                gr::tagged_stream_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<tagged_stream_mux>>(
+               PYBIND11_SH_DEF(tagged_stream_mux)>(
         m, "tagged_stream_mux", D(tagged_stream_mux))
 
         .def(py::init(&tagged_stream_mux::make),

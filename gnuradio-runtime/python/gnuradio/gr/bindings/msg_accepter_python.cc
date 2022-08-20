@@ -33,7 +33,7 @@ void bind_msg_accepter(py::module& m)
     using msg_accepter = ::gr::msg_accepter;
 
 
-    py::class_<msg_accepter, gr::messages::msg_accepter, std::shared_ptr<msg_accepter>>(
+    py::class_<msg_accepter, gr::messages::msg_accepter, PYBIND11_SH_DEF(msg_accepter)>(
         m, "msg_accepter", D(msg_accepter))
 
         .def(py::init<>(), D(msg_accepter, msg_accepter, 0))

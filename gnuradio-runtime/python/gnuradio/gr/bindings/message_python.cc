@@ -33,7 +33,7 @@ void bind_message(py::module& m)
     using message = ::gr::message;
 
 
-    py::class_<message, std::shared_ptr<message>>(m, "message", D(message))
+    py::class_<message, PYBIND11_SH_DEF(message)>(m, "message", D(message))
 
         .def(py::init(&message::make),
              py::arg("type") = 0,

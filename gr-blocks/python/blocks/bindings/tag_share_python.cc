@@ -37,7 +37,7 @@ void bind_tag_share(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<tag_share>>(m, "tag_share", D(tag_share))
+               PYBIND11_SH_DEF(tag_share)>(m, "tag_share", D(tag_share))
 
         .def(py::init(&tag_share::make),
              py::arg("sizeof_io_item"),

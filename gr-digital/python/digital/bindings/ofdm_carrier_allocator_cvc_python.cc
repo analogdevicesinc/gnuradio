@@ -37,7 +37,7 @@ void bind_ofdm_carrier_allocator_cvc(py::module& m)
                gr::tagged_stream_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<ofdm_carrier_allocator_cvc>>(
+               PYBIND11_SH_DEF(ofdm_carrier_allocator_cvc)>(
         m, "ofdm_carrier_allocator_cvc", D(ofdm_carrier_allocator_cvc))
 
         .def(py::init(&ofdm_carrier_allocator_cvc::make),

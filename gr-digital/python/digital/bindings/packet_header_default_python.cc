@@ -33,7 +33,7 @@ void bind_packet_header_default(py::module& m)
     using packet_header_default = ::gr::digital::packet_header_default;
 
 
-    py::class_<packet_header_default, std::shared_ptr<packet_header_default>>(
+    py::class_<packet_header_default, PYBIND11_SH_DEF(packet_header_default)>(
         m, "packet_header_default", D(packet_header_default))
 
         .def(py::init(&packet_header_default::make),

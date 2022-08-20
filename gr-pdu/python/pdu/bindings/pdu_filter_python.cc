@@ -33,7 +33,7 @@ void bind_pdu_filter(py::module& m)
     using pdu_filter = ::gr::pdu::pdu_filter;
 
 
-    py::class_<pdu_filter, gr::block, gr::basic_block, std::shared_ptr<pdu_filter>>(
+    py::class_<pdu_filter, gr::block, gr::basic_block, PYBIND11_SH_DEF(pdu_filter)>(
         m, "pdu_filter", D(pdu_filter))
 
         .def(py::init(&pdu_filter::make),

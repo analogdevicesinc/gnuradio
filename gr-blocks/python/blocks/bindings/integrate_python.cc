@@ -35,7 +35,7 @@ void bind_integrate_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<integrate>>(m, classname)
+               PYBIND11_SH_DEF(integrate)>(m, classname)
         .def(py::init(&gr::blocks::integrate<T>::make),
              py::arg("decim"),
              py::arg("vlen") = 1);

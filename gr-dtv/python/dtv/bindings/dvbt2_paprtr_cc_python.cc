@@ -37,7 +37,7 @@ void bind_dvbt2_paprtr_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt2_paprtr_cc>>(m, "dvbt2_paprtr_cc", D(dvbt2_paprtr_cc))
+               PYBIND11_SH_DEF(dvbt2_paprtr_cc)>(m, "dvbt2_paprtr_cc", D(dvbt2_paprtr_cc))
 
         .def(py::init(&dvbt2_paprtr_cc::make),
              py::arg("carriermode"),

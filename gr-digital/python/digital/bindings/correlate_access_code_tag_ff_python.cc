@@ -37,7 +37,7 @@ void bind_correlate_access_code_tag_ff(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<correlate_access_code_tag_ff>>(
+               PYBIND11_SH_DEF(correlate_access_code_tag_ff)>(
         m, "correlate_access_code_tag_ff", D(correlate_access_code_tag_ff))
 
         .def(py::init(&correlate_access_code_tag_ff::make),

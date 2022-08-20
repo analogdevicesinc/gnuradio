@@ -38,7 +38,7 @@ void bind_pack_k_bits_bb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<pack_k_bits_bb>>(m, "pack_k_bits_bb", D(pack_k_bits_bb))
+               PYBIND11_SH_DEF(pack_k_bits_bb)>(m, "pack_k_bits_bb", D(pack_k_bits_bb))
 
         .def(py::init(&pack_k_bits_bb::make), py::arg("k"), D(pack_k_bits_bb, make))
 

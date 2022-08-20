@@ -37,7 +37,7 @@ void bind_hdlc_framer_pb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<hdlc_framer_pb>>(m, "hdlc_framer_pb", D(hdlc_framer_pb))
+               PYBIND11_SH_DEF(hdlc_framer_pb)>(m, "hdlc_framer_pb", D(hdlc_framer_pb))
 
         .def(py::init(&hdlc_framer_pb::make),
              py::arg("frame_tag_name"),

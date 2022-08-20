@@ -29,7 +29,7 @@ void bind_g721_encode_sb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<g721_encode_sb>>(m, "g721_encode_sb", D(g721_encode_sb))
+               PYBIND11_SH_DEF(g721_encode_sb)>(m, "g721_encode_sb", D(g721_encode_sb))
 
         .def(py::init(&g721_encode_sb::make), D(g721_encode_sb, make))
 

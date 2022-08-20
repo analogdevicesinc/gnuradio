@@ -38,7 +38,7 @@ void bind_ldpc_gen_mtrx_encoder(py::module& m)
 
     py::class_<ldpc_gen_mtrx_encoder,
                gr::fec::generic_encoder,
-               std::shared_ptr<ldpc_gen_mtrx_encoder>>(
+               PYBIND11_SH_DEF(ldpc_gen_mtrx_encoder)>(
         m_code, "ldpc_gen_mtrx_encoder", D(code, ldpc_gen_mtrx_encoder))
 
         .def_static("make",

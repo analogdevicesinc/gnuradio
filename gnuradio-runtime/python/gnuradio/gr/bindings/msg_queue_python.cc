@@ -33,7 +33,7 @@ void bind_msg_queue(py::module& m)
     using msg_queue = ::gr::msg_queue;
 
 
-    py::class_<msg_queue, gr::msg_handler, std::shared_ptr<msg_queue>>(
+    py::class_<msg_queue, gr::msg_handler, PYBIND11_SH_DEF(msg_queue)>(
         m, "msg_queue", D(msg_queue))
 
         .def(py::init(&msg_queue::make), py::arg("limit") = 0, D(msg_queue, make))

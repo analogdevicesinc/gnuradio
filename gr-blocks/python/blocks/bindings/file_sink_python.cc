@@ -38,7 +38,7 @@ void bind_file_sink(py::module& m)
                gr::block,
                gr::basic_block,
                gr::blocks::file_sink_base,
-               std::shared_ptr<file_sink>>(m, "file_sink", D(file_sink))
+               PYBIND11_SH_DEF(file_sink)>(m, "file_sink", D(file_sink))
 
         .def(py::init(&file_sink::make),
              py::arg("itemsize"),

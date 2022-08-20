@@ -37,7 +37,7 @@ void bind_complex_to_mag(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<complex_to_mag>>(m, "complex_to_mag", D(complex_to_mag))
+               PYBIND11_SH_DEF(complex_to_mag)>(m, "complex_to_mag", D(complex_to_mag))
 
         .def(
             py::init(&complex_to_mag::make), py::arg("vlen") = 1, D(complex_to_mag, make))

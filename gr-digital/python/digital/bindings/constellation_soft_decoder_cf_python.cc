@@ -38,7 +38,7 @@ void bind_constellation_soft_decoder_cf(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<constellation_soft_decoder_cf>>(
+               PYBIND11_SH_DEF(constellation_soft_decoder_cf)>(
         m, "constellation_soft_decoder_cf", D(constellation_soft_decoder_cf))
 
         .def(py::init(&constellation_soft_decoder_cf::make),

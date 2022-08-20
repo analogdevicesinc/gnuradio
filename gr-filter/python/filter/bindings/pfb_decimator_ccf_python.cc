@@ -37,7 +37,7 @@ void bind_pfb_decimator_ccf(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<pfb_decimator_ccf>>(
+               PYBIND11_SH_DEF(pfb_decimator_ccf)>(
         m, "pfb_decimator_ccf", D(pfb_decimator_ccf))
 
         .def(py::init(&pfb_decimator_ccf::make),

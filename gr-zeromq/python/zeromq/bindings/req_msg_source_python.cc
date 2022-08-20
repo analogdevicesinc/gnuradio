@@ -36,7 +36,7 @@ void bind_req_msg_source(py::module& m)
     py::class_<req_msg_source,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<req_msg_source>>(m, "req_msg_source", D(req_msg_source))
+               PYBIND11_SH_DEF(req_msg_source)>(m, "req_msg_source", D(req_msg_source))
 
         .def(py::init(&req_msg_source::make),
              py::arg("address"),

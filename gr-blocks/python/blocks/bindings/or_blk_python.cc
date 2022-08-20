@@ -34,7 +34,7 @@ void bind_or_blk_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<or_blk>>(m, classname)
+               PYBIND11_SH_DEF(or_blk)>(m, classname)
         .def(py::init(&gr::blocks::or_blk<T>::make), py::arg("vlen") = 1);
 }
 

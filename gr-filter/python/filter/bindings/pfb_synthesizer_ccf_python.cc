@@ -38,7 +38,7 @@ void bind_pfb_synthesizer_ccf(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<pfb_synthesizer_ccf>>(
+               PYBIND11_SH_DEF(pfb_synthesizer_ccf)>(
         m, "pfb_synthesizer_ccf", D(pfb_synthesizer_ccf))
 
         .def(py::init(&pfb_synthesizer_ccf::make),

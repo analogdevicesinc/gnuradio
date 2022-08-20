@@ -37,7 +37,7 @@ void bind_complex_to_imag(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<complex_to_imag>>(m, "complex_to_imag", D(complex_to_imag))
+               PYBIND11_SH_DEF(complex_to_imag)>(m, "complex_to_imag", D(complex_to_imag))
 
         .def(py::init(&complex_to_imag::make),
              py::arg("vlen") = 1,

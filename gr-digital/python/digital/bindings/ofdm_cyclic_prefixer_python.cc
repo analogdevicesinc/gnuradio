@@ -36,7 +36,7 @@ void bind_ofdm_cyclic_prefixer(py::module& m)
                gr::tagged_stream_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<ofdm_cyclic_prefixer>>(m, "ofdm_cyclic_prefixer")
+               PYBIND11_SH_DEF(ofdm_cyclic_prefixer)>(m, "ofdm_cyclic_prefixer")
 
         .def(py::init((std::shared_ptr<ofdm_cyclic_prefixer>(*)(
                           size_t, size_t, int, const std::string&)) &

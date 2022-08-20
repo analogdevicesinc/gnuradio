@@ -33,7 +33,7 @@ void bind_puncture_bb(py::module& m)
     using puncture_bb = ::gr::fec::puncture_bb;
 
 
-    py::class_<puncture_bb, gr::block, gr::basic_block, std::shared_ptr<puncture_bb>>(
+    py::class_<puncture_bb, gr::block, gr::basic_block, PYBIND11_SH_DEF(puncture_bb)>(
         m, "puncture_bb", D(puncture_bb))
 
         .def(py::init(&puncture_bb::make),

@@ -37,7 +37,7 @@ void bind_map_bb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<map_bb>>(m, "map_bb", D(map_bb))
+               PYBIND11_SH_DEF(map_bb)>(m, "map_bb", D(map_bb))
 
         .def(py::init(&map_bb::make), py::arg("map"), D(map_bb, make))
 

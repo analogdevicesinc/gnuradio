@@ -43,7 +43,7 @@ void bind_const_sink_c(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<const_sink_c>>(m, "const_sink_c", D(const_sink_c))
+               PYBIND11_SH_DEF(const_sink_c)>(m, "const_sink_c", D(const_sink_c))
 
         .def(py::init(&const_sink_c::make),
              py::arg("size"),

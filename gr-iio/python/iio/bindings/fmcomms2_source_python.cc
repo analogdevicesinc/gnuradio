@@ -38,7 +38,7 @@ void bind_fmcomms2_source_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<fmcomms2_source>>(m, classname, D(fmcomms2_source))
+               PYBIND11_SH_DEF(fmcomms2_source)>(m, classname, D(fmcomms2_source))
 
         .def(py::init(&fmcomms2_source::make),
              py::arg("uri"),

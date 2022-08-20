@@ -36,7 +36,7 @@ void bind_freq_xlating_fir_filter_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<freq_xlating_fir_filter>>(m, classname)
+               PYBIND11_SH_DEF(freq_xlating_fir_filter)>(m, classname)
         .def(py::init(&gr::filter::freq_xlating_fir_filter<IN_T, OUT_T, TAP_T>::make),
              py::arg("decimation"),
              py::arg("taps"),

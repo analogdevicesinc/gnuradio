@@ -35,7 +35,7 @@ void bind_adaptive_algorithm_nlms(py::module& m)
 
     py::class_<adaptive_algorithm_nlms,
                gr::digital::adaptive_algorithm,
-               std::shared_ptr<adaptive_algorithm_nlms>>(
+               PYBIND11_SH_DEF(adaptive_algorithm_nlms)>(
         m, "adaptive_algorithm_nlms", D(adaptive_algorithm_nlms))
 
         .def(py::init(&adaptive_algorithm_nlms::make),

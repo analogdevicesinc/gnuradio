@@ -33,7 +33,7 @@ void bind_fxpt_nco(py::module& m)
     using fxpt_nco = ::gr::fxpt_nco;
 
 
-    py::class_<fxpt_nco, std::shared_ptr<fxpt_nco>>(m, "fxpt_nco", D(fxpt_nco))
+    py::class_<fxpt_nco, PYBIND11_SH_DEF(fxpt_nco)>(m, "fxpt_nco", D(fxpt_nco))
 
         .def(py::init<>(), D(fxpt_nco, fxpt_nco, 0))
         .def(py::init<gr::fxpt_nco const&>(), py::arg("arg0"), D(fxpt_nco, fxpt_nco, 1))

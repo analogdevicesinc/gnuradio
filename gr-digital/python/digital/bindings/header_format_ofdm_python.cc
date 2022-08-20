@@ -34,7 +34,7 @@ void bind_header_format_ofdm(py::module& m)
 
     py::class_<header_format_ofdm,
                gr::digital::header_format_crc,
-               std::shared_ptr<header_format_ofdm>>(
+               PYBIND11_SH_DEF(header_format_ofdm)>(
         m, "header_format_ofdm", D(header_format_ofdm))
 
 

@@ -37,7 +37,7 @@ void bind_flowgraph(py::module& m)
     using msg_edge = ::gr::msg_edge;
 
 
-    py::class_<flowgraph, std::shared_ptr<flowgraph>>(m, "flowgraph", D(flowgraph))
+    py::class_<flowgraph, PYBIND11_SH_DEF(flowgraph)>(m, "flowgraph", D(flowgraph))
 
         .def(py::init<gr::flowgraph const&>(), py::arg("arg0"), D(flowgraph, flowgraph))
 
@@ -122,7 +122,7 @@ void bind_flowgraph(py::module& m)
         ;
 
 
-    py::class_<endpoint, std::shared_ptr<endpoint>>(m, "endpoint", D(endpoint))
+    py::class_<endpoint, PYBIND11_SH_DEF(endpoint)>(m, "endpoint", D(endpoint))
 
         .def(py::init<>(), D(endpoint, endpoint, 0))
         .def(py::init<gr::basic_block_sptr, int>(),
@@ -143,7 +143,7 @@ void bind_flowgraph(py::module& m)
         ;
 
 
-    py::class_<msg_endpoint, std::shared_ptr<msg_endpoint>>(
+    py::class_<msg_endpoint, PYBIND11_SH_DEF(msg_endpoint)>(
         m, "msg_endpoint", D(msg_endpoint))
 
         .def(py::init<>(), D(msg_endpoint, msg_endpoint, 0))
@@ -174,7 +174,7 @@ void bind_flowgraph(py::module& m)
         ;
 
 
-    py::class_<edge, std::shared_ptr<edge>>(m, "edge", D(edge))
+    py::class_<edge, PYBIND11_SH_DEF(edge)>(m, "edge", D(edge))
 
         .def(py::init<>(), D(edge, edge, 0))
         .def(py::init<gr::endpoint const&, gr::endpoint const&>(),
@@ -195,7 +195,7 @@ void bind_flowgraph(py::module& m)
         ;
 
 
-    py::class_<msg_edge, std::shared_ptr<msg_edge>>(m, "msg_edge", D(msg_edge))
+    py::class_<msg_edge, PYBIND11_SH_DEF(msg_edge)>(m, "msg_edge", D(msg_edge))
 
         .def(py::init<>(), D(msg_edge, msg_edge, 0))
         .def(py::init<gr::msg_endpoint const&, gr::msg_endpoint const&>(),

@@ -36,7 +36,7 @@ void bind_message_strobe_random(py::module& m)
     py::class_<message_strobe_random,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<message_strobe_random>>(
+               PYBIND11_SH_DEF(message_strobe_random)>(
         m, "message_strobe_random", D(message_strobe_random))
 
         .def(py::init(&message_strobe_random::make),

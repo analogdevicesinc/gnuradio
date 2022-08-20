@@ -18,7 +18,7 @@ namespace py = pybind11;
 void bind_block_gateway(py::module& m)
 {
     using block_gateway = gr::block_gateway;
-    py::class_<block_gateway, gr::block, gr::basic_block, std::shared_ptr<block_gateway>>(
+    py::class_<block_gateway, gr::block, gr::basic_block, PYBIND11_SH_DEF(block_gateway)>(
         m, "block_gateway")
 
         .def(py::init(&block_gateway::make),

@@ -37,7 +37,7 @@ void bind_atsc_viterbi_decoder(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<atsc_viterbi_decoder>>(
+               PYBIND11_SH_DEF(atsc_viterbi_decoder)>(
         m, "atsc_viterbi_decoder", D(atsc_viterbi_decoder))
 
         .def(py::init(&atsc_viterbi_decoder::make), D(atsc_viterbi_decoder, make))

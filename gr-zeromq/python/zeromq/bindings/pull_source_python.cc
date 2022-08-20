@@ -37,7 +37,7 @@ void bind_pull_source(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<pull_source>>(m, "pull_source", D(pull_source))
+               PYBIND11_SH_DEF(pull_source)>(m, "pull_source", D(pull_source))
 
         .def(py::init(&pull_source::make),
              py::arg("itemsize"),

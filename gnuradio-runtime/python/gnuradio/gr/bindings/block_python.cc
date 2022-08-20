@@ -34,7 +34,7 @@ void bind_block(py::module& m)
     using block = ::gr::block;
 
 
-    py::class_<block, gr::basic_block, std::shared_ptr<block>>(m, "block", D(block))
+    py::class_<block, gr::basic_block, PYBIND11_SH_DEF(block)>(m, "block", D(block))
 
 
         .def("history", &block::history, D(block, history))

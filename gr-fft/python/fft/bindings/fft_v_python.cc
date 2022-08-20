@@ -37,7 +37,7 @@ void bind_fft_v_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<fft_v_blk>>(m, classname)
+               PYBIND11_SH_DEF(fft_v_blk)>(m, classname)
         .def(py::init(&gr::fft::fft_v<T, forward>::make),
              py::arg("fft_size"),
              py::arg("window"),

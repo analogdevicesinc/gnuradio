@@ -25,7 +25,7 @@ void bind_amsg_source(py::module& m)
     using amsg_source = ::gr::uhd::amsg_source;
 
 
-    py::class_<amsg_source, std::shared_ptr<amsg_source>>(
+    py::class_<amsg_source, PYBIND11_SH_DEF(amsg_source)>(
         m, "amsg_source", D(amsg_source))
 
         .def(py::init(&amsg_source::make),

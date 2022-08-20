@@ -36,7 +36,7 @@ void bind_ldpc_H_matrix(py::module& m)
     using ldpc_H_matrix = ::gr::fec::code::ldpc_H_matrix;
 
 
-    py::class_<ldpc_H_matrix, gr::fec::code::fec_mtrx, std::shared_ptr<ldpc_H_matrix>>(
+    py::class_<ldpc_H_matrix, gr::fec::code::fec_mtrx, PYBIND11_SH_DEF(ldpc_H_matrix)>(
         m_code, "ldpc_H_matrix", D(code, ldpc_H_matrix))
 
         .def(py::init(&ldpc_H_matrix::make),

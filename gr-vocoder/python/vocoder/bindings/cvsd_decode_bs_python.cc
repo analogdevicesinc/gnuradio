@@ -30,7 +30,7 @@ void bind_cvsd_decode_bs(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<cvsd_decode_bs>>(m, "cvsd_decode_bs", D(cvsd_decode_bs))
+               PYBIND11_SH_DEF(cvsd_decode_bs)>(m, "cvsd_decode_bs", D(cvsd_decode_bs))
 
         .def(py::init(&cvsd_decode_bs::make),
              py::arg("min_step") = 10,

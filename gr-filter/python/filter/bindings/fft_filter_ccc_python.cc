@@ -37,7 +37,7 @@ void bind_fft_filter_ccc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<fft_filter_ccc>>(m, "fft_filter_ccc", D(fft_filter_ccc))
+               PYBIND11_SH_DEF(fft_filter_ccc)>(m, "fft_filter_ccc", D(fft_filter_ccc))
 
         .def(py::init(&fft_filter_ccc::make),
              py::arg("decimation"),

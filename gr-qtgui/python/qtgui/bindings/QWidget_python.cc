@@ -23,5 +23,5 @@ namespace py = pybind11;
 void bind_QWidget(py::module& m)
 {
 
-    py::class_<QWidget, std::shared_ptr<QWidget>>(m, "QWidget");
+    py::class_<QWidget, PYBIND11_SH_DEF(QWidget)>(m, "QWidget");
 }

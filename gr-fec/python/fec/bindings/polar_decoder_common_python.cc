@@ -38,7 +38,7 @@ void bind_polar_decoder_common(py::module& m)
 
     py::class_<polar_decoder_common,
                gr::fec::generic_decoder,
-               std::shared_ptr<polar_decoder_common>>(
+               PYBIND11_SH_DEF(polar_decoder_common)>(
         m_code, "polar_decoder_common", D(code, polar_decoder_common))
 
         // .def(py::init<int,int,std::vector<int, std::allocator<int> >,std::vector<char,

@@ -32,7 +32,7 @@ void bind_pdu_to_stream_template(py::module& m, const char* classname)
 {
     using pdu_to_stream = ::gr::pdu::pdu_to_stream<T>;
 
-    py::class_<pdu_to_stream, gr::block, gr::basic_block, std::shared_ptr<pdu_to_stream>>(
+    py::class_<pdu_to_stream, gr::block, gr::basic_block, PYBIND11_SH_DEF(pdu_to_stream)>(
         m, classname)
         .def(py::init(&gr::pdu::pdu_to_stream<T>::make),
              py::arg("early_pdu_behavior"),

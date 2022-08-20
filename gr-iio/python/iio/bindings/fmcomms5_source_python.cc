@@ -37,7 +37,7 @@ void bind_fmcomms5_source(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<fmcomms5_source>>(m, "fmcomms5_source", D(fmcomms5_source))
+               PYBIND11_SH_DEF(fmcomms5_source)>(m, "fmcomms5_source", D(fmcomms5_source))
 
         .def(py::init(&fmcomms5_source::make),
              py::arg("uri"),

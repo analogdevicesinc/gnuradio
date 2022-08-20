@@ -37,7 +37,7 @@ void bind_null_source(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<null_source>>(m, "null_source", D(null_source))
+               PYBIND11_SH_DEF(null_source)>(m, "null_source", D(null_source))
 
         .def(py::init(&null_source::make),
              py::arg("sizeof_stream_item"),

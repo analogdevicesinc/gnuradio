@@ -33,7 +33,7 @@ void bind_siso_f(py::module& m)
     using siso_f = ::gr::trellis::siso_f;
 
 
-    py::class_<siso_f, gr::block, gr::basic_block, std::shared_ptr<siso_f>>(
+    py::class_<siso_f, gr::block, gr::basic_block, PYBIND11_SH_DEF(siso_f)>(
         m, "siso_f", D(siso_f))
 
         .def(py::init(&siso_f::make),

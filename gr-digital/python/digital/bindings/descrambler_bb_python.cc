@@ -37,7 +37,7 @@ void bind_descrambler_bb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<descrambler_bb>>(m, "descrambler_bb", D(descrambler_bb))
+               PYBIND11_SH_DEF(descrambler_bb)>(m, "descrambler_bb", D(descrambler_bb))
 
         .def(py::init(&descrambler_bb::make),
              py::arg("mask"),

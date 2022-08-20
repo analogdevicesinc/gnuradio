@@ -37,7 +37,7 @@ void bind_atsc_derandomizer(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<atsc_derandomizer>>(
+               PYBIND11_SH_DEF(atsc_derandomizer)>(
         m, "atsc_derandomizer", D(atsc_derandomizer))
 
         .def(py::init(&atsc_derandomizer::make), D(atsc_derandomizer, make))

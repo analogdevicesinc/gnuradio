@@ -36,7 +36,7 @@ void bind_conv_bit_corr_bb(py::module& m)
     py::class_<conv_bit_corr_bb,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<conv_bit_corr_bb>>(
+               PYBIND11_SH_DEF(conv_bit_corr_bb)>(
         m, "conv_bit_corr_bb", D(conv_bit_corr_bb))
 
         .def(py::init(&conv_bit_corr_bb::make),

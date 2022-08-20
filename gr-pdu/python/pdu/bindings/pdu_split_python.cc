@@ -33,7 +33,7 @@ void bind_pdu_split(py::module& m)
     using pdu_split = ::gr::pdu::pdu_split;
 
 
-    py::class_<pdu_split, gr::block, gr::basic_block, std::shared_ptr<pdu_split>>(
+    py::class_<pdu_split, gr::block, gr::basic_block, PYBIND11_SH_DEF(pdu_split)>(
         m, "pdu_split", D(pdu_split))
 
         .def(py::init(&pdu_split::make),

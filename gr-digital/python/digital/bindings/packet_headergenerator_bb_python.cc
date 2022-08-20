@@ -34,7 +34,7 @@ void bind_packet_headergenerator_bb(py::module& m)
 
     py::class_<packet_headergenerator_bb,
                gr::tagged_stream_block,
-               std::shared_ptr<packet_headergenerator_bb>>(m, "packet_headergenerator_bb")
+               PYBIND11_SH_DEF(packet_headergenerator_bb)>(m, "packet_headergenerator_bb")
 
         .def(py::init((std::shared_ptr<packet_headergenerator_bb>(*)(
                           const gr::digital::packet_header_default::sptr&,

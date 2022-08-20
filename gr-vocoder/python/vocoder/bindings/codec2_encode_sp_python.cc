@@ -30,7 +30,7 @@ void bind_codec2_encode_sp(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<codec2_encode_sp>>(
+               PYBIND11_SH_DEF(codec2_encode_sp)>(
         m, "codec2_encode_sp", D(codec2_encode_sp))
 
         .def(py::init(&codec2_encode_sp::make),

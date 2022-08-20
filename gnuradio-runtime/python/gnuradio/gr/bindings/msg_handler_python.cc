@@ -33,7 +33,7 @@ void bind_msg_handler(py::module& m)
     using msg_handler = ::gr::msg_handler;
 
 
-    py::class_<msg_handler, std::shared_ptr<msg_handler>>(
+    py::class_<msg_handler, PYBIND11_SH_DEF(msg_handler)>(
         m, "msg_handler", D(msg_handler))
 
         // .def(py::init<>(),D(msg_handler,msg_handler,0))

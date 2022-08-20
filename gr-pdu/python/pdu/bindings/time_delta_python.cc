@@ -33,7 +33,7 @@ void bind_time_delta(py::module& m)
     using time_delta = gr::pdu::time_delta;
 
 
-    py::class_<time_delta, gr::block, gr::basic_block, std::shared_ptr<time_delta>>(
+    py::class_<time_delta, gr::block, gr::basic_block, PYBIND11_SH_DEF(time_delta)>(
         m, "time_delta", D(time_delta))
 
         .def(py::init(&time_delta::make),

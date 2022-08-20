@@ -34,7 +34,7 @@ void bind_constellation_encoder_bc(py::module& m)
 
     py::class_<constellation_encoder_bc,
                gr::sync_interpolator,
-               std::shared_ptr<constellation_encoder_bc>>(
+               PYBIND11_SH_DEF(constellation_encoder_bc)>(
         m, "constellation_encoder_bc", D(constellation_encoder_bc))
 
         .def(py::init(&constellation_encoder_bc::make),

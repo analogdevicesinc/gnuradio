@@ -36,7 +36,7 @@ void bind_polar_common(py::module& m)
     using polar_common = ::gr::fec::code::polar_common;
 
 
-    py::class_<polar_common, std::shared_ptr<polar_common>>(
+    py::class_<polar_common, PYBIND11_SH_DEF(polar_common)>(
         m_code, "polar_common", D(code, polar_common))
 
         .def(py::init<int,

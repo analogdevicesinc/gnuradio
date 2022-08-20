@@ -35,7 +35,7 @@ void bind_ofdm_equalizer_simpledfe(py::module& m)
 
     py::class_<ofdm_equalizer_simpledfe,
                gr::digital::ofdm_equalizer_1d_pilots,
-               std::shared_ptr<ofdm_equalizer_simpledfe>>(
+               PYBIND11_SH_DEF(ofdm_equalizer_simpledfe)>(
         m, "ofdm_equalizer_simpledfe", D(ofdm_equalizer_simpledfe))
 
         .def(py::init(&ofdm_equalizer_simpledfe::make),

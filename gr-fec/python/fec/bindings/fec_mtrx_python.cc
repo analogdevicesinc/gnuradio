@@ -38,19 +38,19 @@ void bind_fec_mtrx(py::module& m)
     using fec_mtrx = ::gr::fec::code::fec_mtrx;
 
 
-    py::class_<block_data, std::shared_ptr<block_data>>(
+    py::class_<block_data, PYBIND11_SH_DEF(block_data)>(
         m_code, "block_data", D(code, block_data))
 
 
         ;
 
-    py::class_<matrix, std::shared_ptr<matrix>>(m_code, "matrix", D(code, matrix))
+    py::class_<matrix, PYBIND11_SH_DEF(matrix)>(m_code, "matrix", D(code, matrix))
 
 
         ;
 
 
-    py::class_<fec_mtrx, std::shared_ptr<fec_mtrx>>(m_code, "fec_mtrx", D(code, fec_mtrx))
+    py::class_<fec_mtrx, PYBIND11_SH_DEF(fec_mtrx)>(m_code, "fec_mtrx", D(code, fec_mtrx))
 
         // .def(py::init<gr::fec::code::fec_mtrx const&>(),
         //      py::arg("arg0"),

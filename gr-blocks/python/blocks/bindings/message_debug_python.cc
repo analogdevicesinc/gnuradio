@@ -33,7 +33,7 @@ void bind_message_debug(py::module& m)
     using message_debug = ::gr::blocks::message_debug;
 
 
-    py::class_<message_debug, gr::block, gr::basic_block, std::shared_ptr<message_debug>>(
+    py::class_<message_debug, gr::block, gr::basic_block, PYBIND11_SH_DEF(message_debug)>(
         m, "message_debug", D(message_debug))
 
         .def(py::init(&message_debug::make),

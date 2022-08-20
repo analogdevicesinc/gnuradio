@@ -36,7 +36,7 @@ void bind_add_system_time(py::module& m)
     py::class_<add_system_time,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<add_system_time>>(m, "add_system_time", D(add_system_time))
+               PYBIND11_SH_DEF(add_system_time)>(m, "add_system_time", D(add_system_time))
 
         .def(py::init(&add_system_time::make), py::arg("key"), D(add_system_time, make))
 

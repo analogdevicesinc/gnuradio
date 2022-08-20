@@ -38,7 +38,7 @@ void bind_repeat(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<repeat>>(m, "repeat", D(repeat))
+               PYBIND11_SH_DEF(repeat)>(m, "repeat", D(repeat))
 
         .def(py::init(&repeat::make),
              py::arg("itemsize"),

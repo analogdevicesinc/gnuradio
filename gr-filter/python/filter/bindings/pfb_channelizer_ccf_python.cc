@@ -36,7 +36,7 @@ void bind_pfb_channelizer_ccf(py::module& m)
     py::class_<pfb_channelizer_ccf,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<pfb_channelizer_ccf>>(
+               PYBIND11_SH_DEF(pfb_channelizer_ccf)>(
         m, "pfb_channelizer_ccf", D(pfb_channelizer_ccf))
 
         .def(py::init(&pfb_channelizer_ccf::make),

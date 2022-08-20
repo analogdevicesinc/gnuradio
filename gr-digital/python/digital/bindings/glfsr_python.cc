@@ -33,7 +33,7 @@ void bind_glfsr(py::module& m)
     using glfsr = ::gr::digital::glfsr;
 
 
-    py::class_<glfsr, std::shared_ptr<glfsr>>(m, "glfsr", D(glfsr))
+    py::class_<glfsr, PYBIND11_SH_DEF(glfsr)>(m, "glfsr", D(glfsr))
 
         .def(py::init<uint64_t, uint64_t>(),
              py::arg("mask"),

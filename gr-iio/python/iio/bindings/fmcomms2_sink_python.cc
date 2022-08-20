@@ -39,7 +39,7 @@ void bind_fmcomms2_sink_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<fmcomms2_sink>>(m, classname, D(fmcomms2_sink))
+               PYBIND11_SH_DEF(fmcomms2_sink)>(m, classname, D(fmcomms2_sink))
 
 
         .def(py::init(&fmcomms2_sink::make),

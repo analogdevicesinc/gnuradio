@@ -32,7 +32,7 @@ void bind_pccc_encoder_template(py::module& m, const char* classname)
 {
     using pccc_encoder = gr::trellis::pccc_encoder<IN_T, OUT_T>;
 
-    py::class_<pccc_encoder, gr::block, gr::basic_block, std::shared_ptr<pccc_encoder>>(
+    py::class_<pccc_encoder, gr::block, gr::basic_block, PYBIND11_SH_DEF(pccc_encoder)>(
         m, classname)
         .def(py::init(&gr::trellis::pccc_encoder<IN_T, OUT_T>::make),
              py::arg("FSM1"),

@@ -37,7 +37,7 @@ void bind_packet_sink(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<packet_sink>>(m, "packet_sink", D(packet_sink))
+               PYBIND11_SH_DEF(packet_sink)>(m, "packet_sink", D(packet_sink))
 
         .def(py::init(&packet_sink::make),
              py::arg("sync_vector"),

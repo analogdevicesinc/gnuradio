@@ -37,7 +37,7 @@ void bind_device_source(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<device_source>>(m, "device_source", D(device_source))
+               PYBIND11_SH_DEF(device_source)>(m, "device_source", D(device_source))
 
         .def(py::init(&device_source::make),
              py::arg("uri"),

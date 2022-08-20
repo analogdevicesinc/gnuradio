@@ -43,7 +43,7 @@ void bind_freq_sink_f(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<freq_sink_f>>(m, "freq_sink_f", D(freq_sink_f))
+               PYBIND11_SH_DEF(freq_sink_f)>(m, "freq_sink_f", D(freq_sink_f))
 
         .def(py::init(&freq_sink_f::make),
              py::arg("fftsize"),

@@ -36,7 +36,7 @@ void bind_symbol_sync_ff(py::module& m)
     py::class_<symbol_sync_ff,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<symbol_sync_ff>>(m, "symbol_sync_ff", D(symbol_sync_ff))
+               PYBIND11_SH_DEF(symbol_sync_ff)>(m, "symbol_sync_ff", D(symbol_sync_ff))
 
         .def(py::init(&symbol_sync_ff::make),
              py::arg("detector_type"),

@@ -36,7 +36,7 @@ void bind_filter_delay_fc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<filter_delay_fc>>(m, "filter_delay_fc", D(filter_delay_fc))
+               PYBIND11_SH_DEF(filter_delay_fc)>(m, "filter_delay_fc", D(filter_delay_fc))
 
         .def(py::init(&filter_delay_fc::make), py::arg("taps"), D(filter_delay_fc, make));
 }

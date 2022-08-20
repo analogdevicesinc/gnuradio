@@ -37,7 +37,7 @@ void bind_file_source(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<file_source>>(m, "file_source", D(file_source))
+               PYBIND11_SH_DEF(file_source)>(m, "file_source", D(file_source))
 
         .def(py::init(&file_source::make),
              py::arg("itemsize"),

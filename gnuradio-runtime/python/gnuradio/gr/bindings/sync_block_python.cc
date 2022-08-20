@@ -33,7 +33,7 @@ void bind_sync_block(py::module& m)
     using sync_block = ::gr::sync_block;
 
 
-    py::class_<sync_block, gr::block, gr::basic_block, std::shared_ptr<sync_block>>(
+    py::class_<sync_block, gr::block, gr::basic_block, PYBIND11_SH_DEF(sync_block)>(
         m, "sync_block", D(sync_block))
 
 

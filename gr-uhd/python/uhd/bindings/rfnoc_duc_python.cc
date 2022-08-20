@@ -37,7 +37,7 @@ void bind_rfnoc_duc(py::module& m)
                gr::uhd::rfnoc_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<rfnoc_duc>>(m, "rfnoc_duc", D(rfnoc_duc))
+               PYBIND11_SH_DEF(rfnoc_duc)>(m, "rfnoc_duc", D(rfnoc_duc))
 
         .def(py::init(&rfnoc_duc::make),
              py::arg("graph"),

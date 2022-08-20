@@ -36,7 +36,7 @@ void bind_msk_timing_recovery_cc(py::module& m)
     py::class_<msk_timing_recovery_cc,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<msk_timing_recovery_cc>>(
+               PYBIND11_SH_DEF(msk_timing_recovery_cc)>(
         m, "msk_timing_recovery_cc", D(msk_timing_recovery_cc))
 
         .def(py::init(&msk_timing_recovery_cc::make),

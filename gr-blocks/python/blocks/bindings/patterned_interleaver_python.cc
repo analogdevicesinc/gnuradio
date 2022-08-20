@@ -36,7 +36,7 @@ void bind_patterned_interleaver(py::module& m)
     py::class_<patterned_interleaver,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<patterned_interleaver>>(
+               PYBIND11_SH_DEF(patterned_interleaver)>(
         m, "patterned_interleaver", D(patterned_interleaver))
 
         .def(py::init(&patterned_interleaver::make),

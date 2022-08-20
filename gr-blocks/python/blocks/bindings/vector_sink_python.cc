@@ -34,7 +34,7 @@ void bind_vector_sink_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<vector_sink>>(m, classname)
+               PYBIND11_SH_DEF(vector_sink)>(m, classname)
         .def(py::init(&gr::blocks::vector_sink<T>::make),
              py::arg("vlen") = 1,
              py::arg("reserve_items") = 1024)

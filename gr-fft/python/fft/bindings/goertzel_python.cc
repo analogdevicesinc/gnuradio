@@ -33,7 +33,7 @@ void bind_goertzel(py::module& m)
     using goertzel = ::gr::fft::goertzel;
 
 
-    py::class_<goertzel, std::shared_ptr<goertzel>>(m, "goertzel", D(goertzel))
+    py::class_<goertzel, PYBIND11_SH_DEF(goertzel)>(m, "goertzel", D(goertzel))
 
         .def(py::init<int, int, float>(),
              py::arg("rate"),

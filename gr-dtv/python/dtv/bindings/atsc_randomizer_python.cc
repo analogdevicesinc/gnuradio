@@ -37,7 +37,7 @@ void bind_atsc_randomizer(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<atsc_randomizer>>(m, "atsc_randomizer", D(atsc_randomizer))
+               PYBIND11_SH_DEF(atsc_randomizer)>(m, "atsc_randomizer", D(atsc_randomizer))
 
         .def(py::init(&atsc_randomizer::make), D(atsc_randomizer, make))
 

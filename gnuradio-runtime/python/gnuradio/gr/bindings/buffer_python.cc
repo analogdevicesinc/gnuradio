@@ -36,10 +36,10 @@ void bind_buffer(py::module& m)
     using buffer_reader = ::gr::buffer_reader;
 
 
-    py::class_<buffer, std::shared_ptr<buffer>>(m, "buffer", D(buffer));
+    py::class_<buffer, PYBIND11_SH_DEF(buffer)>(m, "buffer", D(buffer));
 
 
-    py::class_<buffer_reader, std::shared_ptr<buffer_reader>>(
+    py::class_<buffer_reader, PYBIND11_SH_DEF(buffer_reader)>(
         m, "buffer_reader", D(buffer_reader));
 
     m.def("buffer_ncurrently_allocated",

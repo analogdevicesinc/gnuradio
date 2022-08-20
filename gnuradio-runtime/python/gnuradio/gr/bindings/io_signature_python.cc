@@ -33,7 +33,7 @@ void bind_io_signature(py::module& m)
     using io_signature = ::gr::io_signature;
 
 
-    py::class_<io_signature, std::shared_ptr<io_signature>>(
+    py::class_<io_signature, PYBIND11_SH_DEF(io_signature)>(
         m, "io_signature", D(io_signature))
 
         .def(py::init(&io_signature::make),

@@ -36,7 +36,7 @@ void bind_ccsds_encoder(py::module& m)
     using ccsds_encoder = ::gr::fec::code::ccsds_encoder;
 
 
-    py::class_<ccsds_encoder, gr::fec::generic_encoder, std::shared_ptr<ccsds_encoder>>(
+    py::class_<ccsds_encoder, gr::fec::generic_encoder, PYBIND11_SH_DEF(ccsds_encoder)>(
         m_code, "ccsds_encoder", D(code, ccsds_encoder))
 
         .def_static("make",

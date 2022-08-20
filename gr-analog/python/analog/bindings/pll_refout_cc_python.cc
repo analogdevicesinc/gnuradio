@@ -37,7 +37,7 @@ void bind_pll_refout_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<pll_refout_cc>>(m, "pll_refout_cc", D(pll_refout_cc))
+               PYBIND11_SH_DEF(pll_refout_cc)>(m, "pll_refout_cc", D(pll_refout_cc))
 
         .def(py::init(&pll_refout_cc::make),
              py::arg("loop_bw"),

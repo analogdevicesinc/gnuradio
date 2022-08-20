@@ -28,6 +28,8 @@ namespace py = pybind11;
 #include <gnuradio/logger.h>
 #include <logger_pydoc.h>
 
+PYBIND11_TYPE_CASTER_BASE_HOLDER(gr::logging, std::unique_ptr<gr::logging, py::nodelete>)
+
 void bind_logger(py::module& m)
 {
     py::enum_<spdlog::level::level_enum>(m, "log_levels")
@@ -42,7 +44,7 @@ void bind_logger(py::module& m)
 
     using logger = gr::logger;
 
-    py::class_<logger, std::shared_ptr<logger>>(m, "logger", D(logger))
+    py::class_<logger, PYBIND11_SH_DEF(logger)>(m, "logger", D(logger))
 
         .def(py::init<std::string>(), py::arg("logger_name"), D(logger, logger))
         .def(py::init<gr::logger const&>(), py::arg("arg0"))

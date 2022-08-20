@@ -37,7 +37,7 @@ void bind_agc2_ff(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<agc2_ff>>(m, "agc2_ff", D(agc2_ff))
+               PYBIND11_SH_DEF(agc2_ff)>(m, "agc2_ff", D(agc2_ff))
 
         .def(py::init(&agc2_ff::make),
              py::arg("attack_rate") = 0.10000000000000001,

@@ -37,7 +37,7 @@ void bind_tags_strobe(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<tags_strobe>>(m, "tags_strobe", D(tags_strobe))
+               PYBIND11_SH_DEF(tags_strobe)>(m, "tags_strobe", D(tags_strobe))
 
         .def(py::init(&tags_strobe::make),
              py::arg("sizeof_stream_item"),

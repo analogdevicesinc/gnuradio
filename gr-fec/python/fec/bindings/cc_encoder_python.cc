@@ -33,7 +33,7 @@ void bind_cc_encoder(py::module& m)
 
     using cc_encoder = ::gr::fec::code::cc_encoder;
 
-    py::class_<cc_encoder, gr::fec::generic_encoder, std::shared_ptr<cc_encoder>>(
+    py::class_<cc_encoder, gr::fec::generic_encoder, PYBIND11_SH_DEF(cc_encoder)>(
         m_code, "cc_encoder", D(code, cc_encoder))
 
         .def_static("make",

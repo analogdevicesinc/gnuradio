@@ -36,7 +36,7 @@ void bind_test_tag_variable_rate_ff(py::module& m)
     py::class_<test_tag_variable_rate_ff,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<test_tag_variable_rate_ff>>(
+               PYBIND11_SH_DEF(test_tag_variable_rate_ff)>(
         m, "test_tag_variable_rate_ff", D(test_tag_variable_rate_ff))
 
         .def(py::init(&test_tag_variable_rate_ff::make),

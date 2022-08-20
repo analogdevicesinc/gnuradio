@@ -22,7 +22,7 @@ void bind_messages_msg_producer(py::module& m)
     using msg_producer = gr::messages::msg_producer;
 
 
-    py::class_<msg_producer, std::shared_ptr<msg_producer>>(m, "messages_msg_producer")
+    py::class_<msg_producer, PYBIND11_SH_DEF(msg_producer)>(m, "messages_msg_producer")
 
         .def("retrieve", &msg_producer::retrieve);
 }

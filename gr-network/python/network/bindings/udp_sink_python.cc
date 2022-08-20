@@ -37,7 +37,7 @@ void bind_udp_sink(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<udp_sink>>(m, "udp_sink", D(udp_sink))
+               PYBIND11_SH_DEF(udp_sink)>(m, "udp_sink", D(udp_sink))
 
         .def(py::init(&udp_sink::make),
              py::arg("itemsize"),

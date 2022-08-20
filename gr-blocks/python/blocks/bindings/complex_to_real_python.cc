@@ -37,7 +37,7 @@ void bind_complex_to_real(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<complex_to_real>>(m, "complex_to_real", D(complex_to_real))
+               PYBIND11_SH_DEF(complex_to_real)>(m, "complex_to_real", D(complex_to_real))
 
         .def(py::init(&complex_to_real::make),
              py::arg("vlen") = 1,

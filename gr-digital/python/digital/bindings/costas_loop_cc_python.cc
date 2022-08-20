@@ -38,7 +38,7 @@ void bind_costas_loop_cc(py::module& m)
                gr::block,
                gr::basic_block,
                gr::blocks::control_loop,
-               std::shared_ptr<costas_loop_cc>>(m, "costas_loop_cc", D(costas_loop_cc))
+               PYBIND11_SH_DEF(costas_loop_cc)>(m, "costas_loop_cc", D(costas_loop_cc))
 
         .def(py::init(&costas_loop_cc::make),
              py::arg("loop_bw"),

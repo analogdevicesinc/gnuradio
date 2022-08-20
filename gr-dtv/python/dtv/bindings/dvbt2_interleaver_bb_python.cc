@@ -36,7 +36,7 @@ void bind_dvbt2_interleaver_bb(py::module& m)
     py::class_<dvbt2_interleaver_bb,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt2_interleaver_bb>>(
+               PYBIND11_SH_DEF(dvbt2_interleaver_bb)>(
         m, "dvbt2_interleaver_bb", D(dvbt2_interleaver_bb))
 
         .def(py::init(&dvbt2_interleaver_bb::make),

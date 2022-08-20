@@ -39,7 +39,7 @@ void bind_source(py::module& m)
                gr::soapy::block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<source>>(m, "source", D(source))
+               PYBIND11_SH_DEF(source)>(m, "source", D(source))
 
         .def(py::init(&source::make),
              py::arg("device"),

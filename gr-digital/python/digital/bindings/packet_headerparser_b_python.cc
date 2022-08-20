@@ -36,7 +36,7 @@ void bind_packet_headerparser_b(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<packet_headerparser_b>>(m, "packet_headerparser_b")
+               PYBIND11_SH_DEF(packet_headerparser_b)>(m, "packet_headerparser_b")
 
         .def(py::init((std::shared_ptr<packet_headerparser_b>(*)(
                           const gr::digital::packet_header_default::sptr&)) &

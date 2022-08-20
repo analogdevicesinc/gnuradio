@@ -36,7 +36,7 @@ void bind_symbol_sync_cc(py::module& m)
     py::class_<symbol_sync_cc,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<symbol_sync_cc>>(m, "symbol_sync_cc", D(symbol_sync_cc))
+               PYBIND11_SH_DEF(symbol_sync_cc)>(m, "symbol_sync_cc", D(symbol_sync_cc))
 
         .def(py::init(&symbol_sync_cc::make),
              py::arg("detector_type"),

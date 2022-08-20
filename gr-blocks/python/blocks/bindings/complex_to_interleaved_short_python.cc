@@ -38,7 +38,7 @@ void bind_complex_to_interleaved_short(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<complex_to_interleaved_short>>(
+               PYBIND11_SH_DEF(complex_to_interleaved_short)>(
         m, "complex_to_interleaved_short", D(complex_to_interleaved_short))
 
         .def(py::init(&complex_to_interleaved_short::make),

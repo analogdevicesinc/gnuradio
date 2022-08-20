@@ -24,7 +24,7 @@ void bind_codec2(py::module& m)
 
     using codec2 = ::gr::vocoder::codec2;
 
-    py::class_<codec2, std::shared_ptr<codec2>> codec2_class(m, "codec2", D(codec2));
+    py::class_<codec2, PYBIND11_SH_DEF(codec2)> codec2_class(m, "codec2", D(codec2));
 
     py::enum_<gr::vocoder::codec2::bit_rate>(codec2_class, "bit_rate")
         .value("MODE_3200", gr::vocoder::codec2::MODE_3200)

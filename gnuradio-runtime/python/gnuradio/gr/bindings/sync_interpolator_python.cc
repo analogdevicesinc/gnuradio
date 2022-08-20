@@ -37,7 +37,7 @@ void bind_sync_interpolator(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<sync_interpolator>>(
+               PYBIND11_SH_DEF(sync_interpolator)>(
         m, "sync_interpolator", D(sync_interpolator))
 
 

@@ -37,7 +37,7 @@ void bind_file_descriptor_source(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<file_descriptor_source>>(
+               PYBIND11_SH_DEF(file_descriptor_source)>(
         m, "file_descriptor_source", D(file_descriptor_source))
 
         .def(py::init(&file_descriptor_source::make),

@@ -37,7 +37,7 @@ void bind_regenerate_bb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<regenerate_bb>>(m, "regenerate_bb", D(regenerate_bb))
+               PYBIND11_SH_DEF(regenerate_bb)>(m, "regenerate_bb", D(regenerate_bb))
 
         .def(py::init(&regenerate_bb::make),
              py::arg("period"),

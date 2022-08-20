@@ -38,7 +38,7 @@ void bind_complex_to_interleaved_char(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<complex_to_interleaved_char>>(
+               PYBIND11_SH_DEF(complex_to_interleaved_char)>(
         m, "complex_to_interleaved_char", D(complex_to_interleaved_char))
 
         .def(py::init(&complex_to_interleaved_char::make),

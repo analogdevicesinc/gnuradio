@@ -37,7 +37,7 @@ void bind_repack_bits_bb(py::module& m)
                gr::tagged_stream_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<repack_bits_bb>>(m, "repack_bits_bb", D(repack_bits_bb))
+               PYBIND11_SH_DEF(repack_bits_bb)>(m, "repack_bits_bb", D(repack_bits_bb))
 
         .def(py::init(&repack_bits_bb::make),
              py::arg("k"),

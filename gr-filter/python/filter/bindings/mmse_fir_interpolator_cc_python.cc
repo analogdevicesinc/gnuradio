@@ -33,7 +33,7 @@ void bind_mmse_fir_interpolator_cc(py::module& m)
     using mmse_fir_interpolator_cc = ::gr::filter::mmse_fir_interpolator_cc;
 
 
-    py::class_<mmse_fir_interpolator_cc, std::shared_ptr<mmse_fir_interpolator_cc>>(
+    py::class_<mmse_fir_interpolator_cc, PYBIND11_SH_DEF(mmse_fir_interpolator_cc)>(
         m, "mmse_fir_interpolator_cc", D(mmse_fir_interpolator_cc))
 
         .def(py::init<>(), D(mmse_fir_interpolator_cc, mmse_fir_interpolator_cc, 0))

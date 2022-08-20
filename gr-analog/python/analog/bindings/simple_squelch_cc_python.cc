@@ -37,7 +37,7 @@ void bind_simple_squelch_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<simple_squelch_cc>>(
+               PYBIND11_SH_DEF(simple_squelch_cc)>(
         m, "simple_squelch_cc", D(simple_squelch_cc))
 
         .def(py::init(&simple_squelch_cc::make),

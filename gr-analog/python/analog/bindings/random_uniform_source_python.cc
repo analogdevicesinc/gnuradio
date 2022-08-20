@@ -34,7 +34,7 @@ void bind_random_uniform_source_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<random_uniform_source>>(m, classname)
+               PYBIND11_SH_DEF(random_uniform_source)>(m, classname)
         .def(py::init(&gr::analog::random_uniform_source<T>::make),
              py::arg("minimum"),
              py::arg("maximum"),

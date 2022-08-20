@@ -37,7 +37,7 @@ void bind_tagged_file_sink(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<tagged_file_sink>>(
+               PYBIND11_SH_DEF(tagged_file_sink)>(
         m, "tagged_file_sink", D(tagged_file_sink))
 
         .def(py::init(&tagged_file_sink::make),

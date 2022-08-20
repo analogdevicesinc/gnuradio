@@ -37,7 +37,7 @@ void bind_threshold_ff(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<threshold_ff>>(m, "threshold_ff", D(threshold_ff))
+               PYBIND11_SH_DEF(threshold_ff)>(m, "threshold_ff", D(threshold_ff))
 
         .def(py::init(&threshold_ff::make),
              py::arg("lo"),

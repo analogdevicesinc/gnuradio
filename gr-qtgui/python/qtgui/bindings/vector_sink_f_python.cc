@@ -43,7 +43,7 @@ void bind_vector_sink_f(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<vector_sink_f>>(m, "vector_sink_f", D(vector_sink_f))
+               PYBIND11_SH_DEF(vector_sink_f)>(m, "vector_sink_f", D(vector_sink_f))
 
         .def(py::init(&vector_sink_f::make),
              py::arg("vlen"),

@@ -33,7 +33,7 @@ void bind_linear_equalizer(py::module& m)
     using linear_equalizer = ::gr::digital::linear_equalizer;
 
 
-    py::class_<linear_equalizer, gr::sync_decimator, std::shared_ptr<linear_equalizer>>(
+    py::class_<linear_equalizer, gr::sync_decimator, PYBIND11_SH_DEF(linear_equalizer)>(
         m, "linear_equalizer", D(linear_equalizer))
 
         .def(py::init(&linear_equalizer::make),

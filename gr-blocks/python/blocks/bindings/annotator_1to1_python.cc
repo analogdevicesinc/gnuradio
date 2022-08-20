@@ -37,7 +37,7 @@ void bind_annotator_1to1(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<annotator_1to1>>(m, "annotator_1to1", D(annotator_1to1))
+               PYBIND11_SH_DEF(annotator_1to1)>(m, "annotator_1to1", D(annotator_1to1))
 
         .def(py::init(&annotator_1to1::make),
              py::arg("when"),

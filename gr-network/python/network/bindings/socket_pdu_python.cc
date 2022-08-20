@@ -33,7 +33,7 @@ void bind_socket_pdu(py::module& m)
     using socket_pdu = gr::network::socket_pdu;
 
 
-    py::class_<socket_pdu, gr::block, gr::basic_block, std::shared_ptr<socket_pdu>>(
+    py::class_<socket_pdu, gr::block, gr::basic_block, PYBIND11_SH_DEF(socket_pdu)>(
         m, "socket_pdu", D(socket_pdu))
 
         .def(py::init(&socket_pdu::make),

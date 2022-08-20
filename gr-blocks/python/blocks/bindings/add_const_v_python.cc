@@ -34,7 +34,7 @@ void bind_add_const_v_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<add_const_v>>(m, classname)
+               PYBIND11_SH_DEF(add_const_v)>(m, classname)
         .def(py::init(&gr::blocks::add_const_v<T>::make), py::arg("k"))
         .def("k", &add_const_v::k)
         .def("set_k", &add_const_v::set_k, py::arg("k"));

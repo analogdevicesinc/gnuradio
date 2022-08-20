@@ -37,7 +37,7 @@ void bind_atsc_trellis_encoder(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<atsc_trellis_encoder>>(
+               PYBIND11_SH_DEF(atsc_trellis_encoder)>(
         m, "atsc_trellis_encoder", D(atsc_trellis_encoder))
 
         .def(py::init(&atsc_trellis_encoder::make), D(atsc_trellis_encoder, make))

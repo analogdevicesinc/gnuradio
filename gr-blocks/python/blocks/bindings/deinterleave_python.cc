@@ -33,7 +33,7 @@ void bind_deinterleave(py::module& m)
     using deinterleave = ::gr::blocks::deinterleave;
 
 
-    py::class_<deinterleave, gr::block, gr::basic_block, std::shared_ptr<deinterleave>>(
+    py::class_<deinterleave, gr::block, gr::basic_block, PYBIND11_SH_DEF(deinterleave)>(
         m, "deinterleave", D(deinterleave))
 
         .def(py::init(&deinterleave::make),

@@ -36,7 +36,7 @@ void bind_dvbt_energy_descramble(py::module& m)
     py::class_<dvbt_energy_descramble,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt_energy_descramble>>(
+               PYBIND11_SH_DEF(dvbt_energy_descramble)>(
         m, "dvbt_energy_descramble", D(dvbt_energy_descramble))
 
         .def(py::init(&dvbt_energy_descramble::make),

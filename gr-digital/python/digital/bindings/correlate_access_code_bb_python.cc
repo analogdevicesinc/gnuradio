@@ -37,7 +37,7 @@ void bind_correlate_access_code_bb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<correlate_access_code_bb>>(
+               PYBIND11_SH_DEF(correlate_access_code_bb)>(
         m, "correlate_access_code_bb", D(correlate_access_code_bb))
 
         .def(py::init(&correlate_access_code_bb::make),

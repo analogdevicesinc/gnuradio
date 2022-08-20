@@ -37,7 +37,7 @@ void bind_glfsr_source_f(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<glfsr_source_f>>(m, "glfsr_source_f", D(glfsr_source_f))
+               PYBIND11_SH_DEF(glfsr_source_f)>(m, "glfsr_source_f", D(glfsr_source_f))
 
         .def(py::init(&glfsr_source_f::make),
              py::arg("degree"),

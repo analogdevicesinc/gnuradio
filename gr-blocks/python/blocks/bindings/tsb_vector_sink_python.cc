@@ -34,7 +34,7 @@ void bind_tsb_vector_sink_template(py::module& m, const char* classname)
                gr::tagged_stream_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<tsb_vector_sink>>(m, classname)
+               PYBIND11_SH_DEF(tsb_vector_sink)>(m, classname)
         .def(py::init(&gr::blocks::tsb_vector_sink<T>::make),
              py::arg("vlen") = (unsigned int)1,
              py::arg("tsb_key") = std::string("ts_last"))

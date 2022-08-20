@@ -38,7 +38,7 @@ void bind_polar_decoder_sc_systematic(py::module& m)
 
     py::class_<polar_decoder_sc_systematic,
                gr::fec::code::polar_decoder_common,
-               std::shared_ptr<polar_decoder_sc_systematic>>(
+               PYBIND11_SH_DEF(polar_decoder_sc_systematic)>(
         m_code, "polar_decoder_sc_systematic", D(code, polar_decoder_sc_systematic))
 
         .def_static("make",

@@ -37,7 +37,7 @@ void bind_lfsr_32k_source_s(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<lfsr_32k_source_s>>(
+               PYBIND11_SH_DEF(lfsr_32k_source_s)>(
         m, "lfsr_32k_source_s", D(lfsr_32k_source_s))
 
         .def(py::init(&lfsr_32k_source_s::make), D(lfsr_32k_source_s, make))

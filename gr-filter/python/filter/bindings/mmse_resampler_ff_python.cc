@@ -36,7 +36,7 @@ void bind_mmse_resampler_ff(py::module& m)
     py::class_<mmse_resampler_ff,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<mmse_resampler_ff>>(
+               PYBIND11_SH_DEF(mmse_resampler_ff)>(
         m, "mmse_resampler_ff", D(mmse_resampler_ff))
 
         .def(py::init(&mmse_resampler_ff::make),

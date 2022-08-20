@@ -34,7 +34,7 @@ void bind_max_blk_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<max_blk>>(m, classname)
+               PYBIND11_SH_DEF(max_blk)>(m, classname)
         .def(py::init(&gr::blocks::max_blk<T>::make),
              py::arg("vlen"),
              py::arg("vlen_out") = 1);

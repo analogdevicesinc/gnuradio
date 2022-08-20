@@ -37,7 +37,7 @@ void bind_vector_map(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<vector_map>>(m, "vector_map", D(vector_map))
+               PYBIND11_SH_DEF(vector_map)>(m, "vector_map", D(vector_map))
 
         .def(py::init(&vector_map::make),
              py::arg("item_size"),

@@ -37,7 +37,7 @@ void bind_conjugate_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<conjugate_cc>>(m, "conjugate_cc", D(conjugate_cc))
+               PYBIND11_SH_DEF(conjugate_cc)>(m, "conjugate_cc", D(conjugate_cc))
 
         .def(py::init(&conjugate_cc::make), D(conjugate_cc, make))
 

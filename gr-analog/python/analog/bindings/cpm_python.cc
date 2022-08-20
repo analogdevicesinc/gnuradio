@@ -32,7 +32,7 @@ void bind_cpm(py::module& m)
 
     using cpm = ::gr::analog::cpm;
 
-    py::class_<cpm, std::shared_ptr<cpm>> cpm_class(m, "cpm");
+    py::class_<cpm, PYBIND11_SH_DEF(cpm)> cpm_class(m, "cpm");
 
 
     py::enum_<gr::analog::cpm::cpm_type>(cpm_class, "cpm_type")

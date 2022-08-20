@@ -35,7 +35,7 @@ void bind_interp_fir_filter_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<interp_fir_filter>>(m, classname)
+               PYBIND11_SH_DEF(interp_fir_filter)>(m, classname)
         .def(py::init(&gr::filter::interp_fir_filter<IN_T, OUT_T, TAP_T>::make),
              py::arg("interpolation"),
              py::arg("taps"))

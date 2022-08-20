@@ -36,7 +36,7 @@ void bind_dvb_bbheader_bb(py::module& m)
     py::class_<dvb_bbheader_bb,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvb_bbheader_bb>>(m, "dvb_bbheader_bb", D(dvb_bbheader_bb))
+               PYBIND11_SH_DEF(dvb_bbheader_bb)>(m, "dvb_bbheader_bb", D(dvb_bbheader_bb))
 
         .def(py::init(&dvb_bbheader_bb::make),
              py::arg("standard"),

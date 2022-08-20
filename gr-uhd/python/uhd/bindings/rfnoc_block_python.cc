@@ -33,7 +33,7 @@ void bind_rfnoc_block(py::module& m)
     using rfnoc_block = ::gr::uhd::rfnoc_block;
 
 
-    py::class_<rfnoc_block, gr::block, gr::basic_block, std::shared_ptr<rfnoc_block>>(
+    py::class_<rfnoc_block, gr::block, gr::basic_block, PYBIND11_SH_DEF(rfnoc_block)>(
         m, "rfnoc_block", D(rfnoc_block))
 
 

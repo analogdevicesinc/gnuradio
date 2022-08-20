@@ -46,7 +46,7 @@ void bind_iio_types(py::module& m)
     py::implicitly_convertible<int, gr::iio::data_type_t>();
     py::implicitly_convertible<int, gr::iio::attr_type_t>();
 
-    py::class_<gr::iio::iio_param_t, std::shared_ptr<gr::iio::iio_param_t>>(m,
+    py::class_<gr::iio::iio_param_t, PYBIND11_SH_DEF(gr::iio::iio_param_t)>(m,
                                                                             "iio_param_t")
         .def(py::init<const std::string&>())
         .def(py::init<const std::string&, gr::iio::iio_param_value_t>());

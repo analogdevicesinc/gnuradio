@@ -37,7 +37,7 @@ void bind_sink_s(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<sink_s>>(m, "sink_s", D(sink_s))
+               PYBIND11_SH_DEF(sink_s)>(m, "sink_s", D(sink_s))
 
         .def(py::init(&sink_s::make),
              py::arg("framerate"),

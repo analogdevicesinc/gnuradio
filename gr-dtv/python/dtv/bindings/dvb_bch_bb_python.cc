@@ -33,7 +33,7 @@ void bind_dvb_bch_bb(py::module& m)
     using dvb_bch_bb = ::gr::dtv::dvb_bch_bb;
 
 
-    py::class_<dvb_bch_bb, gr::block, gr::basic_block, std::shared_ptr<dvb_bch_bb>>(
+    py::class_<dvb_bch_bb, gr::block, gr::basic_block, PYBIND11_SH_DEF(dvb_bch_bb)>(
         m, "dvb_bch_bb", D(dvb_bch_bb))
 
         .def(py::init(&dvb_bch_bb::make),

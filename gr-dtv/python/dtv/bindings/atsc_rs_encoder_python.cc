@@ -37,7 +37,7 @@ void bind_atsc_rs_encoder(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<atsc_rs_encoder>>(m, "atsc_rs_encoder", D(atsc_rs_encoder))
+               PYBIND11_SH_DEF(atsc_rs_encoder)>(m, "atsc_rs_encoder", D(atsc_rs_encoder))
 
         .def(py::init(&atsc_rs_encoder::make), D(atsc_rs_encoder, make))
 

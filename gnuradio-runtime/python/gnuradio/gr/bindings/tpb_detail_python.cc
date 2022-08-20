@@ -34,7 +34,7 @@ void bind_tpb_detail(py::module& m)
     using tpb_detail = ::gr::tpb_detail;
 
 
-    py::class_<tpb_detail, std::shared_ptr<tpb_detail>>(m, "tpb_detail", D(tpb_detail))
+    py::class_<tpb_detail, PYBIND11_SH_DEF(tpb_detail)>(m, "tpb_detail", D(tpb_detail))
 
         .def(py::init<>(), D(tpb_detail, tpb_detail))
 

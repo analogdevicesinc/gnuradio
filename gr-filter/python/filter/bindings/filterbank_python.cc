@@ -33,7 +33,7 @@ void bind_filterbank(py::module& m)
     using filterbank = gr::filter::kernel::filterbank;
 
 
-    py::class_<filterbank, std::shared_ptr<filterbank>>(
+    py::class_<filterbank, PYBIND11_SH_DEF(filterbank)>(
         m_kernel, "filterbank", D(kernel, filterbank))
 
         .def(py::init<std::vector<

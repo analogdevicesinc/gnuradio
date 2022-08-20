@@ -23,7 +23,7 @@ void bind_thread(py::module& m)
 
     m.def("get_current_thread_id", &gr::get_current_thread_id);
     m.def("thread_bind_to_processor",
-          (void (*)(std::vector<int, std::allocator<int>> const&)) &
+          (void (*)(std::vector<int, std::allocator<int)> const&)) &
               gr::thread_bind_to_processor,
           py::arg("mask"));
     m.def("thread_bind_to_processor",

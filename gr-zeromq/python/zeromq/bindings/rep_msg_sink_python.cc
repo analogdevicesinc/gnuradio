@@ -33,7 +33,7 @@ void bind_rep_msg_sink(py::module& m)
     using rep_msg_sink = ::gr::zeromq::rep_msg_sink;
 
 
-    py::class_<rep_msg_sink, gr::block, gr::basic_block, std::shared_ptr<rep_msg_sink>>(
+    py::class_<rep_msg_sink, gr::block, gr::basic_block, PYBIND11_SH_DEF(rep_msg_sink)>(
         m, "rep_msg_sink", D(rep_msg_sink))
 
         .def(py::init(&rep_msg_sink::make),

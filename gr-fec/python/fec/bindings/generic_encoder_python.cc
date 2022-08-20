@@ -33,7 +33,7 @@ void bind_generic_encoder(py::module& m)
     using generic_encoder = ::gr::fec::generic_encoder;
 
 
-    py::class_<generic_encoder, std::shared_ptr<generic_encoder>>(
+    py::class_<generic_encoder, PYBIND11_SH_DEF(generic_encoder)>(
         m, "generic_encoder", D(generic_encoder))
 
         // .def(py::init<>(),D(generic_encoder,generic_encoder,0))

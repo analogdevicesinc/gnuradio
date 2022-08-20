@@ -37,7 +37,7 @@ void bind_probe_mpsk_snr_est_c(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<probe_mpsk_snr_est_c>>(
+               PYBIND11_SH_DEF(probe_mpsk_snr_est_c)>(
         m, "probe_mpsk_snr_est_c", D(probe_mpsk_snr_est_c))
 
         .def(py::init(&probe_mpsk_snr_est_c::make),

@@ -36,7 +36,7 @@ void bind_pfb_arb_resampler_ccf(py::module& m)
     py::class_<pfb_arb_resampler_ccf,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<pfb_arb_resampler_ccf>>(
+               PYBIND11_SH_DEF(pfb_arb_resampler_ccf)>(
         m, "pfb_arb_resampler_ccf", D(pfb_arb_resampler_ccf))
 
         .def(py::init(&pfb_arb_resampler_ccf::make),

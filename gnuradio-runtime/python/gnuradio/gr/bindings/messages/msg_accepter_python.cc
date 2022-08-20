@@ -22,7 +22,7 @@ void bind_messages_msg_accepter(py::module& m)
     using msg_accepter = gr::messages::msg_accepter;
 
 
-    py::class_<msg_accepter, std::shared_ptr<msg_accepter>>(m, "messages_msg_accepter")
+    py::class_<msg_accepter, PYBIND11_SH_DEF(msg_accepter)>(m, "messages_msg_accepter")
 
         .def("post", &msg_accepter::post, py::arg("which_port"), py::arg("msg"));
 }

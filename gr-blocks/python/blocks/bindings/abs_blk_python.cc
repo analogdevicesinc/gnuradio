@@ -34,7 +34,7 @@ void bind_abs_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<abs_blk>>(m, classname)
+               PYBIND11_SH_DEF(abs_blk)>(m, classname)
         .def(py::init(&gr::blocks::abs_blk<T>::make), py::arg("vlen") = 1);
 }
 

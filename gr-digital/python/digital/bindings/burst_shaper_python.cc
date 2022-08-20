@@ -30,7 +30,7 @@ void bind_burst_shaper_template(py::module& m, const char* classname)
 {
     using burst_shaper = gr::digital::burst_shaper<T>;
 
-    py::class_<burst_shaper, gr::block, gr::basic_block, std::shared_ptr<burst_shaper>>(
+    py::class_<burst_shaper, gr::block, gr::basic_block, PYBIND11_SH_DEF(burst_shaper)>(
         m, classname)
         .def(py::init(&gr::digital::burst_shaper<T>::make),
              py::arg("taps"),

@@ -33,7 +33,7 @@ void bind_fxpt(py::module& m)
     using fxpt = ::gr::fxpt;
 
 
-    py::class_<fxpt, std::shared_ptr<fxpt>>(m, "fxpt", D(fxpt))
+    py::class_<fxpt, PYBIND11_SH_DEF(fxpt)>(m, "fxpt", D(fxpt))
 
         .def(py::init<>(), D(fxpt, fxpt, 0))
         .def(py::init<gr::fxpt const&>(), py::arg("arg0"), D(fxpt, fxpt, 1))

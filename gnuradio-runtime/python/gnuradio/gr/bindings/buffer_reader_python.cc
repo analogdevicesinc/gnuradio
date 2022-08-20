@@ -33,7 +33,7 @@ void bind_buffer_reader(py::module& m)
 
     using buffer_reader = ::gr::buffer_reader;
 
-    py::class_<buffer_reader, std::shared_ptr<buffer_reader>>(
+    py::class_<buffer_reader, PYBIND11_SH_DEF(buffer_reader)>(
         m, "buffer_reader", D(buffer_reader))
 
         .def(py::init<gr::buffer_reader const&>(),

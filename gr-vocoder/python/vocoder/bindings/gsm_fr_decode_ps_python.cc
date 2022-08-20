@@ -30,7 +30,7 @@ void bind_gsm_fr_decode_ps(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<gsm_fr_decode_ps>>(
+               PYBIND11_SH_DEF(gsm_fr_decode_ps)>(
         m, "gsm_fr_decode_ps", D(gsm_fr_decode_ps))
 
         .def(py::init(&gsm_fr_decode_ps::make), D(gsm_fr_decode_ps, make))

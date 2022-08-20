@@ -36,7 +36,7 @@ void bind_dvbt_inner_coder(py::module& m)
     py::class_<dvbt_inner_coder,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt_inner_coder>>(
+               PYBIND11_SH_DEF(dvbt_inner_coder)>(
         m, "dvbt_inner_coder", D(dvbt_inner_coder))
 
         .def(py::init(&dvbt_inner_coder::make),

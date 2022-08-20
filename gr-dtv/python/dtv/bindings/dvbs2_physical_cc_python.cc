@@ -36,7 +36,7 @@ void bind_dvbs2_physical_cc(py::module& m)
     py::class_<dvbs2_physical_cc,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbs2_physical_cc>>(
+               PYBIND11_SH_DEF(dvbs2_physical_cc)>(
         m, "dvbs2_physical_cc", D(dvbs2_physical_cc))
 
         .def(py::init(&dvbs2_physical_cc::make),

@@ -36,7 +36,7 @@ void bind_dvbt_bit_inner_interleaver(py::module& m)
     py::class_<dvbt_bit_inner_interleaver,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<dvbt_bit_inner_interleaver>>(
+               PYBIND11_SH_DEF(dvbt_bit_inner_interleaver)>(
         m, "dvbt_bit_inner_interleaver", D(dvbt_bit_inner_interleaver))
 
         .def(py::init(&dvbt_bit_inner_interleaver::make),

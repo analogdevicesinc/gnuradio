@@ -43,7 +43,7 @@ void bind_meas_evm_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<meas_evm_cc>>(m, "meas_evm_cc", D(meas_evm_cc))
+               PYBIND11_SH_DEF(meas_evm_cc)>(m, "meas_evm_cc", D(meas_evm_cc))
 
         .def(py::init(&meas_evm_cc::make),
              py::arg("cons"),

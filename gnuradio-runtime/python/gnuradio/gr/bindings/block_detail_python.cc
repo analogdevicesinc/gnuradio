@@ -35,7 +35,7 @@ void bind_block_detail(py::module& m)
     using block_detail = ::gr::block_detail;
 
 
-    py::class_<block_detail, std::shared_ptr<block_detail>>(
+    py::class_<block_detail, PYBIND11_SH_DEF(block_detail)>(
         m, "block_detail", D(block_detail))
 
 

@@ -35,7 +35,7 @@ void bind_filterbank_vcvcf(py::module& m)
     py::class_<filterbank_vcvcf,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<filterbank_vcvcf>>(
+               PYBIND11_SH_DEF(filterbank_vcvcf)>(
         m, "filterbank_vcvcf", D(filterbank_vcvcf))
 
         .def(

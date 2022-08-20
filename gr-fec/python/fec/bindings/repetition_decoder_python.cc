@@ -38,7 +38,7 @@ void bind_repetition_decoder(py::module& m)
 
     py::class_<repetition_decoder,
                gr::fec::generic_decoder,
-               std::shared_ptr<repetition_decoder>>(
+               PYBIND11_SH_DEF(repetition_decoder)>(
         m_code, "repetition_decoder", D(code, repetition_decoder))
 
         .def_static("make",

@@ -43,7 +43,7 @@ void bind_constellation(py::module& m)
     using constellation_8psk_natural = ::gr::digital::constellation_8psk_natural;
     using constellation_16qam = ::gr::digital::constellation_16qam;
 
-    py::class_<constellation, std::shared_ptr<constellation>> constellation_class(
+    py::class_<constellation, PYBIND11_SH_DEF(constellation)> constellation_class(
         m, "constellation", D(constellation));
 
     py::enum_<constellation::normalization_t>(constellation_class, "normalization")
@@ -197,7 +197,7 @@ void bind_constellation(py::module& m)
 
     py::class_<constellation_calcdist,
                gr::digital::constellation,
-               std::shared_ptr<constellation_calcdist>>(
+               PYBIND11_SH_DEF(constellation_calcdist)>(
         m, "constellation_calcdist", D(constellation_calcdist))
 
         .def(py::init(&constellation_calcdist::make),
@@ -219,7 +219,7 @@ void bind_constellation(py::module& m)
 
     py::class_<constellation_sector,
                gr::digital::constellation,
-               std::shared_ptr<constellation_sector>>(
+               PYBIND11_SH_DEF(constellation_sector)>(
         m, "constellation_sector", D(constellation_sector))
 
         .def("decision_maker",
@@ -232,7 +232,7 @@ void bind_constellation(py::module& m)
 
     py::class_<constellation_rect,
                gr::digital::constellation_sector,
-               std::shared_ptr<constellation_rect>>(
+               PYBIND11_SH_DEF(constellation_rect)>(
         m, "constellation_rect", D(constellation_rect))
 
         .def(py::init(&constellation_rect::make),
@@ -249,7 +249,7 @@ void bind_constellation(py::module& m)
 
     py::class_<constellation_expl_rect,
                gr::digital::constellation_rect,
-               std::shared_ptr<constellation_expl_rect>>(
+               PYBIND11_SH_DEF(constellation_expl_rect)>(
         m, "constellation_expl_rect", D(constellation_expl_rect))
 
         .def(py::init(&constellation_expl_rect::make),
@@ -266,7 +266,7 @@ void bind_constellation(py::module& m)
 
     py::class_<constellation_psk,
                gr::digital::constellation_sector,
-               std::shared_ptr<constellation_psk>>(
+               PYBIND11_SH_DEF(constellation_psk)>(
         m, "constellation_psk", D(constellation_psk))
 
         .def(py::init(&constellation_psk::make),
@@ -278,7 +278,7 @@ void bind_constellation(py::module& m)
 
     py::class_<constellation_bpsk,
                gr::digital::constellation,
-               std::shared_ptr<constellation_bpsk>>(
+               PYBIND11_SH_DEF(constellation_bpsk)>(
         m, "constellation_bpsk", D(constellation_bpsk))
 
         .def(py::init(&constellation_bpsk::make), D(constellation_bpsk, make))
@@ -292,7 +292,7 @@ void bind_constellation(py::module& m)
 
     py::class_<constellation_qpsk,
                gr::digital::constellation,
-               std::shared_ptr<constellation_qpsk>>(
+               PYBIND11_SH_DEF(constellation_qpsk)>(
         m, "constellation_qpsk", D(constellation_qpsk))
 
         .def(py::init(&constellation_qpsk::make), D(constellation_qpsk, make))
@@ -306,7 +306,7 @@ void bind_constellation(py::module& m)
 
     py::class_<constellation_dqpsk,
                gr::digital::constellation,
-               std::shared_ptr<constellation_dqpsk>>(
+               PYBIND11_SH_DEF(constellation_dqpsk)>(
         m, "constellation_dqpsk", D(constellation_dqpsk))
 
         .def(py::init(&constellation_dqpsk::make), D(constellation_dqpsk, make))
@@ -320,7 +320,7 @@ void bind_constellation(py::module& m)
 
     py::class_<constellation_8psk,
                gr::digital::constellation,
-               std::shared_ptr<constellation_8psk>>(
+               PYBIND11_SH_DEF(constellation_8psk)>(
         m, "constellation_8psk", D(constellation_8psk))
 
         .def(py::init(&constellation_8psk::make), D(constellation_8psk, make))
@@ -334,7 +334,7 @@ void bind_constellation(py::module& m)
 
     py::class_<constellation_8psk_natural,
                gr::digital::constellation,
-               std::shared_ptr<constellation_8psk_natural>>(
+               PYBIND11_SH_DEF(constellation_8psk_natural)>(
         m, "constellation_8psk_natural", D(constellation_8psk_natural))
 
         .def(py::init(&constellation_8psk_natural::make),
@@ -349,7 +349,7 @@ void bind_constellation(py::module& m)
 
     py::class_<constellation_16qam,
                gr::digital::constellation,
-               std::shared_ptr<constellation_16qam>>(
+               PYBIND11_SH_DEF(constellation_16qam)>(
         m, "constellation_16qam", D(constellation_16qam))
 
         .def(py::init(&constellation_16qam::make), D(constellation_16qam, make))

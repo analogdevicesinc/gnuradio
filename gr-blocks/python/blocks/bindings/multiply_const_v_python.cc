@@ -34,7 +34,7 @@ void bind_multiply_const_v_template(py::module& m, const char* classname)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<multiply_const_v>>(m, classname)
+               PYBIND11_SH_DEF(multiply_const_v)>(m, classname)
         .def(py::init(&gr::blocks::multiply_const_v<T>::make), py::arg("k"))
         .def("k", &multiply_const_v::k)
         .def("set_k", &multiply_const_v::set_k, py::arg("k"));

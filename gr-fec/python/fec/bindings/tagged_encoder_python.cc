@@ -37,7 +37,7 @@ void bind_tagged_encoder(py::module& m)
                gr::tagged_stream_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<tagged_encoder>>(m, "tagged_encoder", D(tagged_encoder))
+               PYBIND11_SH_DEF(tagged_encoder)>(m, "tagged_encoder", D(tagged_encoder))
 
         .def(py::init(&tagged_encoder::make),
              py::arg("my_encoder"),

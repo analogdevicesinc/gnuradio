@@ -37,7 +37,7 @@ void bind_atsc_fpll(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<atsc_fpll>>(m, "atsc_fpll", D(atsc_fpll))
+               PYBIND11_SH_DEF(atsc_fpll)>(m, "atsc_fpll", D(atsc_fpll))
 
         .def(py::init(&atsc_fpll::make), py::arg("rate"), D(atsc_fpll, make))
 

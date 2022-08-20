@@ -33,7 +33,7 @@ void bind_random(py::module& m)
     using random = ::gr::random;
 
 
-    py::class_<xoroshiro128p_prng, std::shared_ptr<xoroshiro128p_prng>>(
+    py::class_<xoroshiro128p_prng, PYBIND11_SH_DEF(xoroshiro128p_prng)>(
         m, "xoroshiro128p_prng", D(xoroshiro128p_prng))
 
         .def(py::init<uint64_t>(),
@@ -58,7 +58,7 @@ void bind_random(py::module& m)
         .def("__call__", &xoroshiro128p_prng::operator());
 
 
-    py::class_<random, std::shared_ptr<random>>(m, "random", D(random))
+    py::class_<random, PYBIND11_SH_DEF(random)>(m, "random", D(random))
 
         .def(py::init<uint64_t, int64_t, int64_t>(),
              py::arg("seed") = 0,

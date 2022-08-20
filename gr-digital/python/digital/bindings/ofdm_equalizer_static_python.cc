@@ -35,7 +35,7 @@ void bind_ofdm_equalizer_static(py::module& m)
 
     py::class_<ofdm_equalizer_static,
                gr::digital::ofdm_equalizer_1d_pilots,
-               std::shared_ptr<ofdm_equalizer_static>>(
+               PYBIND11_SH_DEF(ofdm_equalizer_static)>(
         m, "ofdm_equalizer_static", D(ofdm_equalizer_static))
 
         .def(py::init(&ofdm_equalizer_static::make),

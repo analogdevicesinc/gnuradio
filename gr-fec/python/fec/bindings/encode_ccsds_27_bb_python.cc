@@ -38,7 +38,7 @@ void bind_encode_ccsds_27_bb(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<encode_ccsds_27_bb>>(
+               PYBIND11_SH_DEF(encode_ccsds_27_bb)>(
         m, "encode_ccsds_27_bb", D(encode_ccsds_27_bb))
 
         .def(py::init(&encode_ccsds_27_bb::make), D(encode_ccsds_27_bb, make))

@@ -37,7 +37,7 @@ void bind_feedforward_agc_cc(py::module& m)
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<feedforward_agc_cc>>(
+               PYBIND11_SH_DEF(feedforward_agc_cc)>(
         m, "feedforward_agc_cc", D(feedforward_agc_cc))
 
         .def(py::init(&feedforward_agc_cc::make),

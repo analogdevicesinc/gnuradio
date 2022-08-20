@@ -33,7 +33,7 @@ void bind_nop(py::module& m)
     using nop = ::gr::blocks::nop;
 
 
-    py::class_<nop, gr::block, gr::basic_block, std::shared_ptr<nop>>(m, "nop", D(nop))
+    py::class_<nop, gr::block, gr::basic_block, PYBIND11_SH_DEF(nop)>(m, "nop", D(nop))
 
         .def(py::init(&nop::make), py::arg("sizeof_stream_item"), D(nop, make))
 

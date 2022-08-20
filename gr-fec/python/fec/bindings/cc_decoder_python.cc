@@ -36,7 +36,7 @@ void bind_cc_decoder(py::module& m)
     using cc_decoder = ::gr::fec::code::cc_decoder;
 
 
-    py::class_<cc_decoder, gr::fec::generic_decoder, std::shared_ptr<cc_decoder>>(
+    py::class_<cc_decoder, gr::fec::generic_decoder, PYBIND11_SH_DEF(cc_decoder)>(
         m_code, "cc_decoder", D(code, cc_decoder))
 
         // unable to use init because incompatible pointer type is returned
