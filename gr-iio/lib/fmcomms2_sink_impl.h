@@ -54,7 +54,6 @@ public:
 
     ~fmcomms2_sink_impl();
 
-    void update_dependent_params();
     virtual void set_len_tag_key(const std::string& len_tag_key);
     virtual void set_bandwidth(unsigned long bandwidth);
     virtual void set_rf_port_select(const std::string& rf_port_select);
@@ -67,6 +66,8 @@ public:
                                    float fstop = 0.0);
 
 protected:
+    virtual void update_dependent_params();
+
     unsigned long long d_frequency = 2400000000;
     unsigned long d_samplerate = 1000000;
     unsigned long d_bandwidth = 20000000;
@@ -78,6 +79,10 @@ protected:
     float d_fpass = (float)d_samplerate / 4.0;
     float d_fstop = (float)d_samplerate / 3.0;
 };
+
+template class fmcomms2_sink_impl<int16_t>;
+template class fmcomms2_sink_impl<std::complex<int16_t>>;
+template class fmcomms2_sink_impl<gr_complex>;
 
 } // namespace iio
 } // namespace gr

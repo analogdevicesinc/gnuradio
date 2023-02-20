@@ -3,6 +3,15 @@ label: FMComms5 Sink
 flags: [ python, throttle ]
 
 parameters:
+-   id: type
+    label: Input Type
+    dtype: enum
+    options: [fc32, sc16]
+    option_labels: [Complex float32, Complex int16]
+    option_attributes:
+        type: [fc32, sc16]
+    hide: part
+
 -   id: uri
     label: IIO context URI
     dtype: string
@@ -21,12 +30,7 @@ parameters:
 -   id: samplerate
     label: Sample Rate
     dtype: int
-    default: 2084000
-
--   id: bandwidth
-    label: RF Bandwidth
-    dtype: int
-    default: 20000000
+    default: samp_rate
 
 -   id: buffer_size
     label: Buffer size
@@ -135,6 +139,12 @@ parameters:
     default: 20000000
     hide: ${ ('all' if filter_source == "'File'" else 'none') }
 
+-   id: len_tag_key
+    label: Packet Length Tag
+    dtype: string
+    hide: ${( 'part' )}
+
+
 inputs:
 -   domain: stream
     dtype: complex
@@ -154,8 +164,24 @@ asserts:
 
 templates:
     imports: from gnuradio import iio
-    make: iio.fmcomms5_sink_f32c(${uri}, ${frequency1}, ${frequency2}, ${samplerate}, ${bandwidth}, ${tx1_en}, ${tx2_en}, ${tx3_en}, ${tx4_en}, ${buffer_size}, ${cyclic}, ${rf_port_select}, ${attenuation1}, ${attenuation2}, ${attenuation3}, ${attenuation4}, ${filter_source}, ${filter}, ${fpass}, ${fstop})
+    make: |
+        iio.fmcomms5_sink_${type.type}(${uri}, [${tx1_en}, ${tx1_en}, ${tx2_en}, ${tx2_en}, ${tx3_en}, ${tx3_en}, ${tx4_en}, ${tx4_en}], ${buffer_size}, ${cyclic})
+        self.${id}.set_len_tag_key(${len_tag_key})
+        self.${id}.set_bandwidth(${bandwidth})
+        self.${id}.set_frequency(${frequency1}, ${frequency2})
+        self.${id}.set_samplerate(${samplerate})
+        self.${id}.set_attenuation(0, ${attenuation1})
+        self.${id}.set_attenuation(1, ${attenuation2})
+        self.${id}.set_attenuation(2, ${attenuation3})
+        self.${id}.set_attenuation(3, ${attenuation4})
+        self.${id}.set_filter_params(${filter_source}, ${filter}, ${fpass}, ${fstop})
     callbacks:
-    - set_params(${frequency1}, ${frequency2}, ${samplerate}, ${bandwidth}, ${rf_port_select}, ${attenuation1}, ${attenuation2}, ${attenuation3}, ${attenuation4}, ${filter_source}, ${filter}, ${fpass}, ${fstop})
-
+        - set_bandwidth(${bandwidth})
+        - set_frequency(${frequency1}, ${frequency2})
+        - set_samplerate(${samplerate})
+        - set_attenuation(0, ${attenuation1})
+        - set_attenuation(1, ${attenuation2})
+        - set_attenuation(2, ${attenuation3})
+        - set_attenuation(3, ${attenuation4})
+        - set_filter_params(${filter_source}, ${filter}, ${fpass}, ${fstop})
 file_format: 1

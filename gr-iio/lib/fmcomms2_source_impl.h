@@ -62,7 +62,7 @@ public:
                                    float fstop);
 
 protected:
-    void update_dependent_params();
+    virtual void update_dependent_params();
 
     unsigned long long d_frequency = 2400000000;
     unsigned long d_samplerate = 1000000;
@@ -80,6 +80,10 @@ protected:
     float d_fpass = (float)d_samplerate / 4.0;
     float d_fstop = (float)d_samplerate / 3.0;
 };
+
+template class fmcomms2_source_impl<int16_t>;
+template class fmcomms2_source_impl<std::complex<int16_t>>;
+template class fmcomms2_source_impl<gr_complex>;
 
 } // namespace iio
 } // namespace gr

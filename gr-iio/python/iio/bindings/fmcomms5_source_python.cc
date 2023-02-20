@@ -14,7 +14,7 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(fmcomms5_source.h)                                         */
-/* BINDTOOL_HEADER_FILE_HASH(47cfab4e4c9abba5048481b9e2283ab3)                     */
+/* BINDTOOL_HEADER_FILE_HASH(580d5c460338ca7ef80e48d725477fd0)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -27,74 +27,48 @@ namespace py = pybind11;
 // pydoc.h is automatically generated in the build directory
 #include <fmcomms5_source_pydoc.h>
 
-void bind_fmcomms5_source(py::module& m)
+template <typename T>
+void bind_fmcomms5_source_template(py::module& m, const char *classname)
 {
 
-    using fmcomms5_source = gr::iio::fmcomms5_source;
+    using fmcomms5_source = gr::iio::fmcomms5_source<T>;
 
 
     py::class_<fmcomms5_source,
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<fmcomms5_source>>(m, "fmcomms5_source", D(fmcomms5_source))
+               std::shared_ptr<fmcomms5_source>>(m, classname, D(fmcomms5_source))
 
         .def(py::init(&fmcomms5_source::make),
              py::arg("uri"),
-             py::arg("longfrequency1"),
-             py::arg("longfrequency2"),
-             py::arg("samplerate"),
-             py::arg("bandwidth"),
-             py::arg("ch1_en"),
-             py::arg("ch2_en"),
-             py::arg("ch3_en"),
-             py::arg("ch4_en"),
-             py::arg("ch5_en"),
-             py::arg("ch6_en"),
-             py::arg("ch7_en"),
-             py::arg("ch8_en"),
+             py::arg("ch_en"),
              py::arg("buffer_size"),
-             py::arg("quadrature"),
-             py::arg("rfdc"),
-             py::arg("bbdc"),
-             py::arg("gain1"),
-             py::arg("gain1_value"),
-             py::arg("gain2"),
-             py::arg("gain2_value"),
-             py::arg("gain3"),
-             py::arg("gain3_value"),
-             py::arg("gain4"),
-             py::arg("gain4_value"),
-             py::arg("rf_port_select"),
-             py::arg("filter_source") = "",
-             py::arg("filter_filename") = "",
-             py::arg("Fpass") = 0.0,
-             py::arg("Fstop") = 0.0,
              D(fmcomms5_source, make))
+        .def("set_frequency", &fmcomms5_source::set_frequency,
+	     py::arg("longfrequency1"),
+	     py::arg("longfrequency2"))
+        .def("set_samplerate", &fmcomms5_source::set_samplerate, py::arg("samplerate"))
+        .def("set_gain_mode",
+             &fmcomms5_source::set_gain_mode,
+             py::arg("chan"),
+             py::arg("mode"))
+        .def("set_gain",
+             &fmcomms5_source::set_gain,
+             py::arg("chan"),
+             py::arg("gain_value"))
+        .def("set_quadrature", &fmcomms5_source::set_quadrature, py::arg("quadrature"))
+        .def("set_rfdc", &fmcomms5_source::set_rfdc, py::arg("rfdc"))
+        .def("set_bbdc", &fmcomms5_source::set_bbdc, py::arg("bbdc"))
+        .def("set_filter_params", &fmcomms5_source::set_filter_params)
+        .def(
+            "set_len_tag_key", &fmcomms5_source::set_len_tag_key, py::arg("len_tag_key"));
+    ;
+}
 
-        .def("set_params",
-             &fmcomms5_source::set_params,
-             py::arg("longfrequency1"),
-             py::arg("longfrequency2"),
-             py::arg("samplerate"),
-             py::arg("bandwidth"),
-             py::arg("quadrature"),
-             py::arg("rfdc"),
-             py::arg("bbdc"),
-             py::arg("gain1"),
-             py::arg("gain1_value"),
-             py::arg("gain2"),
-             py::arg("gain2_value"),
-             py::arg("gain3"),
-             py::arg("gain3_value"),
-             py::arg("gain4"),
-             py::arg("gain4_value"),
-             py::arg("rf_port_select"),
-             py::arg("filter_source") = "",
-             py::arg("filter_filename") = "",
-             py::arg("Fpass") = 0.0,
-             py::arg("Fstop") = 0.0,
-             D(fmcomms5_source, set_params))
-
-        ;
+void bind_fmcomms5_source(py::module& m)
+{
+    bind_fmcomms5_source_template<int16_t>(m, "fmcomms5_source_s");
+    bind_fmcomms5_source_template<std::complex<int16_t>>(m, "fmcomms5_source_sc16");
+    bind_fmcomms5_source_template<gr_complex>(m, "fmcomms5_source_fc32");
 }

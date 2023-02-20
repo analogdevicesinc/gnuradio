@@ -13,8 +13,8 @@
 /* If manual edits are made, the following tags should be modified accordingly.    */
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
-/* BINDTOOL_HEADER_FILE(fmcomms5_sink.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(ae5565ab39d736f5d7616aab8159ef77)                     */
+/* BINDTOOL_HEADER_FILE(fmcomms5_sink.h)                                           */
+/* BINDTOOL_HEADER_FILE_HASH(64bc2681bd46c7b27129448a6463c02b)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -27,61 +27,51 @@ namespace py = pybind11;
 // pydoc.h is automatically generated in the build directory
 #include <fmcomms5_sink_pydoc.h>
 
-void bind_fmcomms5_sink(py::module& m)
+template <typename T>
+void bind_fmcomms5_sink_template(py::module& m, const char* classname)
 {
 
-    using fmcomms5_sink = gr::iio::fmcomms5_sink;
+    using fmcomms5_sink = gr::iio::fmcomms5_sink<T>;
 
 
     py::class_<fmcomms5_sink,
                gr::sync_block,
                gr::block,
                gr::basic_block,
-               std::shared_ptr<fmcomms5_sink>>(m, "fmcomms5_sink", D(fmcomms5_sink))
+               std::shared_ptr<fmcomms5_sink>>(m, classname, D(fmcomms5_sink))
+
 
         .def(py::init(&fmcomms5_sink::make),
              py::arg("uri"),
-             py::arg("longfrequency1"),
-             py::arg("longfrequency2"),
-             py::arg("samplerate"),
-             py::arg("bandwidth"),
-             py::arg("ch1_en"),
-             py::arg("ch2_en"),
-             py::arg("ch3_en"),
-             py::arg("ch4_en"),
-             py::arg("ch5_en"),
-             py::arg("ch6_en"),
-             py::arg("ch7_en"),
-             py::arg("ch8_en"),
+             py::arg("ch_en"),
              py::arg("buffer_size"),
              py::arg("cyclic"),
-             py::arg("rf_port_select"),
-             py::arg("attenuation1"),
-             py::arg("attenuation2"),
-             py::arg("attenuation3"),
-             py::arg("attenuation4"),
-             py::arg("filter_source") = "",
-             py::arg("filter_filename") = "",
-             py::arg("Fpass") = 0.0,
-             py::arg("Fstop") = 0.0,
              D(fmcomms5_sink, make))
-
-        .def("set_params",
-             &fmcomms5_sink::set_params,
-             py::arg("longfrequency1"),
-             py::arg("longfrequency2"),
-             py::arg("samplerate"),
-             py::arg("bandwidth"),
-             py::arg("rf_port_select"),
-             py::arg("attenuation1"),
-             py::arg("attenuation2"),
-             py::arg("attenuation3"),
-             py::arg("attenuation4"),
-             py::arg("filter_source") = "",
+        .def("set_bandwidth", &fmcomms5_sink::set_bandwidth, py::arg("longbandwidth"))
+        .def("set_frequency", &fmcomms5_sink::set_frequency,
+	     py::arg("longfrequency1"),
+	     py::arg("longfrequency2"))
+        .def("set_samplerate", &fmcomms5_sink::set_samplerate, py::arg("samplerate"))
+        .def("set_attenuation",
+             &fmcomms5_sink::set_attenuation,
+             py::arg("chan"),
+             py::arg("attenuation"))
+        .def("set_filter_params",
+             &fmcomms5_sink::set_filter_params,
+             py::arg("filter_source"),
              py::arg("filter_filename") = "",
-             py::arg("Fpass") = 0.0,
-             py::arg("Fstop") = 0.0,
-             D(fmcomms5_sink, set_params))
+             py::arg("fpass") = 0.0,
+             py::arg("fstop") = 0.0)
+        .def("set_len_tag_key",
+             &fmcomms5_sink::set_len_tag_key,
+             py::arg("len_tag_key") = "")
 
         ;
+}
+
+void bind_fmcomms5_sink(py::module& m)
+{
+    bind_fmcomms5_sink_template<int16_t>(m, "fmcomms5_sink_s");
+    bind_fmcomms5_sink_template<std::complex<int16_t>>(m, "fmcomms5_sink_sc16");
+    bind_fmcomms5_sink_template<gr_complex>(m, "fmcomms5_sink_fc32");
 }
