@@ -31,9 +31,7 @@ private:
 
     std::mutex uf_mutex;
     std::thread underflow_thd;
-    std::vector<std::string>
 
-    get_channels_vector(bool ch1_en, bool ch2_en, bool ch3_en, bool ch4_en);
     std::vector<std::string> get_channels_vector(const std::vector<bool>& ch_en);
     void check_underflow(void);
 

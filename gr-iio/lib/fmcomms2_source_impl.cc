@@ -38,24 +38,6 @@ typename fmcomms2_source<T>::sptr fmcomms2_source<T>::make(const std::string& ur
 }
 
 template <typename T>
-std::vector<std::string> fmcomms2_source_impl<T>::get_channels_vector(bool ch1_en,
-                                                                      bool ch2_en,
-                                                                      bool ch3_en,
-                                                                      bool ch4_en)
-{
-    std::vector<std::string> channels;
-    if (ch1_en)
-        channels.push_back("voltage0");
-    if (ch2_en)
-        channels.push_back("voltage1");
-    if (ch3_en)
-        channels.push_back("voltage2");
-    if (ch4_en)
-        channels.push_back("voltage3");
-    return channels;
-}
-
-template <typename T>
 std::vector<std::string>
 fmcomms2_source_impl<T>::get_channels_vector(const std::vector<bool>& ch_en)
 {

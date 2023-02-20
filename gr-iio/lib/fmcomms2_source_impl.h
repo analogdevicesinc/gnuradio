@@ -26,8 +26,6 @@ template <typename T>
 class fmcomms2_source_impl : public fmcomms2_source<T>, public device_source_impl
 {
 private:
-    std::vector<std::string>
-    get_channels_vector(bool ch1_en, bool ch2_en, bool ch3_en, bool ch4_en);
     std::vector<std::string> get_channels_vector(const std::vector<bool>& ch_en);
     std::thread overflow_thd;
     void check_overflow(void);
