@@ -270,7 +270,8 @@ void fmcomms2_source_impl<T>::update_dependent_params()
     } else
         throw std::runtime_error("Unknown filter configuration");
 
-    device_source_impl::set_params(params);
+    set_params(params);
+
     // Filters can only be disabled after the sample rate has been set
     if (d_filter_source.compare("Off") == 0) {
         int ret = ad9361_set_trx_fir_enable(phy, false);
@@ -292,7 +293,7 @@ void fmcomms2_source_impl<T>::set_frequency(double frequency)
     iio_param_vec_t params;
     params.emplace_back("out_altvoltage0_RX_LO_frequency",
                         static_cast<unsigned long long>(frequency));
-    device_source_impl::set_params(params);
+    set_params(params);
 }
 
 template <typename T>
@@ -327,7 +328,7 @@ void fmcomms2_source_impl<T>::set_gain_mode(size_t chan, const std::string& mode
     params.emplace_back("in_voltage" + std::to_string(chan) +
                         "_gain_control_mode=" + mode);
 
-    device_source_impl::set_params(params);
+    set_params(params);
     d_gain_mode[chan] = mode;
 }
 
@@ -344,7 +345,7 @@ void fmcomms2_source_impl<T>::set_gain(size_t chan, double gain_value)
         params.emplace_back("in_voltage" + std::to_string(chan) + "_hardwaregain",
                             gain_value);
     }
-    device_source_impl::set_params(params);
+    set_params(params);
     d_gain_value[chan] = gain_value;
 }
 
@@ -353,7 +354,7 @@ void fmcomms2_source_impl<T>::set_quadrature(bool quadrature)
 {
     iio_param_vec_t params;
     params.emplace_back("in_voltage_quadrature_tracking_en", quadrature);
-    device_source_impl::set_params(params);
+    set_params(params);
     d_quadrature = quadrature;
 }
 
@@ -362,7 +363,7 @@ void fmcomms2_source_impl<T>::set_rfdc(bool rfdc)
 {
     iio_param_vec_t params;
     params.emplace_back("in_voltage_rf_dc_offset_tracking_en", rfdc);
-    device_source_impl::set_params(params);
+    set_params(params);
     d_rfdc = rfdc;
 }
 
@@ -371,7 +372,7 @@ void fmcomms2_source_impl<T>::set_bbdc(bool bbdc)
 {
     iio_param_vec_t params;
     params.emplace_back("in_voltage_bb_dc_offset_tracking_en", bbdc);
-    device_source_impl::set_params(params);
+    set_params(params);
     d_bbdc = bbdc;
 }
 

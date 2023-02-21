@@ -81,7 +81,7 @@ public:
 
     void set_len_tag_key(const std::string& len_tag_key) override;
 
-    void set_params(const iio_param_vec_t& params);
+    virtual void set_params(const iio_param_vec_t& params);
     void set_buffer_size(unsigned int buffer_size) override;
     void set_timeout_ms(unsigned long timeout) override;
 
