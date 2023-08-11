@@ -91,6 +91,10 @@ device_sink_impl::device_sink_impl(iio_context* ctx,
 {
     unsigned int nb_channels, i;
 
+    // Set cyclic mode for device sink. This will be overridden by child
+    // implementations they can manage cyclic mode themselves.
+    d_cyclic = cyclic;
+
     /* Set minimum input size */
     set_output_multiple(buffer_size / (interpolation + 1));
 
@@ -228,7 +232,10 @@ int device_sink_impl::work(int noutput_items,
     }
 
     consume_each(buffer_size / (interpolation + 1));
-    return 0;
+    if (d_cyclic)
+        return WORK_DONE;
+    else
+        return 0;
 }
 
 void device_sink_impl::forecast(int noutput_items, gr_vector_int& ninput_items_required)

@@ -245,6 +245,9 @@ fmcomms5_sink_impl::fmcomms5_sink_impl(iio_context* ctx,
                filter_filename,
                Fpass,
                Fstop);
+
+    // Force device_sink_impl::work to return when in cyclic mode
+    d_cyclic = false;
 }
 
 void fmcomms5_sink_impl::set_params(iio_device* phy_device,

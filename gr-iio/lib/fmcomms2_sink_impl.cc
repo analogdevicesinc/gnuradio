@@ -129,6 +129,9 @@ fmcomms2_sink_impl<T>::fmcomms2_sink_impl(iio_context* ctx,
 
     // Tell tagger in device_sink_impl::work that we are using a less inputs
     override_tagged_input_channels = d_device_bufs.size() / 2;
+
+    // Force device_sink_impl::work to return when in cyclic mode
+    d_cyclic = false;
 }
 
 template <typename T>

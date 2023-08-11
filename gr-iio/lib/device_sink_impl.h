@@ -35,6 +35,7 @@ protected:
     bool destroy_ctx;
     pmt::pmt_t d_len_tag_key;
     uint16_t override_tagged_input_channels = 0;
+    bool d_cyclic = false;
 
 public:
     device_sink_impl(iio_context* ctx,
