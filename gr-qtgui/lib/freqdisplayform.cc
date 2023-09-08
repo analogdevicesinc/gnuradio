@@ -468,7 +468,7 @@ std::string FreqDisplayForm::getTriggerTagKey() const { return d_trig_tag_key; }
 
 void FreqDisplayForm::notifyYAxisPlus()
 {
-    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtPlot::yLeft);
+    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtAxis::YLeft);
     double range = ax.upperBound() - ax.lowerBound();
     double step = range / 20.0;
     getPlot()->setYaxis(ax.lowerBound() + step, ax.upperBound() + step);
@@ -476,7 +476,7 @@ void FreqDisplayForm::notifyYAxisPlus()
 
 void FreqDisplayForm::notifyYAxisMinus()
 {
-    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtPlot::yLeft);
+    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtAxis::YLeft);
     double range = ax.upperBound() - ax.lowerBound();
     double step = range / 20.0;
     getPlot()->setYaxis(ax.lowerBound() - step, ax.upperBound() - step);
@@ -484,7 +484,7 @@ void FreqDisplayForm::notifyYAxisMinus()
 
 void FreqDisplayForm::notifyYRangePlus()
 {
-    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtPlot::yLeft);
+    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtAxis::YLeft);
     double range = ax.upperBound() - ax.lowerBound();
     double step = range / 20.0;
     getPlot()->setYaxis(ax.lowerBound() - step, ax.upperBound() + step);
@@ -492,7 +492,7 @@ void FreqDisplayForm::notifyYRangePlus()
 
 void FreqDisplayForm::notifyYRangeMinus()
 {
-    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtPlot::yLeft);
+    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtAxis::YLeft);
     double range = ax.upperBound() - ax.lowerBound();
     double step = range / 20.0;
     getPlot()->setYaxis(ax.lowerBound() + step, ax.upperBound() - step);

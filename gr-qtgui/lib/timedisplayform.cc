@@ -471,7 +471,7 @@ std::string TimeDisplayForm::getTriggerTagKey() const { return d_trig_tag_key; }
 
 void TimeDisplayForm::notifyYAxisPlus()
 {
-    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtPlot::yLeft);
+    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtAxis::YLeft);
     double range = ax.upperBound() - ax.lowerBound();
     double step = range / 20.0;
     getPlot()->setYaxis(ax.lowerBound() + step, ax.upperBound() + step);
@@ -479,7 +479,7 @@ void TimeDisplayForm::notifyYAxisPlus()
 
 void TimeDisplayForm::notifyYAxisMinus()
 {
-    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtPlot::yLeft);
+    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtAxis::YLeft);
     double range = ax.upperBound() - ax.lowerBound();
     double step = range / 20.0;
     getPlot()->setYaxis(ax.lowerBound() - step, ax.upperBound() - step);
@@ -487,7 +487,7 @@ void TimeDisplayForm::notifyYAxisMinus()
 
 void TimeDisplayForm::notifyYRangePlus()
 {
-    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtPlot::yLeft);
+    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtAxis::YLeft);
     double range = ax.upperBound() - ax.lowerBound();
     double step = range / 20.0;
     getPlot()->setYaxis(ax.lowerBound() - step, ax.upperBound() + step);
@@ -495,7 +495,7 @@ void TimeDisplayForm::notifyYRangePlus()
 
 void TimeDisplayForm::notifyYRangeMinus()
 {
-    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtPlot::yLeft);
+    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtAxis::YLeft);
     double range = ax.upperBound() - ax.lowerBound();
     double step = range / 20.0;
     getPlot()->setYaxis(ax.lowerBound() + step, ax.upperBound() - step);
@@ -540,7 +540,7 @@ void TimeDisplayForm::notifyTriggerSlope(const QString& slope)
 
 void TimeDisplayForm::notifyTriggerLevelPlus()
 {
-    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtPlot::yLeft);
+    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtAxis::YLeft);
     double range = ax.upperBound() - ax.lowerBound();
 
     double step = range / 20.0;
@@ -549,7 +549,7 @@ void TimeDisplayForm::notifyTriggerLevelPlus()
 
 void TimeDisplayForm::notifyTriggerLevelMinus()
 {
-    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtPlot::yLeft);
+    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtAxis::YLeft);
     double range = ax.upperBound() - ax.lowerBound();
 
     double step = range / 20.0;
@@ -558,7 +558,7 @@ void TimeDisplayForm::notifyTriggerLevelMinus()
 
 void TimeDisplayForm::notifyTriggerDelayPlus()
 {
-    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtPlot::xBottom);
+    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtAxis::XBottom);
     double range = ax.upperBound() - ax.lowerBound();
 
     double step = range / 20.0;
@@ -568,7 +568,7 @@ void TimeDisplayForm::notifyTriggerDelayPlus()
 
 void TimeDisplayForm::notifyTriggerDelayMinus()
 {
-    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtPlot::xBottom);
+    QwtScaleDiv ax = getPlot()->axisScaleDiv(QwtAxis::XBottom);
     double range = ax.upperBound() - ax.lowerBound();
 
     double step = range / 20.0;

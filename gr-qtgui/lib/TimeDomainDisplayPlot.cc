@@ -88,13 +88,13 @@ TimeDomainDisplayPlot::TimeDomainDisplayPlot(int nplots, QWidget* parent)
     d_semilogy = false;
     d_autoscale_shot = false;
 
-    setAxisScaleEngine(QwtPlot::xBottom, new QwtLinearScaleEngine);
+    setAxisScaleEngine(QwtAxis::XBottom, new QwtLinearScaleEngine);
     setXaxis(0, d_numPoints);
-    setAxisTitle(QwtPlot::xBottom, "Time (sec)");
+    setAxisTitle(QwtAxis::XBottom, "Time (sec)");
 
-    setAxisScaleEngine(QwtPlot::yLeft, new QwtLinearScaleEngine);
+    setAxisScaleEngine(QwtAxis::YLeft, new QwtLinearScaleEngine);
     setYaxis(-2.0, 2.0);
-    setAxisTitle(QwtPlot::yLeft, "Amplitude");
+    setAxisTitle(QwtAxis::YLeft, "Amplitude");
 
     QList<QColor> colors;
     colors << QColor(Qt::blue) << QColor(Qt::red) << QColor(Qt::green)
@@ -376,10 +376,10 @@ void TimeDomainDisplayPlot::_resetXAxisPoints()
     QRectF zbase = d_zoomer->zoomBase();
 
     if (d_semilogx) {
-        setAxisScale(QwtPlot::xBottom, 1e-1, d_numPoints * delt);
+        setAxisScale(QwtAxis::XBottom, 1e-1, d_numPoints * delt);
         zbase.setLeft(1e-1);
     } else {
-        setAxisScale(QwtPlot::xBottom, 0, d_numPoints * delt);
+        setAxisScale(QwtAxis::XBottom, 0, d_numPoints * delt);
         zbase.setLeft(0);
     }
 
@@ -428,7 +428,7 @@ void TimeDomainDisplayPlot::setSampleRate(double sr,
         // displayed, I think it looks better by just setting it to 4 regardless.
         // double display_units = ceil(log10(units)/2.0);
         double display_units = 4;
-        setAxisTitle(QwtPlot::xBottom, QString("Time (%1)").arg(strunits.c_str()));
+        setAxisTitle(QwtAxis::XBottom, QString("Time (%1)").arg(strunits.c_str()));
         ((TimeDomainDisplayZoomer*)d_zoomer)->setTimePrecision(display_units);
         ((TimeDomainDisplayZoomer*)d_zoomer)->setUnitType(strunits);
     }
@@ -455,9 +455,9 @@ void TimeDomainDisplayPlot::setSemilogx(bool en)
 {
     d_semilogx = en;
     if (!d_semilogx) {
-        setAxisScaleEngine(QwtPlot::xBottom, new QwtLinearScaleEngine);
+        setAxisScaleEngine(QwtAxis::XBottom, new QwtLinearScaleEngine);
     } else {
-        setAxisScaleEngine(QwtPlot::xBottom, new QwtLogScaleEngine);
+        setAxisScaleEngine(QwtAxis::XBottom, new QwtLogScaleEngine);
     }
     _resetXAxisPoints();
 }
@@ -467,13 +467,13 @@ void TimeDomainDisplayPlot::setSemilogy(bool en)
     if (d_semilogy != en) {
         d_semilogy = en;
 
-        double max = axisScaleDiv(QwtPlot::yLeft).upperBound();
+        double max = axisScaleDiv(QwtAxis::YLeft).upperBound();
 
         if (!d_semilogy) {
-            setAxisScaleEngine(QwtPlot::yLeft, new QwtLinearScaleEngine);
+            setAxisScaleEngine(QwtAxis::YLeft, new QwtLinearScaleEngine);
             setYaxis(-pow(10.0, max / 10.0), pow(10.0, max / 10.0));
         } else {
-            setAxisScaleEngine(QwtPlot::yLeft, new QwtLogScaleEngine);
+            setAxisScaleEngine(QwtAxis::YLeft, new QwtLogScaleEngine);
             setYaxis(1e-10, 10.0 * log10(max));
         }
     }
@@ -518,7 +518,7 @@ void TimeDomainDisplayPlot::setYLabel(const std::string& label, const std::strin
     std::string l = label;
     if (unit.length() > 0)
         l += " (" + unit + ")";
-    setAxisTitle(QwtPlot::yLeft, QString(l.c_str()));
+    setAxisTitle(QwtAxis::YLeft, QString(l.c_str()));
     ((TimeDomainDisplayZoomer*)d_zoomer)->setYUnitType(unit);
 }
 

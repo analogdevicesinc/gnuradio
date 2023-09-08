@@ -76,12 +76,12 @@ VectorDisplayPlot::VectorDisplayPlot(int nplots, QWidget* parent)
 {
     d_numPoints = default_numpoints;
 
-    setAxisTitle(QwtPlot::xBottom, d_x_axis_label);
-    setAxisScale(QwtPlot::xBottom, d_x_axis_start, d_numPoints - 1);
+    setAxisTitle(QwtAxis::XBottom, d_x_axis_label);
+    setAxisScale(QwtAxis::XBottom, d_x_axis_start, d_numPoints - 1);
 
-    setAxisScaleEngine(QwtPlot::yLeft, new QwtLinearScaleEngine);
-    setAxisScale(QwtPlot::yLeft, d_ymin, d_ymax);
-    setAxisTitle(QwtPlot::yLeft, d_y_axis_label);
+    setAxisScaleEngine(QwtAxis::YLeft, new QwtLinearScaleEngine);
+    setAxisScale(QwtAxis::YLeft, d_ymin, d_ymax);
+    setAxisTitle(QwtAxis::YLeft, d_y_axis_label);
 
     QList<QColor> default_colors;
     default_colors << QColor(Qt::blue) << QColor(Qt::red) << QColor(Qt::green)
@@ -186,7 +186,7 @@ void VectorDisplayPlot::setYaxis(double min, double max)
     d_ymax = max;
 
     // Set the axis max/min to the new values
-    setAxisScale(QwtPlot::yLeft, d_ymin, d_ymax);
+    setAxisScale(QwtAxis::YLeft, d_ymin, d_ymax);
 
     // Reset the base zoom level to the new axis scale set here.
     // But don't do it if we set the axis due to auto scaling.
@@ -201,13 +201,13 @@ double VectorDisplayPlot::getYMax() const { return d_ymax; }
 void VectorDisplayPlot::setXAxisLabel(const QString& label)
 {
     d_x_axis_label = label;
-    setAxisTitle(QwtPlot::xBottom, label);
+    setAxisTitle(QwtAxis::XBottom, label);
 }
 
 void VectorDisplayPlot::setYAxisLabel(const QString& label)
 {
     d_y_axis_label = label;
-    setAxisTitle(QwtPlot::yLeft, label);
+    setAxisTitle(QwtAxis::YLeft, label);
 }
 
 void VectorDisplayPlot::setXAxisUnit(const QString& unit)
@@ -229,8 +229,8 @@ void VectorDisplayPlot::setXAxisValues(const double start, const double step)
     d_x_axis_start = start;
     d_x_axis_step = step;
 
-    if ((axisScaleDraw(QwtPlot::xBottom) != NULL) && (d_zoomer != NULL)) {
-        setAxisTitle(QwtPlot::xBottom, d_x_axis_label);
+    if ((axisScaleDraw(QwtAxis::XBottom) != NULL) && (d_zoomer != NULL)) {
+        setAxisTitle(QwtAxis::XBottom, d_x_axis_label);
         if (reset) {
             _resetXAxisPoints();
             clearMaxData();
@@ -357,7 +357,7 @@ void VectorDisplayPlot::_resetXAxisPoints()
         xValue += d_x_axis_step;
     }
 
-    setAxisScale(QwtPlot::xBottom, d_xdata[0], d_xdata[d_numPoints - 1]);
+    setAxisScale(QwtAxis::XBottom, d_xdata[0], d_xdata[d_numPoints - 1]);
 
     // Set up zoomer base for maximum unzoom x-axis
     // and reset to maximum unzoom level

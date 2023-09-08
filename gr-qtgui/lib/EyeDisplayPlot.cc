@@ -101,16 +101,16 @@ EyeDisplayPlot::EyeDisplayPlot(unsigned int nplots,
     title.setText(QString("Eye [Data %1]").arg(d_curve_index));
     setTitle(title);
 
-    setAxisScaleEngine(QwtPlot::xBottom, new QwtLinearScaleEngine);
+    setAxisScaleEngine(QwtAxis::XBottom, new QwtLinearScaleEngine);
     setXaxis(-1.0 * d_numPointsPerPeriod, d_numPointsPerPeriod - 1);
     QwtText xAxisTitle(QString("Time (sec)"));
     xAxisTitle.setRenderFlags(Qt::AlignRight | Qt::AlignVCenter);
-    setAxisTitle(QwtPlot::xBottom, xAxisTitle);
+    setAxisTitle(QwtAxis::XBottom, xAxisTitle);
 
-    setAxisScaleEngine(QwtPlot::yLeft, new QwtLinearScaleEngine);
+    setAxisScaleEngine(QwtAxis::YLeft, new QwtLinearScaleEngine);
     setYaxis(-2.0, 2.0);
     QwtText yAxisTitle(QString("Amplitude"));
-    setAxisTitle(QwtPlot::yLeft, yAxisTitle);
+    setAxisTitle(QwtAxis::YLeft, yAxisTitle);
 
     colors << QColor(Qt::blue) << QColor(Qt::red) << QColor(Qt::green)
            << QColor(Qt::black) << QColor(Qt::cyan) << QColor(Qt::magenta)
@@ -383,7 +383,7 @@ void EyeDisplayPlot::_resetXAxisPoints()
         d_xdata[loc] = delt * loc;
     }
 
-    setAxisScale(QwtPlot::xBottom, 0, 2.0 * delt * d_sps);
+    setAxisScale(QwtAxis::XBottom, 0, 2.0 * delt * d_sps);
     // Set up zoomer base for maximum unzoom x-axis
     // and reset to maximum unzoom level
     QRectF zbase = d_zoomer->zoomBase();
@@ -424,7 +424,7 @@ void EyeDisplayPlot::setSampleRate(double sr, double units, const std::string& s
         double display_units = 4;
         QwtText axisTitle(QString("Time (%1)").arg(strunits.c_str()));
         axisTitle.setRenderFlags(Qt::AlignRight | Qt::AlignVCenter);
-        setAxisTitle(QwtPlot::xBottom, axisTitle);
+        setAxisTitle(QwtAxis::XBottom, axisTitle);
         ((EyeDisplayZoomer*)d_zoomer)->setTimePrecision(display_units);
         ((EyeDisplayZoomer*)d_zoomer)->setUnitType(strunits);
     }
@@ -474,7 +474,7 @@ void EyeDisplayPlot::setYLabel(const std::string& label, const std::string& unit
     if (unit.length() > 0)
         l += " (" + unit + ")";
     QwtText yAxisTitle(QString(l.c_str()));
-    setAxisTitle(QwtPlot::yLeft, yAxisTitle);
+    setAxisTitle(QwtAxis::YLeft, yAxisTitle);
 
     ((EyeDisplayZoomer*)d_zoomer)->setYUnitType(unit);
 }

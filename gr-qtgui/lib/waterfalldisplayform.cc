@@ -287,7 +287,7 @@ bool WaterfallDisplayForm::checkClicked()
 
 void WaterfallDisplayForm::setTimeTitle(const std::string title)
 {
-    getPlot()->setAxisTitle(QwtPlot::yLeft, title.c_str());
+    getPlot()->setAxisTitle(QwtAxis::YLeft, title.c_str());
 }
 
 float WaterfallDisplayForm::getClickedFreq() const { return d_clicked_freq; }

@@ -359,9 +359,9 @@ TimeRasterDisplayPlot::TimeRasterDisplayPlot(
     d_numPoints = d_cols;
     d_color_bar_title_font_size = 18;
 
-    setAxisScaleDraw(QwtPlot::xBottom,
+    setAxisScaleDraw(QwtAxis::XBottom,
                      new QwtXScaleDraw(d_x_start_value, d_x_end_value, cols));
-    setAxisScaleDraw(QwtPlot::yLeft,
+    setAxisScaleDraw(QwtAxis::YLeft,
                      new QwtYScaleDraw(d_y_start_value, d_y_end_value, rows));
 
     for (unsigned int i = 0; i < d_nplots; ++i) {
@@ -435,20 +435,20 @@ void TimeRasterDisplayPlot::reset()
 
     double sec_per_samp = units / d_samp_rate;
 
-    QwtYScaleDraw* yScale = (QwtYScaleDraw*)axisScaleDraw(QwtPlot::yLeft);
+    QwtYScaleDraw* yScale = (QwtYScaleDraw*)axisScaleDraw(QwtAxis::YLeft);
     yScale->setRows(d_rows);
 
-    QwtXScaleDraw* xScale = (QwtXScaleDraw*)axisScaleDraw(QwtPlot::xBottom);
+    QwtXScaleDraw* xScale = (QwtXScaleDraw*)axisScaleDraw(QwtAxis::XBottom);
     xScale->setSecondsPerLine(sec_per_samp);
     if (d_x_label.length() > 0) {
-        setAxisTitle(QwtPlot::xBottom, QString(d_x_label.c_str()));
+        setAxisTitle(QwtAxis::XBottom, QString(d_x_label.c_str()));
     } else {
-        setAxisTitle(QwtPlot::xBottom, QString("Time (%1)").arg(strunits[iunit].c_str()));
+        setAxisTitle(QwtAxis::XBottom, QString("Time (%1)").arg(strunits[iunit].c_str()));
     }
     xScale->initiateUpdate();
 
     if (d_y_label.length() > 0) {
-        setAxisTitle(QwtPlot::yLeft, d_y_label.c_str());
+        setAxisTitle(QwtAxis::YLeft, d_y_label.c_str());
     }
 
     // Load up the new base zoom settings
@@ -501,7 +501,7 @@ void TimeRasterDisplayPlot::setXAxis(double min, double max)
 {
     d_x_start_value = min;
     d_x_end_value = max;
-    setAxisScaleDraw(QwtPlot::xBottom,
+    setAxisScaleDraw(QwtAxis::XBottom,
                      new QwtXScaleDraw(d_x_start_value, d_x_end_value, d_cols));
     reset();
 }
@@ -516,7 +516,7 @@ void TimeRasterDisplayPlot::setYAxis(double min, double max)
 {
     d_y_start_value = min;
     d_y_end_value = max;
-    setAxisScaleDraw(QwtPlot::yLeft,
+    setAxisScaleDraw(QwtAxis::YLeft,
                      new QwtYScaleDraw(d_y_start_value, d_y_end_value, d_rows));
     reset();
 }
@@ -548,7 +548,7 @@ void TimeRasterDisplayPlot::setPlotDimensions(const double rows,
     d_rows = rows;
     d_cols = cols;
 
-    if ((axisScaleDraw(QwtPlot::xBottom) != NULL) && (d_zoomer != NULL)) {
+    if ((axisScaleDraw(QwtAxis::XBottom) != NULL) && (d_zoomer != NULL)) {
         if (rst) {
             reset();
         }
@@ -609,13 +609,13 @@ double TimeRasterDisplayPlot::getMaxIntensity(unsigned int which) const
 void TimeRasterDisplayPlot::replot()
 {
     // Update the x-axis display
-    if (axisWidget(QwtPlot::yLeft) != NULL) {
-        axisWidget(QwtPlot::yLeft)->update();
+    if (axisWidget(QwtAxis::YLeft) != NULL) {
+        axisWidget(QwtAxis::YLeft)->update();
     }
 
     // Update the y-axis display
-    if (axisWidget(QwtPlot::xBottom) != NULL) {
-        axisWidget(QwtPlot::xBottom)->update();
+    if (axisWidget(QwtAxis::XBottom) != NULL) {
+        axisWidget(QwtAxis::XBottom)->update();
     }
 
     if (d_zoomer != NULL) {
@@ -729,7 +729,7 @@ const QColor TimeRasterDisplayPlot::getUserDefinedHighIntensityColor() const
 
 void TimeRasterDisplayPlot::_updateIntensityRangeDisplay()
 {
-    QwtScaleWidget* rightAxis = axisWidget(QwtPlot::yRight);
+    QwtScaleWidget* rightAxis = axisWidget(QwtAxis::YRight);
     QwtText colorBarTitle("Intensity");
     colorBarTitle.setFont(QFont("Arial", d_color_bar_title_font_size));
     rightAxis->setTitle(colorBarTitle);
@@ -764,9 +764,9 @@ void TimeRasterDisplayPlot::_updateIntensityRangeDisplay()
             rightAxis->setColorMap(intv, new ColorMap_MultiColor());
             break;
         }
-        setAxisScale(QwtPlot::yRight, intv.minValue(), intv.maxValue());
+        setAxisScale(QwtAxis::YRight, intv.minValue(), intv.maxValue());
 
-        enableAxis(QwtPlot::yRight);
+		setAxisVisible(QwtAxis::YRight);
 
         plotLayout()->setAlignCanvasToScales(true);
 

@@ -63,12 +63,12 @@ FrequencyDisplayPlot::FrequencyDisplayPlot(int nplots, QWidget* parent)
 {
     d_numPoints = 0;
 
-    setAxisTitle(QwtPlot::xBottom, "Frequency (Hz)");
-    setAxisScaleDraw(QwtPlot::xBottom, new FreqDisplayScaleDraw(0));
+    setAxisTitle(QwtAxis::XBottom, "Frequency (Hz)");
+    setAxisScaleDraw(QwtAxis::XBottom, new FreqDisplayScaleDraw(0));
 
-    setAxisScaleEngine(QwtPlot::yLeft, new QwtLinearScaleEngine);
-    setAxisScale(QwtPlot::yLeft, d_ymin, d_ymax);
-    setAxisTitle(QwtPlot::yLeft, "Relative Gain (dB)");
+    setAxisScaleEngine(QwtAxis::YLeft, new QwtLinearScaleEngine);
+    setAxisScale(QwtAxis::YLeft, d_ymin, d_ymax);
+    setAxisTitle(QwtAxis::YLeft, "Relative Gain (dB)");
 
     QList<QColor> default_colors;
     default_colors << QColor(Qt::blue) << QColor(Qt::red) << QColor(Qt::green)
@@ -199,7 +199,7 @@ void FrequencyDisplayPlot::setYaxis(double min, double max)
     d_ymax = max;
 
     // Set the axis max/min to the new values
-    setAxisScale(QwtPlot::yLeft, d_ymin, d_ymax);
+    setAxisScale(QwtAxis::YLeft, d_ymin, d_ymax);
 
     // Reset the base zoom level to the new axis scale set here.
     // But don't do it if we set the axis due to auto scaling.
@@ -234,10 +234,10 @@ void FrequencyDisplayPlot::setFrequencyRange(const double centerfreq,
         d_stop_frequency = stopFreq;
         d_center_frequency = centerfreq / units;
 
-        if ((axisScaleDraw(QwtPlot::xBottom) != NULL) && (d_zoomer != NULL)) {
+        if ((axisScaleDraw(QwtAxis::XBottom) != NULL) && (d_zoomer != NULL)) {
             double display_units = ceil(log10(units) / 2.0);
-            setAxisScaleDraw(QwtPlot::xBottom, new FreqDisplayScaleDraw(display_units));
-            setAxisTitle(QwtPlot::xBottom,
+            setAxisScaleDraw(QwtAxis::XBottom, new FreqDisplayScaleDraw(display_units));
+            setAxisTitle(QwtAxis::XBottom,
                          QString("Frequency (%1)").arg(strunits.c_str()));
 
             if (reset) {
@@ -431,7 +431,7 @@ void FrequencyDisplayPlot::_resetXAxisPoints()
         freqValue += fft_bin_size;
     }
 
-    setAxisScale(QwtPlot::xBottom, d_start_frequency, d_stop_frequency);
+    setAxisScale(QwtAxis::XBottom, d_start_frequency, d_stop_frequency);
 
     // Set up zoomer base for maximum unzoom x-axis
     // and reset to maximum unzoom level
@@ -483,7 +483,7 @@ void FrequencyDisplayPlot::setYLabel(const std::string& label, const std::string
     std::string l = label;
     if (unit.length() > 0)
         l += " (" + unit + ")";
-    setAxisTitle(QwtPlot::yLeft, QString(l.c_str()));
+    setAxisTitle(QwtAxis::YLeft, QString(l.c_str()));
     static_cast<FreqDisplayZoomer*>(d_zoomer)->setYUnit(unit);
 }
 

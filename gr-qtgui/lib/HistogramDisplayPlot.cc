@@ -77,13 +77,13 @@ HistogramDisplayPlot::HistogramDisplayPlot(unsigned int nplots, QWidget* parent)
 
     d_autoscale_state = true;
 
-    setAxisScaleEngine(QwtPlot::xBottom, new QwtLinearScaleEngine);
+    setAxisScaleEngine(QwtAxis::XBottom, new QwtLinearScaleEngine);
     setXaxis(-1, 1);
-    setAxisTitle(QwtPlot::xBottom, "Value");
+    setAxisTitle(QwtAxis::XBottom, "Value");
 
-    setAxisScaleEngine(QwtPlot::yLeft, new QwtLinearScaleEngine);
+    setAxisScaleEngine(QwtAxis::YLeft, new QwtLinearScaleEngine);
     setYaxis(-2.0, d_bins);
-    setAxisTitle(QwtPlot::yLeft, "Count");
+    setAxisTitle(QwtAxis::YLeft, "Count");
 
     QList<QColor> colors;
     colors << QColor(Qt::blue) << QColor(Qt::red) << QColor(Qt::green)
@@ -197,17 +197,17 @@ void HistogramDisplayPlot::_resetXAxisPoints(double left, double right)
         d_xdata[loc] = d_left + (loc + 0.5) * d_width; // center the value in each bin
     }
     QwtScaleDiv scalediv(d_left, d_right);
-    setAxisScaleDiv(QwtPlot::xBottom, scalediv);
+    setAxisScaleDiv(QwtAxis::XBottom, scalediv);
 
     // Set up zoomer base for maximum unzoom x-axis
     // and reset to maximum unzoom level
     QRectF zbase = d_zoomer->zoomBase();
 
     if (d_semilogx) {
-        setAxisScale(QwtPlot::xBottom, 1e-1, d_right);
+        setAxisScale(QwtAxis::XBottom, 1e-1, d_right);
         zbase.setLeft(1e-1);
     } else {
-        setAxisScale(QwtPlot::xBottom, d_left, d_right);
+        setAxisScale(QwtAxis::XBottom, d_left, d_right);
         zbase.setLeft(d_left);
     }
 
@@ -241,9 +241,9 @@ void HistogramDisplayPlot::setSemilogx(bool en)
 {
     d_semilogx = en;
     if (!d_semilogx) {
-        setAxisScaleEngine(QwtPlot::xBottom, new QwtLinearScaleEngine);
+        setAxisScaleEngine(QwtAxis::XBottom, new QwtLinearScaleEngine);
     } else {
-        setAxisScaleEngine(QwtPlot::xBottom, new QwtLogScaleEngine);
+        setAxisScaleEngine(QwtAxis::XBottom, new QwtLogScaleEngine);
     }
 }
 
@@ -252,13 +252,13 @@ void HistogramDisplayPlot::setSemilogy(bool en)
     if (d_semilogy != en) {
         d_semilogy = en;
 
-        double max = axisScaleDiv(QwtPlot::yLeft).upperBound();
+        double max = axisScaleDiv(QwtAxis::YLeft).upperBound();
 
         if (!d_semilogy) {
-            setAxisScaleEngine(QwtPlot::yLeft, new QwtLinearScaleEngine);
+            setAxisScaleEngine(QwtAxis::YLeft, new QwtLinearScaleEngine);
             setYaxis(-pow(10.0, max / 10.0), pow(10.0, max / 10.0));
         } else {
-            setAxisScaleEngine(QwtPlot::yLeft, new QwtLogScaleEngine);
+            setAxisScaleEngine(QwtAxis::YLeft, new QwtLogScaleEngine);
             setYaxis(1e-10, 10.0 * log10(100 * max));
         }
     }

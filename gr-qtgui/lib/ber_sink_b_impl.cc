@@ -130,8 +130,8 @@ void ber_sink_b_impl::initialize()
     d_main_gui = new ConstellationDisplayForm(d_esno_buffers.size(), d_parent);
 
     d_main_gui->setNPoints(d_nconnections);
-    d_main_gui->getPlot()->setAxisTitle(QwtPlot::yLeft, "LogScale BER");
-    d_main_gui->getPlot()->setAxisTitle(QwtPlot::xBottom, "ESNO");
+    d_main_gui->getPlot()->setAxisTitle(QwtAxis::YLeft, "LogScale BER");
+    d_main_gui->getPlot()->setAxisTitle(QwtAxis::XBottom, "ESNO");
     // initialize update time to 10 times a second
     set_update_time(0.1);
 }

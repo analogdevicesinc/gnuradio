@@ -32,7 +32,7 @@ DisplayPlot::DisplayPlot(int nplots, QWidget* parent)
     setPaletteColor(default_palette_color);
 
     d_panner = new QwtPlotPanner(canvas());
-    d_panner->setAxisEnabled(QwtPlot::yRight, false);
+    d_panner->setAxisEnabled(QwtAxis::YRight, false);
     d_panner->setMouseButton(Qt::MiddleButton, Qt::ControlModifier);
 
     // emit the position of clicks on widget
@@ -46,13 +46,13 @@ DisplayPlot::DisplayPlot(int nplots, QWidget* parent)
 
     // Configure magnify on mouse wheel
     d_magnifier = new QwtPlotMagnifier(canvas());
-    d_magnifier->setAxisEnabled(QwtPlot::xBottom, false);
+    d_magnifier->setAxisEnabled(QwtAxis::XBottom, false);
 
     // Avoid jumping when labels with more/less digits
     // appear/disappear when scrolling vertically
 
-    const QFontMetrics fm(axisWidget(QwtPlot::yLeft)->font());
-    QwtScaleDraw* sd = axisScaleDraw(QwtPlot::yLeft);
+    const QFontMetrics fm(axisWidget(QwtAxis::YLeft)->font());
+    QwtScaleDraw* sd = axisScaleDraw(QwtAxis::YLeft);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 11, 0))
     int min_ext = fm.horizontalAdvance("100.00");
 #else
@@ -83,14 +83,14 @@ void DisplayPlot::disableLegend()
 
 void DisplayPlot::setYaxis(double min, double max)
 {
-    setAxisScale(QwtPlot::yLeft, min, max);
+    setAxisScale(QwtAxis::YLeft, min, max);
     if (!d_autoscale_state)
         d_zoomer->setZoomBase();
 }
 
 void DisplayPlot::setXaxis(double min, double max)
 {
-    setAxisScale(QwtPlot::xBottom, min, max);
+    setAxisScale(QwtAxis::XBottom, min, max);
     d_zoomer->setZoomBase();
 }
 
@@ -198,37 +198,37 @@ int DisplayPlot::getAxisLabelFontSize(int axisId) const
 
 void DisplayPlot::setYaxisLabelFontSize(int fs)
 {
-    setAxisLabelFontSize(QwtPlot::yLeft, fs);
+    setAxisLabelFontSize(QwtAxis::YLeft, fs);
 }
 
 int DisplayPlot::getYaxisLabelFontSize() const
 {
-    int fs = getAxisLabelFontSize(QwtPlot::yLeft);
+    int fs = getAxisLabelFontSize(QwtAxis::YLeft);
     return fs;
 }
 
 void DisplayPlot::setXaxisLabelFontSize(int fs)
 {
-    setAxisLabelFontSize(QwtPlot::xBottom, fs);
+    setAxisLabelFontSize(QwtAxis::XBottom, fs);
 }
 
 int DisplayPlot::getXaxisLabelFontSize() const
 {
-    int fs = getAxisLabelFontSize(QwtPlot::xBottom);
+    int fs = getAxisLabelFontSize(QwtAxis::XBottom);
     return fs;
 }
 
 void DisplayPlot::setAxesLabelFontSize(int fs)
 {
-    setAxisLabelFontSize(QwtPlot::yLeft, fs);
-    setAxisLabelFontSize(QwtPlot::xBottom, fs);
+    setAxisLabelFontSize(QwtAxis::YLeft, fs);
+    setAxisLabelFontSize(QwtAxis::XBottom, fs);
 }
 
 int DisplayPlot::getAxesLabelFontSize() const
 {
     // Returns 0 if all axes do not have the same font size.
-    int fs = getAxisLabelFontSize(QwtPlot::yLeft);
-    if (getAxisLabelFontSize(QwtPlot::xBottom) != fs)
+    int fs = getAxisLabelFontSize(QwtAxis::YLeft);
+    if (getAxisLabelFontSize(QwtAxis::XBottom) != fs)
         return 0;
     return fs;
 }
@@ -358,6 +358,6 @@ void DisplayPlot::onPickerPointSelected(const QPointF& p)
 
 void DisplayPlot::setAxisLabels(bool en)
 {
-    enableAxis(0, en);
-    enableAxis(2, en);
+	setAxisVisible(0, en);
+	setAxisVisible(2, en);
 }

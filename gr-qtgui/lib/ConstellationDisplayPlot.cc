@@ -58,16 +58,16 @@ ConstellationDisplayPlot::ConstellationDisplayPlot(int nplots, QWidget* parent)
     d_zoomer->setRubberBandPen(c);
     d_zoomer->setTrackerPen(c);
 
-    d_magnifier->setAxisEnabled(QwtPlot::xBottom, true);
-    d_magnifier->setAxisEnabled(QwtPlot::yLeft, true);
+    d_magnifier->setAxisEnabled(QwtAxis::XBottom, true);
+    d_magnifier->setAxisEnabled(QwtAxis::YLeft, true);
 
-    setAxisScaleEngine(QwtPlot::xBottom, new QwtLinearScaleEngine);
+    setAxisScaleEngine(QwtAxis::XBottom, new QwtLinearScaleEngine);
     set_xaxis(-2.0, 2.0);
-    setAxisTitle(QwtPlot::xBottom, "In-phase");
+    setAxisTitle(QwtAxis::XBottom, "In-phase");
 
-    setAxisScaleEngine(QwtPlot::yLeft, new QwtLinearScaleEngine);
+    setAxisScaleEngine(QwtAxis::YLeft, new QwtLinearScaleEngine);
     set_yaxis(-2.0, 2.0);
-    setAxisTitle(QwtPlot::yLeft, "Quadrature");
+    setAxisTitle(QwtAxis::YLeft, "Quadrature");
     updateAxes();
 
     QList<QColor> colors;

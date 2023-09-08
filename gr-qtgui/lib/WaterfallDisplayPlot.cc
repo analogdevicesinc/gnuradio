@@ -109,11 +109,11 @@ WaterfallDisplayPlot::WaterfallDisplayPlot(int nplots, QWidget* parent)
     d_nrows = 200;
     d_color_bar_title_font_size = 18;
 
-    setAxisTitle(QwtPlot::xBottom, "Frequency (Hz)");
-    setAxisScaleDraw(QwtPlot::xBottom, new FreqDisplayScaleDraw(0));
+    setAxisTitle(QwtAxis::XBottom, "Frequency (Hz)");
+    setAxisScaleDraw(QwtAxis::XBottom, new FreqDisplayScaleDraw(0));
 
-    setAxisTitle(QwtPlot::yLeft, "Time (s)");
-    setAxisScaleDraw(QwtPlot::yLeft, new QwtTimeScaleDraw());
+    setAxisTitle(QwtAxis::YLeft, "Time (s)");
+    setAxisScaleDraw(QwtAxis::YLeft, new QwtTimeScaleDraw());
 
     for (unsigned int i = 0; i < d_nplots; ++i) {
         d_data.push_back(
@@ -168,7 +168,7 @@ void WaterfallDisplayPlot::resetAxis()
         d_data[i]->reset();
     }
 
-    setAxisScale(QwtPlot::xBottom, d_start_frequency, d_stop_frequency);
+    setAxisScale(QwtAxis::XBottom, d_start_frequency, d_stop_frequency);
 
     // Load up the new base zoom settings
     QRectF zbase = d_zoomer->zoomBase();
@@ -202,10 +202,10 @@ void WaterfallDisplayPlot::setFrequencyRange(const double centerfreq,
         d_stop_frequency = stopFreq;
         d_center_frequency = centerfreq / units;
 
-        if ((axisScaleDraw(QwtPlot::xBottom) != NULL) && (d_zoomer != NULL)) {
+        if ((axisScaleDraw(QwtAxis::XBottom) != NULL) && (d_zoomer != NULL)) {
             double display_units = ceil(log10(units) / 2.0);
-            setAxisScaleDraw(QwtPlot::xBottom, new FreqDisplayScaleDraw(display_units));
-            setAxisTitle(QwtPlot::xBottom,
+            setAxisScaleDraw(QwtAxis::XBottom, new FreqDisplayScaleDraw(display_units));
+            setAxisTitle(QwtAxis::XBottom,
                          QString("Frequency (%1)").arg(strunits.c_str()));
 
             if (reset) {
@@ -266,7 +266,7 @@ void WaterfallDisplayPlot::plotNewData(const std::vector<double*> dataPoints,
             }
 
             QwtTimeScaleDraw* timeScale =
-                (QwtTimeScaleDraw*)axisScaleDraw(QwtPlot::yLeft);
+                (QwtTimeScaleDraw*)axisScaleDraw(QwtAxis::YLeft);
             timeScale->setSecondsPerLine(timePerFFT);
             timeScale->setZeroTime(timestamp);
             timeScale->initiateUpdate();
@@ -292,7 +292,7 @@ void WaterfallDisplayPlot::plotNewData(const std::vector<double*> dataPoints,
             }
 
             QwtTimeScaleDraw* timeScale =
-                (QwtTimeScaleDraw*)axisScaleDraw(QwtPlot::yLeft);
+                (QwtTimeScaleDraw*)axisScaleDraw(QwtAxis::YLeft);
             timeScale->setSecondsPerLine(timePerFFT);
             timeScale->setZeroTime(timestamp);
 
@@ -362,21 +362,21 @@ void WaterfallDisplayPlot::setColorMapTitleFontSize(int tfs)
 
 void WaterfallDisplayPlot::replot()
 {
-    QwtTimeScaleDraw* timeScale = (QwtTimeScaleDraw*)axisScaleDraw(QwtPlot::yLeft);
+    QwtTimeScaleDraw* timeScale = (QwtTimeScaleDraw*)axisScaleDraw(QwtAxis::YLeft);
     timeScale->initiateUpdate();
 
     FreqDisplayScaleDraw* freqScale =
-        (FreqDisplayScaleDraw*)axisScaleDraw(QwtPlot::xBottom);
+        (FreqDisplayScaleDraw*)axisScaleDraw(QwtAxis::XBottom);
     freqScale->initiateUpdate();
 
     // Update the time axis display
-    if (axisWidget(QwtPlot::yLeft) != NULL) {
-        axisWidget(QwtPlot::yLeft)->update();
+    if (axisWidget(QwtAxis::YLeft) != NULL) {
+        axisWidget(QwtAxis::YLeft)->update();
     }
 
     // Update the Frequency Offset Display
-    if (axisWidget(QwtPlot::xBottom) != NULL) {
-        axisWidget(QwtPlot::xBottom)->update();
+    if (axisWidget(QwtAxis::XBottom) != NULL) {
+        axisWidget(QwtAxis::XBottom)->update();
     }
 
     if (d_zoomer != NULL) {
@@ -501,7 +501,7 @@ int WaterfallDisplayPlot::getNumRows() const { return d_nrows; }
 
 void WaterfallDisplayPlot::_updateIntensityRangeDisplay()
 {
-    QwtScaleWidget* rightAxis = axisWidget(QwtPlot::yRight);
+    QwtScaleWidget* rightAxis = axisWidget(QwtAxis::YRight);
     QwtText colorBarTitle("Intensity (dB)");
     colorBarTitle.setFont(QFont("Arial", d_color_bar_title_font_size));
     rightAxis->setTitle(colorBarTitle);
@@ -538,7 +538,7 @@ void WaterfallDisplayPlot::_updateIntensityRangeDisplay()
             rightAxis->setColorMap(intv, new ColorMap_MultiColor());
             break;
         }
-        setAxisScale(QwtPlot::yRight, intv.minValue(), intv.maxValue());
+        setAxisScale(QwtAxis::YRight, intv.minValue(), intv.maxValue());
 
         plotLayout()->setAlignCanvasToScales(true);
 
@@ -554,19 +554,19 @@ void WaterfallDisplayPlot::_updateIntensityRangeDisplay()
 void WaterfallDisplayPlot::disableLegend()
 {
     d_legend_enabled = false;
-    enableAxis(QwtPlot::yRight, false);
+	setAxisVisible(QwtAxis::YRight, false);
 }
 
 void WaterfallDisplayPlot::enableLegend()
 {
     d_legend_enabled = true;
-    enableAxis(QwtPlot::yRight, true);
+	setAxisVisible(QwtAxis::YRight, true);
 }
 
 void WaterfallDisplayPlot::enableLegend(bool en)
 {
     d_legend_enabled = en;
-    enableAxis(QwtPlot::yRight, en);
+	setAxisVisible(QwtAxis::YRight, en);
 }
 
 void WaterfallDisplayPlot::setNumRows(int nrows) { d_nrows = nrows; }
