@@ -106,10 +106,7 @@ void device_source_impl::set_buffer_size(unsigned int _buffer_size)
 
     if (buf && this->buffer_size != _buffer_size) {
         iio_buffer_destroy(buf);
-
-        buf = iio_device_create_buffer(dev, _buffer_size, false);
-        if (!buf)
-            throw std::runtime_error("Unable to create buffer!\n");
+        buf = nullptr;
     }
 
     this->buffer_size = _buffer_size;
@@ -279,6 +276,16 @@ int device_source_impl::work(int noutput_items,
 
     // Check if we've processed what we have first
     if (!items_in_buffer) {
+        if (!buf) {
+            buf = iio_device_create_buffer(dev, buffer_size, false);
+            if (!buf) {
+                char buf[256];
+                iio_strerror(errno, buf, sizeof(buf));
+                d_logger->error("Unable to create buffer: {:s}", buf);
+                return -1;
+            }
+        }
+
         ret = iio_buffer_refill(buf);
         if (ret < 0) {
             /* -EBADF happens when the buffer is cancelled */
@@ -286,7 +293,7 @@ int device_source_impl::work(int noutput_items,
 
                 char buf[256];
                 iio_strerror(-ret, buf, sizeof(buf));
-                d_logger->warn("Unable to refill buffer: {:s}", buf);
+                d_logger->error("Unable to refill buffer: {:s}", buf);
             }
             return -1;
         }
@@ -333,12 +340,7 @@ bool device_source_impl::start()
     byte_offset = 0;
     thread_stopped = false;
 
-    buf = iio_device_create_buffer(dev, buffer_size, false);
-    if (!buf) {
-        throw std::runtime_error("Unable to create buffer!\n");
-    }
-
-    return !!buf;
+    return true;
 }
 
 bool device_source_impl::stop()
