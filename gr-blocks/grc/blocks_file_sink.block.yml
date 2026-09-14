@@ -55,8 +55,5 @@ cpp_templates:
     make: 'this->${id} = blocks::file_sink::make(${type.size}*${vlen}, ${file}, ${append});'
     callbacks:
     - open(${file})
-    translations:
-        'True': 'true'
-        'False': 'false'
 
 file_format: 1

@@ -15,6 +15,7 @@
 #include "async_decoder_impl.h"
 #include <gnuradio/io_signature.h>
 #include <volk/volk.h>
+#include <cmath>
 #include <cstdio>
 
 namespace gr {
@@ -51,15 +52,10 @@ async_decoder_impl::async_decoder_impl(generic_decoder::sptr my_decoder,
     message_port_register_in(d_in_port);
     message_port_register_out(d_out_port);
 
-    if (d_packed) {
-        set_msg_handler(d_in_port, [this](pmt::pmt_t msg) { this->decode_packed(msg); });
-    } else {
-        set_msg_handler(d_in_port,
-                        [this](pmt::pmt_t msg) { this->decode_unpacked(msg); });
-    }
+    set_msg_handler(d_in_port, [this](const pmt::pmt_t& msg) { this->decode(msg); });
 
     // The maximum frame size is set by the initial frame size of the decoder.
-    d_max_bits_in = d_mtu * 8 * 1.0 / d_decoder->rate();
+    d_max_bits_in = std::lround(d_mtu * 8 * 1.0 / d_decoder->rate());
     d_tmp_f32.resize(d_max_bits_in);
 
     if (strncmp(d_decoder->get_input_conversion(), "uchar", 5) == 0) {
@@ -74,7 +70,28 @@ async_decoder_impl::async_decoder_impl(generic_decoder::sptr my_decoder,
 
 async_decoder_impl::~async_decoder_impl() {}
 
-void async_decoder_impl::decode_unpacked(pmt::pmt_t msg)
+// The volk_32f_s32f_x2_convert_8u kernel is only available since Volk 3.1.
+// In earlier versions we use this ad-hoc function.
+#if !(VOLK_VERSION >= 030100)
+inline void async_decoder_impl::convert_32f_to_8u(uint8_t* output_vector,
+                                                  const float* input_vector,
+                                                  const float scale,
+                                                  const float bias,
+                                                  unsigned int num_points)
+{
+    volk_32f_s32f_multiply_32f(d_tmp_f32.data(), input_vector, scale, num_points);
+    if (bias != 0.0) {
+        for (size_t n = 0; n < num_points; n++) {
+            d_tmp_f32[n] += bias;
+        }
+    }
+    for (size_t n = 0; n < num_points; n++) {
+        output_vector[n] = std::clamp<float>(d_tmp_f32[n], 0.0f, UINT8_MAX);
+    }
+}
+#endif
+
+void async_decoder_impl::decode(const pmt::pmt_t& msg)
 {
     // extract input pdu
     pmt::pmt_t meta(pmt::car(msg));
@@ -83,14 +100,14 @@ void async_decoder_impl::decode_unpacked(pmt::pmt_t msg)
     // Watch out for this diff. It might be over-specializing to the
     // CC decoder in terminated mode that has an extra rate(K-1)
     // bits added on to the transmitted frame.
-    int diff =
-        d_decoder->rate() * d_decoder->get_input_size() - d_decoder->get_output_size();
+    int diff = std::lround(d_decoder->rate() * d_decoder->get_input_size()) -
+               d_decoder->get_output_size();
 
     size_t nbits_in = pmt::length(bits);
     size_t nbits_out = 0;
     size_t nblocks = 1;
     bool variable_frame_size =
-        d_decoder->set_frame_size(nbits_in * d_decoder->rate() - diff);
+        d_decoder->set_frame_size(std::lround(nbits_in * d_decoder->rate()) - diff);
 
     // Check here if the frame size is larger than what we've
     // allocated for in the constructor.
@@ -101,7 +118,7 @@ void async_decoder_impl::decode_unpacked(pmt::pmt_t msg)
 
     // set up nbits_out
     if (variable_frame_size) {
-        nbits_out = nbits_in * d_decoder->rate() - diff;
+        nbits_out = std::lround(nbits_in * d_decoder->rate()) - diff;
     } else {
         nblocks = nbits_in / d_decoder->get_input_size();
         nbits_out = nblocks * d_decoder->get_output_size();
@@ -110,89 +127,51 @@ void async_decoder_impl::decode_unpacked(pmt::pmt_t msg)
         }
     }
 
-    size_t o0(0);
-    const float* f32in = pmt::f32vector_elements(bits, o0);
-    pmt::pmt_t outvec(pmt::make_u8vector(nbits_out, 0x00));
-    uint8_t* u8out = pmt::u8vector_writable_elements(outvec, o0);
+    size_t vector_len = 0; // used only to get the length of PMT vectors
+    const float* f32in = pmt::f32vector_elements(bits, vector_len);
+    const size_t nitems_out = d_packed ? nbits_out / 8 : nbits_out;
+    auto outvec = pmt::make_u8vector(nitems_out, 0x00);
+    uint8_t* u8out = pmt::u8vector_writable_elements(outvec, vector_len);
+    uint8_t* decoder_out = d_packed ? d_bits_out.data() : u8out;
+    const float shift = d_decoder->get_shift();
 
-    if (strncmp(d_decoder->get_input_conversion(), "uchar", 5) == 0) {
-        volk_32f_s32f_multiply_32f(d_tmp_f32.data(), f32in, 48.0f, nbits_in);
-    } else {
-        memcpy(d_tmp_f32.data(), f32in, nbits_in * sizeof(float));
-    }
+    if (std::string_view(d_decoder->get_input_conversion()) == "uchar") {
+#if VOLK_VERSION >= 030100
+        volk_32f_s32f_x2_convert_8u(d_tmp_u8.data(), f32in, 48.0f, shift, nbits_in);
+#else
+        convert_32f_to_8u(d_tmp_u8.data(), f32in, 48.0f, shift, nbits_in);
+#endif
 
-    if (d_decoder->get_shift() != 0) {
-        for (size_t n = 0; n < nbits_in; n++)
-            d_tmp_f32[n] += d_decoder->get_shift();
-    }
-
-    if (strncmp(d_decoder->get_input_conversion(), "uchar", 5) == 0) {
-        // volk_32f_s32f_convert_8i(d_tmp_u8, d_tmp_f32, 1, nbits_in);
-        for (size_t n = 0; n < nbits_in; n++)
-            d_tmp_u8[n] = static_cast<uint8_t>(d_tmp_f32[n]);
-
-        d_decoder->generic_work((void*)d_tmp_u8.data(), (void*)u8out);
-    } else {
         for (size_t i = 0; i < nblocks; i++) {
-            d_decoder->generic_work((void*)&d_tmp_f32[i * d_decoder->get_input_size()],
-                                    (void*)&u8out[i * d_decoder->get_output_size()]);
+            d_decoder->generic_work(
+                (void*)&d_tmp_u8[i * d_decoder->get_input_size()],
+                (void*)&decoder_out[i * d_decoder->get_output_size()]);
+        }
+    } else {
+        if (shift != 0.0) {
+            volk_32f_s32f_add_32f(d_tmp_f32.data(), f32in, shift, nbits_in);
+        } else {
+            memcpy(d_tmp_f32.data(), f32in, nbits_in * sizeof(float));
+        }
+
+        for (size_t i = 0; i < nblocks; i++) {
+            d_decoder->generic_work(
+                (void*)&d_tmp_f32[i * d_decoder->get_input_size()],
+                (void*)&decoder_out[i * d_decoder->get_output_size()]);
         }
     }
 
-    static const pmt::pmt_t iterations_key = pmt::mp("iterations");
-    meta = pmt::dict_add(meta, iterations_key, pmt::mp(d_decoder->get_iterations()));
-    message_port_pub(d_out_port, pmt::cons(meta, outvec));
-}
+    // Note: when nblocks > 1, this only gets the iterations for the last
+    // decoder block.
+    meta = pmt::dict_add(meta, ITERATIONS_KEY, pmt::mp(d_decoder->get_iterations()));
 
-void async_decoder_impl::decode_packed(pmt::pmt_t msg)
-{
-    // extract input pdu
-    pmt::pmt_t meta(pmt::car(msg));
-    pmt::pmt_t bits(pmt::cdr(msg));
-
-    size_t o0 = 0;
-    size_t nbits_in = pmt::length(bits);
-    int nbits_out = nbits_in * d_decoder->rate();
-    int nbytes_out = nbits_out / 8;
-
-    // Check here if the frame size is larger than what we've
-    // allocated for in the constructor.
-    if (nbits_in > d_max_bits_in) {
-        throw std::runtime_error(
-            "async_decoder: Received frame larger than max frame size.");
+    if (d_packed) {
+        if (d_rev_pack) {
+            d_pack.pack_rev(u8out, decoder_out, nitems_out);
+        } else {
+            d_pack.pack(u8out, decoder_out, nitems_out);
+        }
     }
-
-    d_decoder->set_frame_size(nbits_out);
-
-    pmt::pmt_t outvec(pmt::make_u8vector(nbytes_out, 0x00));
-    uint8_t* bytes_out = pmt::u8vector_writable_elements(outvec, o0);
-    const float* f32in = pmt::f32vector_elements(bits, o0);
-
-    if (strncmp(d_decoder->get_input_conversion(), "uchar", 5) == 0) {
-        volk_32f_s32f_multiply_32f(d_tmp_f32.data(), f32in, 48.0f, nbits_in);
-    } else {
-        memcpy(d_tmp_f32.data(), f32in, nbits_in * sizeof(float));
-    }
-
-    if (d_decoder->get_shift() != 0) {
-        for (size_t n = 0; n < nbits_in; n++)
-            d_tmp_f32[n] += d_decoder->get_shift();
-    }
-
-    if (strncmp(d_decoder->get_input_conversion(), "uchar", 5) == 0) {
-        // volk_32f_s32f_convert_8i(d_tmp_u8, d_tmp_f32, 1.0, nbits_in);
-        for (size_t n = 0; n < nbits_in; n++)
-            d_tmp_u8[n] = static_cast<uint8_t>(d_tmp_f32[n]);
-
-        d_decoder->generic_work((void*)d_tmp_u8.data(), (void*)d_bits_out.data());
-    } else {
-        d_decoder->generic_work((void*)d_tmp_f32.data(), (void*)d_bits_out.data());
-    }
-
-    if (d_rev_pack)
-        d_pack.pack_rev(bytes_out, d_bits_out.data(), nbytes_out);
-    else
-        d_pack.pack(bytes_out, d_bits_out.data(), nbytes_out);
 
     message_port_pub(d_out_port, pmt::cons(meta, outvec));
 }

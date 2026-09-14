@@ -8,6 +8,7 @@
 import ast
 import collections
 import textwrap
+from typing import Union, List
 
 from .. import Constants
 from ..base import Element
@@ -21,6 +22,8 @@ attributed_str = type('attributed_str', (str,), {})
 
 @setup_names
 class Param(Element):
+
+    EvaluationType = Union[None, str, complex, float, int, bool, List[str], List[complex], List[float], List[int]]
 
     is_param = True
 
@@ -46,7 +49,7 @@ class Param(Element):
         self.hide = hide or 'none'
         # end of args ########################################################
 
-        self._evaluated = None
+        self._evaluated: Param.EvaluationType = None
         self._stringify_flag = False
         self._lisitify_flag = False
         self.hostage_cells = set()
@@ -124,13 +127,28 @@ class Param(Element):
         return value
 
     def set_value(self, value):
-        # Must be a string
-        self.value = str(value)
+        """
+        Store the user provided value.
+
+        Strips leading and trailing whitespace for all parameter types except
+        multiline fields where whitespace can be significant.
+        """
+        value = str(value)
+        if self._should_trim_value():
+            value = value.strip()
+        self.value = value
 
     def set_default(self, value):
         if self.default == self.value:
             self.set_value(value)
         self.default = str(value)
+
+    def _should_trim_value(self) -> bool:
+        """
+        Determine if leading/trailing whitespace should be trimmed when saving
+        parameter values.
+        """
+        return self.dtype not in ('_multiline', '_multiline_python_external')
 
     def rewrite(self):
         Element.rewrite(self)
@@ -165,10 +183,10 @@ class Param(Element):
             except dtypes.ValidateError as e:
                 self.add_error_message(str(e))
 
-    def get_evaluated(self):
+    def get_evaluated(self) -> EvaluationType:
         return self._evaluated
 
-    def is_float(self, num):
+    def _is_float(self, num: str) -> bool:
         """
         Check if string can be converted to float.
 
@@ -181,7 +199,7 @@ class Param(Element):
         except ValueError:
             return False
 
-    def evaluate(self):
+    def evaluate(self) -> EvaluationType:
         """
         Evaluate the value.
 
@@ -211,7 +229,7 @@ class Param(Element):
         elif dtype in ('raw', 'complex', 'real', 'float', 'int', 'short', 'byte', 'hex', 'bool'):
             if expr:
                 try:
-                    if isinstance(expr, str) and self.is_float(expr[:-1]):
+                    if isinstance(expr, str) and self._is_float(expr[:-1]):
                         scale_factor = expr[-1:]
                         if scale_factor in self.scale:
                             expr = str(float(expr[:-1]) *
@@ -308,6 +326,8 @@ class Param(Element):
                 self.evaluate()
             return '[' + value + ']' if self._lisitify_flag else value
         else:
+            if self.dtype in ('int', 'real') and ('+' in value or '-' in value or '*' in value or '/' in value):
+                value = '(' + value + ')'
             return value
 
     def get_opt(self, item):
@@ -316,7 +336,7 @@ class Param(Element):
     ##############################################
     # GUI Hint
     ##############################################
-    def parse_gui_hint(self, expr):
+    def parse_gui_hint(self, expr: str) -> str:
         """
         Parse/validate gui hint value.
 
@@ -347,7 +367,7 @@ class Param(Element):
             e = self.parent_flowgraph.evaluate(pos)
 
             if not isinstance(e, (list, tuple)) or len(e) not in (2, 4) or not all(isinstance(ei, int) for ei in e):
-                raise Exception(
+                self.add_error_message(
                     'Invalid GUI Hint entered: {e!r} (Must be a list of {{2,4}} non-negative integers).'.format(e=e))
 
             if len(e) == 2:
@@ -357,11 +377,11 @@ class Param(Element):
                 row, col, row_span, col_span = e
 
             if (row < 0) or (col < 0):
-                raise Exception(
-                    'Invalid GUI Hint entered: {e!r} (non-negative integers only).'.format(e=e))
+                self.add_error_message(
+                    'Invalid GUI Hint entered: {e!r} (non-negative rows/cols only).'.format(e=e))
 
             if (row_span < 1) or (col_span < 1):
-                raise Exception(
+                self.add_error_message(
                     'Invalid GUI Hint entered: {e!r} (positive row/column span required).'.format(e=e))
 
             return row, col, row_span, col_span
@@ -371,13 +391,14 @@ class Param(Element):
                     if block.key == 'qtgui_tab_widget' and block.name == tab)
             tab_block = next(iter(tabs), None)
             if not tab_block:
-                raise Exception(
+                self.add_error_message(
                     'Invalid tab name entered: {tab} (Tab name not found).'.format(tab=tab))
+                return
 
             tab_index_size = int(tab_block.params['num_tabs'].value)
             if index >= tab_index_size:
-                raise Exception('Invalid tab index entered: {tab}@{index} (Index out of range).'.format(
-                    tab=tab, index=index))
+                self.add_error_message(
+                    'Invalid tab index entered: {tab}@{index} (Index out of range).'.format(tab=tab, index=index))
 
         # Collision Detection
         def collision_detection(row, col, row_span, col_span):
@@ -388,13 +409,13 @@ class Param(Element):
                 for c in range(col, col + col_span):
                     self.hostage_cells.add((my_parent, (r, c)))
 
-            for other in self.get_all_params('gui_hint'):
+            for other in self._get_all_params('gui_hint'):
                 if other is self:
                     continue
                 collision = next(
                     iter(self.hostage_cells & other.hostage_cells), None)
                 if collision:
-                    raise Exception('Block {block!r} is also using parent {parent!r}, cell {cell!r}.'.format(
+                    self.add_error_message('Block {block!r} is also using parent {parent!r}, cell {cell!r}.'.format(
                         block=other.parent_block.name, parent=collision[0], cell=collision[1]
                     ))
 
@@ -457,7 +478,7 @@ class Param(Element):
 
         return widget_str
 
-    def get_all_params(self, dtype, key=None):
+    def _get_all_params(self, dtype, key=None) -> List[Element]:
         """
         Get all the params from the flowgraph that have the given type and
         optionally a given key

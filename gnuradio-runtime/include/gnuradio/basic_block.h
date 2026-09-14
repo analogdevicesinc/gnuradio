@@ -28,6 +28,25 @@
 
 namespace gr {
 
+class msg_queue_comparator
+{
+private:
+    const pmt::pmt_t d_system_port = pmt::intern("system");
+
+public:
+    bool operator()(pmt::pmt_t const& queue_key1, pmt::pmt_t const& queue_key2) const
+    {
+        if (pmt::eqv(queue_key2, d_system_port))
+            return false;
+        else if (pmt::eqv(queue_key1, d_system_port))
+            return true;
+        else {
+            pmt::comparator cmp;
+            return cmp(queue_key1, queue_key2);
+        }
+    }
+};
+
 /*!
  * \brief The abstract base class for all signal processing blocks.
  * \ingroup internal
@@ -49,8 +68,8 @@ private:
     d_msg_handlers_t d_msg_handlers;
 
     typedef std::deque<pmt::pmt_t> msg_queue_t;
-    typedef std::map<pmt::pmt_t, msg_queue_t, pmt::comparator> msg_queue_map_t;
-    typedef std::map<pmt::pmt_t, msg_queue_t, pmt::comparator>::iterator
+    typedef std::map<pmt::pmt_t, msg_queue_t, msg_queue_comparator> msg_queue_map_t;
+    typedef std::map<pmt::pmt_t, msg_queue_t, msg_queue_comparator>::iterator
         msg_queue_map_itr;
 
     gr::thread::mutex mutex; //< protects all vars
@@ -149,7 +168,7 @@ public:
     std::string name() const { return d_name; }
 
     /*!
-     * The sybolic name of the block, which is used in the
+     * The symbolic name of the block, which is used in the
      * block_registry. The name is assigned by the block's constructor
      * and never changes during the life of the block.
      */
@@ -262,6 +281,7 @@ public:
     //! How many messages in the queue?
     size_t nmsgs(pmt::pmt_t which_port)
     {
+        gr::thread::scoped_lock guard(mutex);
         if (msg_queue.find(which_port) == msg_queue.end())
             throw std::runtime_error("port does not exist!");
         return msg_queue[which_port].size();

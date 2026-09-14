@@ -3,32 +3,48 @@
 # -*- mode: yaml -*-
 
 name: Build conda package
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+
 
 jobs:
   build:
     name: ${{ matrix.CONFIG }}
-    runs-on: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.runs_on }}
+    timeout-minutes: 360
     strategy:
       fail-fast: false
       matrix:
         include:
-          - CONFIG: linux_64_numpy1.19python3.9.____cpython
-            SHORT_CONFIG: linux_64_numpy1.19python3.9.____cpython
+          - CONFIG: linux_64_numpy1.23python3.11.____cpython
+            SHORT_CONFIG: linux_64_numpy1.23python3.11.____cpython
             UPLOAD_PACKAGES: True
-            DOCKER_IMAGE: quay.io/condaforge/linux-anvil-cos7-x86_64
             os: ubuntu
-          - CONFIG: win_64_numpy1.19python3.9.____cpython
-            SHORT_CONFIG: win_64_numpy1.19python3.9.____cpython
+            runs_on: ['ubuntu-latest']
+            DOCKER_IMAGE: quay.io/condaforge/linux-anvil-x86_64:cos7
+          ## Removed macos, because -13 stopped working, macos-14 fails with
+          ## linker errors in Qt code (very hard to debug without a machine or
+          ## any experience on that platform) and the best guess "just try
+          ## rerendering" fails; log on
+          ## https://github.com/gnuradio/gnuradio/pull/8019
+          # - CONFIG: osx_64_numpy1.23python3.11.____cpython
+          #   SHORT_CONFIG: osx_64_numpy1.23python3.11.____cpython
+          #   UPLOAD_PACKAGES: True
+          #   os: macos
+          #   runs_on: ['macos-13']
+          - CONFIG: win_64_numpy1.23python3.11.____cpython
+            SHORT_CONFIG: win_64_numpy1.23python3.11.____cpython
             UPLOAD_PACKAGES: True
             os: windows
-          - CONFIG: osx_64_numpy1.19python3.9.____cpython
-            SHORT_CONFIG: osx_64_numpy1.19python3.9.____cpython
-            UPLOAD_PACKAGES: True
-            os: macos
+            runs_on: ['windows-latest']
     steps:
+
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b # v4.1.4
       with:
         fetch-depth: 0
 
@@ -39,12 +55,16 @@ jobs:
         UPLOAD_PACKAGES: ${{ matrix.UPLOAD_PACKAGES }}
         DOCKER_IMAGE: ${{ matrix.DOCKER_IMAGE }}
         CI: github_actions
-        UPLOAD_ON_BRANCH: master
+        UPLOAD_ON_BRANCH: main
+        CONDA_FORGE_DOCKER_RUN_ARGS: "${{ matrix.CONDA_FORGE_DOCKER_RUN_ARGS }}"
         BINSTAR_TOKEN: ${{ secrets.BINSTAR_TOKEN }}
       shell: bash
       run: |
         echo "::group::Configure binfmt_misc"
         docker run --rm --privileged multiarch/qemu-user-static:register --reset --credential yes
+        export flow_run_id="github_$GITHUB_RUN_ID"
+        export remote_url="https://github.com/$GITHUB_REPOSITORY"
+        export sha="$GITHUB_SHA"
         export FEEDSTOCK_NAME="$(basename $GITHUB_REPOSITORY)"
         export GIT_BRANCH="$(basename $GITHUB_REF)"
         if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
@@ -53,7 +73,8 @@ jobs:
           export IS_PR_BUILD="False"
         fi
         echo "::endgroup::"
-        ./.scripts/run_docker_build.sh
+        # run, but convert conda log grouping to github grouping
+        ./.scripts/run_docker_build.sh | sed 's/.*##\[group\]\(.*\)/::group::\1/;s/.*##\[endgroup\].*/::endgroup::/'
 
     - name: Build on macOS
       if: matrix.os == 'macos'
@@ -61,10 +82,13 @@ jobs:
         CONFIG: ${{ matrix.CONFIG }}
         UPLOAD_PACKAGES: ${{ matrix.UPLOAD_PACKAGES }}
         CI: github_actions
-        UPLOAD_ON_BRANCH: master
+        UPLOAD_ON_BRANCH: main
         BINSTAR_TOKEN: ${{ secrets.BINSTAR_TOKEN }}
       shell: bash
       run: |
+        export flow_run_id="github_$GITHUB_RUN_ID"
+        export remote_url="https://github.com/$GITHUB_REPOSITORY"
+        export sha="$GITHUB_SHA"
         export FEEDSTOCK_NAME="$(basename $GITHUB_REPOSITORY)"
         export GIT_BRANCH="$(basename $GITHUB_REF)"
         if [[ "${GITHUB_EVENT_NAME}" == "pull_request" ]]; then
@@ -72,44 +96,22 @@ jobs:
         else
           export IS_PR_BUILD="False"
         fi
-        ./.scripts/run_osx_build.sh
-
-    - name: Install Miniconda for windows
-      uses: conda-incubator/setup-miniconda@v2
-      with:
-        miniforge-version: latest
-        miniforge-variant: Mambaforge
-      if: matrix.os == 'windows'
+        ./.scripts/run_osx_build.sh | sed 's/.*##\[group\]\(.*\)/::group::\1/;s/.*##\[endgroup\].*/::endgroup::/'
 
     - name: Build on windows
       shell: cmd
       run: |
-        call activate base
-        mamba.exe install -c conda-forge 'python=3.9' conda-build conda "conda-forge-ci-setup=3" pip boa
-        if errorlevel 1 exit 1
-        setup_conda_rc .\ ".\.packaging/conda_recipe" .\.ci_support\%CONFIG%.yaml
-        if errorlevel 1 exit 1
-        
-        conda.exe mambabuild ".packaging/conda_recipe" -m .ci_support\%CONFIG%.yaml
-        if errorlevel 1 exit 1
-        set "FEEDSTOCK_NAME=%GITHUB_REPOSITORY:*/=%"
-        set "GIT_BRANCH=%GITHUB_REF:refs/heads/=%"
-        if /i "%GITHUB_EVENT_NAME%" == "pull_request" (
-          set "IS_PR_BUILD=True"
-        ) else (
-          set "IS_PR_BUILD=False"
-        )
-        if /i "%UPLOAD_PACKAGES%" == "true" (
-          if /i "%IS_PR_BUILD%" == "false" (
-            upload_package  .\ ".\.packaging/conda_recipe" .ci_support\%CONFIG%.yaml
-          )
-        )
+        set "flow_run_id=github_%GITHUB_RUN_ID%"
+        set "remote_url=https://github.com/%GITHUB_REPOSITORY%"
+        set "sha=%GITHUB_SHA%"
+        call ".scripts\run_win_build.bat"
       env:
+        MINIFORGE_HOME: D:\Miniforge
         PYTHONUNBUFFERED: 1
         CONFIG: ${{ matrix.CONFIG }}
         CI: github_actions
         UPLOAD_PACKAGES: ${{ matrix.UPLOAD_PACKAGES }}
-        UPLOAD_ON_BRANCH: master
+        UPLOAD_ON_BRANCH: main
         BINSTAR_TOKEN: ${{ secrets.BINSTAR_TOKEN }}
       if: matrix.os == 'windows'
     - name: Prepare conda build artifacts
@@ -120,6 +122,7 @@ jobs:
         CONFIG: ${{ matrix.CONFIG }}
         SHORT_CONFIG: ${{ matrix.SHORT_CONFIG }}
         OS: ${{ matrix.os }}
+        MINIFORGE_HOME_WIN: D:\Miniforge
       run: |
         export CI=github_actions
         export CI_RUN_ID=$GITHUB_RUN_ID
@@ -128,7 +131,7 @@ jobs:
         if [ $OS == "macos" ]; then
           export CONDA_BLD_DIR="${MINIFORGE_HOME:-${HOME}/miniforge3}/conda-bld"
         elif [ $OS == "windows" ]; then
-          export CONDA_BLD_DIR="${CONDA//\\//}/conda-bld"
+          export CONDA_BLD_DIR="${MINIFORGE_HOME_WIN//\\//}/conda-bld"
         else
           export CONDA_BLD_DIR="build_artifacts"
         fi
@@ -143,11 +146,12 @@ jobs:
         else
           export BLD_ARTIFACT_PREFIX="conda_pkgs"
         fi
-        ./.scripts/create_conda_build_artifacts.sh
+        ./.scripts/create_conda_build_artifacts.sh | sed 's/.*##\[group\]\(.*\)/::group::\1/;s/.*##\[endgroup\].*/::endgroup::/'
+
       continue-on-error: true
 
     - name: Store conda build artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
       if: ${{ always() && steps.prepare-artifacts.outcome == 'success' }}
       with:
         name: ${{ steps.prepare-artifacts.outputs.BLD_ARTIFACT_NAME }}
@@ -156,7 +160,7 @@ jobs:
       continue-on-error: true
 
     - name: Store conda build environment artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
       if: ${{ failure() && steps.prepare-artifacts.outcome == 'success' }}
       with:
         name: ${{ steps.prepare-artifacts.outputs.ENV_ARTIFACT_NAME }}

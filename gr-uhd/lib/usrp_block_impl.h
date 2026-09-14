@@ -14,7 +14,6 @@
 #include <gnuradio/uhd/usrp_block.h>
 #include <pmt/pmt.h>
 #include <uhd/usrp/multi_usrp.hpp>
-#include <boost/dynamic_bitset.hpp>
 #include <functional>
 
 
@@ -150,51 +149,6 @@ protected:
                                  const std::string& sensor_name,
                                  get_sensor_fn_t get_sensor_fn);
 
-    //! Helper function for msg_handler_command:
-    // - Extracts command and the command value from the command PMT
-    // - Returns true if the command PMT is well formed
-    // - If a channel is given, return that as well, otherwise set the channel to -1
-    static bool _unpack_chan_command(std::string& command,
-                                     pmt::pmt_t& cmd_val,
-                                     int& chan,
-                                     const pmt::pmt_t& cmd_pmt);
-
-    //! Helper function for msg_handler_command:
-    // - Sets a value in vector_to_update to cmd_val, depending on chan
-    // - If chan is a positive integer, it will set vector_to_update[chan]
-    // - If chan is -1, it depends on minus_one_updates_all:
-    //   - Either set vector_to_update[0] or
-    //   - Set *all* entries in vector_to_update
-    // - Returns a dynamic_bitset, all indexes that where changed in
-    //   vector_to_update are set to 1
-    template <typename T>
-    static boost::dynamic_bitset<>
-    _update_vector_from_cmd_val(std::vector<T>& vector_to_update,
-                                int chan,
-                                const T cmd_val,
-                                bool minus_one_updates_all = false)
-    {
-        boost::dynamic_bitset<> vals_updated(vector_to_update.size());
-        if (chan == -1) {
-            if (minus_one_updates_all) {
-                for (size_t i = 0; i < vector_to_update.size(); i++) {
-                    if (vector_to_update[i] != cmd_val) {
-                        vals_updated[i] = true;
-                        vector_to_update[i] = cmd_val;
-                    }
-                }
-                return vals_updated;
-            }
-            chan = 0;
-        }
-        if (vector_to_update[chan] != cmd_val) {
-            vector_to_update[chan] = cmd_val;
-            vals_updated[chan] = true;
-        }
-
-        return vals_updated;
-    }
-
     //! Like set_center_freq(), but uses _curr_freq and _curr_lo_offset
     virtual ::uhd::tune_result_t
     _set_center_freq_from_internals(size_t chan, pmt::pmt_t direction) = 0;
@@ -222,8 +176,8 @@ protected:
     // (this is not necessarily the true value the USRP is currently tuned to!).
     std::vector<::uhd::tune_request_t> _curr_tx_tune_req;
     std::vector<::uhd::tune_request_t> _curr_rx_tune_req;
-    boost::dynamic_bitset<> _tx_chans_to_tune;
-    boost::dynamic_bitset<> _rx_chans_to_tune;
+    std::vector<bool> _tx_chans_to_tune;
+    std::vector<bool> _rx_chans_to_tune;
 
     //! Stores the individual command handlers
     ::uhd::dict<pmt::pmt_t, cmd_handler_t> _msg_cmd_handlers;

@@ -4,7 +4,9 @@ include(GrPybind)
 # Python Bindings
 ########################################################################
 
-list(APPEND qtgui_python_files
+list(
+    APPEND
+    qtgui_python_files
     # ConstellationDisplayPlot_python.cc
     # DisplayPlot_python.cc
     # FrequencyDisplayPlot_python.cc
@@ -29,6 +31,7 @@ list(APPEND qtgui_python_files
     freqdisplayform_python.cc
     histogram_sink_f_python.cc
     histogramdisplayform_python.cc
+    matrix_sink_python.cc
     number_sink_python.cc
     numberdisplayform_python.cc
     # plot_raster_python.cc
@@ -53,12 +56,31 @@ list(APPEND qtgui_python_files
     # waterfallGlobalData_python.cc
     waterfall_sink_c_python.cc
     waterfall_sink_f_python.cc
-    waterfalldisplayform_python.cc
-    python_bindings.cc)
+    waterfalldisplayform_python.cc)
 
-GR_PYBIND_MAKE(qtgui 
-   ../../.. 
-   gr::qtgui
-   "${qtgui_python_files}")
+if(ENABLE_GR_QTGUI_OPENGL)
+    list(
+        APPEND
+        qtgui_python_files
+        rfnoc_f15_display_python.cc
+    )
+endif(ENABLE_GR_QTGUI_OPENGL)
 
-install(TARGETS qtgui_python DESTINATION ${GR_PYTHON_DIR}/gnuradio/qtgui COMPONENT pythonapi)
+list(APPEND qtgui_python_files python_bindings.cc)
+
+set(include_dirs ${Qt6Widgets_INCLUDE_DIRS})
+if(QWT_FOUND)
+    list(APPEND include_dirs ${QWT_INCLUDE_DIRS})
+endif(QWT_FOUND)
+list(JOIN include_dirs "," extra_includes)
+
+gr_pybind_make_check_hash(qtgui ../../.. gr::qtgui "${qtgui_python_files}")
+
+if(ENABLE_GR_QTGUI_OPENGL)
+    target_compile_definitions(qtgui_python PRIVATE OPENGL_FOUND)
+endif(ENABLE_GR_QTGUI_OPENGL)
+
+install(
+    TARGETS qtgui_python
+    DESTINATION ${GR_PYTHON_DIR}/gnuradio/qtgui
+    COMPONENT pythonapi)

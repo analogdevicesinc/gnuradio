@@ -129,6 +129,14 @@ class FlowGraph(CoreFlowgraph, Drawable):
                 '>>> Error opening an external editor. Please select a different editor.\n')
             # Reset the editor to force the user to select a new one.
             self.parent_platform.config.editor = ''
+            self.remove_external_editor(target=target)
+
+    def remove_external_editor(self, target=None, param=None):
+        if target is None:
+            target = (param.parent_block.name, param.key)
+        if target in self._external_updaters:
+            self._external_updaters[target].stop()
+            del self._external_updaters[target]
 
     def handle_external_editor_change(self, new_value, target):
         try:
@@ -136,8 +144,7 @@ class FlowGraph(CoreFlowgraph, Drawable):
             self.get_block(block_id).params[param_key].set_value(new_value)
 
         except (IndexError, ValueError):  # block no longer exists
-            self._external_updaters[target].stop()
-            del self._external_updaters[target]
+            self.remove_external_editor(target=target)
             return
         Actions.EXTERNAL_UPDATE()
 
@@ -670,7 +677,16 @@ class FlowGraph(CoreFlowgraph, Drawable):
         Returns:
             sub set of blocks in this flow graph
         """
-        return (e for e in self.selected_elements if e.is_block)
+        return (e for e in self.selected_elements.copy() if e.is_block)
+
+    def selected_connections(self):
+        """
+        Get a group of selected connections.
+
+        Returns:
+            sub set of connections in this flow graph
+        """
+        return (e for e in self.selected_elements.copy() if e.is_connection)
 
     @property
     def selected_block(self):
@@ -681,6 +697,16 @@ class FlowGraph(CoreFlowgraph, Drawable):
             a block or None
         """
         return next(self.selected_blocks(), None)
+
+    @property
+    def selected_connection(self):
+        """
+        Get the selected connection
+
+        Returns:
+            a connection or None
+        """
+        return next(self.selected_connections(), None)
 
     def get_selected_elements(self):
         """

@@ -49,7 +49,7 @@
  */
 #define BUTTERFLY(i, sym)                                         \
     {                                                             \
-        int m0, m1;                                               \
+        long m0, m1;                                              \
                                                                   \
         /* ACS for 0 branch */                                    \
         m0 = state[i].metric + mets[sym];          /* 2*i */      \
@@ -80,7 +80,7 @@ namespace fec {
 
 /* Convolutionally encode data into binary symbols */
 unsigned char encode(unsigned char* symbols,
-                     unsigned char* data,
+                     const unsigned char* data,
                      unsigned int nbytes,
                      unsigned char encstate)
 {

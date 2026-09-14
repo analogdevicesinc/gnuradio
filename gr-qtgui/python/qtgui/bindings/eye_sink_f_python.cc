@@ -53,7 +53,7 @@ void bind_eye_sink_f(py::module& m)
              D(eye_sink_f, make))
 
 
-        .def("exec_", &eye_sink_f::exec_, D(eye_sink_f, exec_))
+        .def("exec", &eye_sink_f::exec, D(eye_sink_f, exec))
 
 
         .def(
@@ -241,14 +241,14 @@ void bind_eye_sink_f(py::module& m)
 
 
         .def("enable_tags",
-             (void (eye_sink_f::*)(unsigned int, bool)) & eye_sink_f::enable_tags,
+             (void(eye_sink_f::*)(unsigned int, bool)) & eye_sink_f::enable_tags,
              py::arg("which"),
              py::arg("en"),
              D(eye_sink_f, enable_tags, 0))
 
 
         .def("enable_tags",
-             (void (eye_sink_f::*)(bool)) & eye_sink_f::enable_tags,
+             (void(eye_sink_f::*)(bool)) & eye_sink_f::enable_tags,
              py::arg("en"),
              D(eye_sink_f, enable_tags, 1))
 

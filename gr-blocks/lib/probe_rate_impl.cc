@@ -8,6 +8,7 @@
  *
  */
 
+#include "pmt/pmt.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -18,12 +19,19 @@
 namespace gr {
 namespace blocks {
 
-probe_rate::sptr probe_rate::make(size_t itemsize, double update_rate_ms, double alpha)
+probe_rate::sptr probe_rate::make(size_t itemsize,
+                                  double update_rate_ms,
+                                  double alpha,
+                                  std::string_view name)
 {
-    return gnuradio::make_block_sptr<probe_rate_impl>(itemsize, update_rate_ms, alpha);
+    return gnuradio::make_block_sptr<probe_rate_impl>(
+        itemsize, update_rate_ms, alpha, name);
 }
 
-probe_rate_impl::probe_rate_impl(size_t itemsize, double update_rate_ms, double alpha)
+probe_rate_impl::probe_rate_impl(size_t itemsize,
+                                 double update_rate_ms,
+                                 double alpha,
+                                 std::string_view name)
     : sync_block("probe_rate",
                  io_signature::make(1, 1, itemsize),
                  io_signature::make(0, 0, itemsize)),
@@ -37,6 +45,16 @@ probe_rate_impl::probe_rate_impl(size_t itemsize, double update_rate_ms, double 
       d_dict_now(pmt::mp("rate_now"))
 {
     message_port_register_out(d_port);
+    set_name(name);
+}
+
+void probe_rate_impl::set_name(std::string_view name)
+{
+    if (name.empty()) {
+        d_data_dict.erase(pmt::mp("name"));
+    } else {
+        d_data_dict[pmt::mp("name")] = pmt::mp(name);
+    }
 }
 
 probe_rate_impl::~probe_rate_impl() {}
@@ -46,9 +64,9 @@ int probe_rate_impl::work(int noutput_items,
                           gr_vector_void_star& output_items)
 {
     d_lastthru += noutput_items;
-    boost::posix_time::ptime now(boost::posix_time::microsec_clock::local_time());
-    boost::posix_time::time_duration diff = now - d_last_update;
-    double diff_ms = diff.total_milliseconds();
+    auto now = std::chrono::steady_clock::now();
+    std::chrono::duration<double, std::milli> diff = now - d_last_update;
+    double diff_ms = diff.count();
     if (diff_ms >= d_min_update_time) {
         double rate_this_update = d_lastthru * 1e3 / diff_ms;
         d_lastthru = 0;
@@ -58,10 +76,9 @@ int probe_rate_impl::work(int noutput_items,
         } else {
             d_avg = rate_this_update * d_alpha + d_avg * d_beta;
         }
-        pmt::pmt_t d = pmt::make_dict();
-        d = pmt::dict_add(d, d_dict_avg, pmt::mp(d_avg));
-        d = pmt::dict_add(d, d_dict_now, pmt::mp(rate_this_update));
-        message_port_pub(d_port, pmt::cons(d, pmt::PMT_NIL));
+        d_data_dict[d_dict_avg] = pmt::mp(d_avg);
+        d_data_dict[d_dict_now] = pmt::mp(rate_this_update);
+        message_port_pub(d_port, pmt::dict_from_mapping(d_data_dict));
     }
     return noutput_items;
 }
@@ -100,16 +117,16 @@ double probe_rate_impl::rate() { return d_avg; }
 
 double probe_rate_impl::timesincelast()
 {
-    boost::posix_time::ptime now(boost::posix_time::microsec_clock::local_time());
-    boost::posix_time::time_duration diff = now - d_last_update;
-    return diff.total_milliseconds();
+    auto now = std::chrono::steady_clock::now();
+    std::chrono::duration<double, std::milli> diff = now - d_last_update;
+    return diff.count();
 }
 
 bool probe_rate_impl::start()
 {
     d_avg = 0;
     d_lastthru = 0;
-    d_last_update = boost::posix_time::microsec_clock::local_time();
+    d_last_update = std::chrono::steady_clock::now();
     return true;
 }
 

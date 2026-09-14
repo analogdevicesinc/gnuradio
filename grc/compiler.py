@@ -14,6 +14,7 @@ from gnuradio import gr
 
 from .core import Messages
 from .core.platform import Platform
+from . import paths
 
 
 def argument_parser():
@@ -39,11 +40,12 @@ def main(args=None):
         prefs=gr.prefs(),
         version=gr.version(),
         version_parts=(gr.major_version(),
-                       gr.api_version(), gr.minor_version())
+                       gr.api_version(), gr.minor_version()),
+        install_prefix=gr.prefix(),
     )
     platform.build_library()
 
-    output_dir = args.output if not args.user_lib_dir else platform.config.hier_block_lib_dir
+    output_dir = args.output if not args.user_lib_dir else paths.get_state_directory()
     try:
         # recursive mkdir: os.makedirs doesn't work with .. paths, resolve with realpath
         os.makedirs(os.path.realpath(output_dir), exist_ok=True)
@@ -55,11 +57,17 @@ def main(args=None):
     for grc_file in args.grc_files:
         os.path.exists(grc_file) or exit('Error: missing ' + grc_file)
         Messages.send('\n')
-
-        flow_graph, file_path = platform.load_and_generate_flow_graph(
+        flow_graph, generator = platform.load_and_generate_flow_graph(
             os.path.abspath(grc_file), os.path.abspath(output_dir))
-        if not file_path:
+        if flow_graph is None and generator is None:
+            exit('Error: Failed to load ' + grc_file)
+        if generator is None:
+            exit("Error: Failed to create generator")
+        if not generator.file_path:
             exit('Compilation error')
-    if file_path and args.run:
-        run_command_args = flow_graph.get_run_command(file_path, split=True)
-        subprocess.call(run_command_args)
+    if generator.file_path and args.run:
+        run_command_args = generator.get_exec_args()
+        args = run_command_args.pop("args")
+        run_command_args.pop("stdout", None)
+        run_command_args.pop("stderr", None)
+        subprocess.run(args=args, **run_command_args)

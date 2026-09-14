@@ -1,6 +1,6 @@
 id: variable_low_pass_filter_taps
 label: Low-pass Filter Taps
-flags: [ show_id, python ]
+flags: [ show_id, python, cpp]
 
 parameters:
 -   id: gain
@@ -19,22 +19,28 @@ parameters:
     dtype: float
 -   id: win
     label: Window
-    dtype: raw
+    dtype: enum
     default: window.WIN_HAMMING
     options: [window.WIN_HAMMING, window.WIN_HANN, window.WIN_BLACKMAN, window.WIN_RECTANGULAR,
         window.WIN_KAISER]
     option_labels: [Hamming, Hann, Blackman, Rectangular, Kaiser]
+    option_attributes:
+        python_opts: [0, 1, 2, 3, 4]
+        cpp_opts: [fft::window::WIN_HAMMING, fft::window::WIN_HANN, fft::window::WIN_BLACKMAN, fft::window::WIN_RECTANGULAR, fft::window::WIN_KAISER]
 -   id: beta
     label: Beta
     dtype: float
     default: '6.76'
-value: ${ firdes.low_pass(gain, samp_rate, cutoff_freq, width, win, beta) }
+    hide: ${ ('part' if (win == "window.WIN_KAISER") else 'all') }
+-   id: value
+    dtype: float_vector
+    hide: all
+value: ${ firdes.low_pass(gain, samp_rate, cutoff_freq, width, win.python_opts, beta) }
 
 templates:
     imports: from gnuradio.filter import firdes
     var_make: |-
-        self.${id} = ${id} = firdes.low_pass(${gain}, ${samp_rate}, ${cutoff_freq},\
-        ${width}, ${win}, ${beta})
+        self.${id} = ${id} = firdes.low_pass(${gain}, ${samp_rate}, ${cutoff_freq}, ${width}, ${win}, ${beta})
     callbacks:
     - self.set_${id}(firdes.low_pass(${gain}, ${samp_rate}, ${cutoff_freq}, ${width}, ${win}, ${beta}))
 
@@ -42,8 +48,8 @@ cpp_templates:
     includes: ['#include <gnuradio/filter/firdes.h>']
     declarations: 'filter::firdes::sptr ${id};'
     var_make: |-
-        this->${id} = ${id} = firdes.low_pass(${gain}, ${samp_rate}, ${cutoff_freq},\
-        ${width}, ${win}, ${beta});
+        ${id} = filter::firdes::low_pass(${gain}, ${samp_rate}, ${cutoff_freq},
+                ${width}, ${win.cpp_opts}, ${beta});
     link: ['gnuradio::gnuradio-filter']
 
 documentation: |-

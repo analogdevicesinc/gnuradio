@@ -1,6 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Copyright (C) 2017 Free Software Foundation, Inc.
+ * Copyright (C) 2023 Daniel Estevez <daniel@destevez.net>
  *
  * This file is part of GNU Radio
  *
@@ -13,10 +14,9 @@
 #endif
 
 #include "symbol_sync_ff_impl.h"
-#include <gnuradio/integer_math.h>
 #include <gnuradio/io_signature.h>
 #include <gnuradio/math.h>
-#include <boost/format.hpp>
+#include <numeric>
 #include <stdexcept>
 
 namespace gr {
@@ -73,6 +73,8 @@ symbol_sync_ff_impl::symbol_sync_ff_impl(enum ted_type detector_type,
       d_inst_output_period(sps / static_cast<float>(osps)),
       d_inst_clock_period(sps),
       d_avg_clock_period(sps),
+      d_sps(sps),
+      d_max_deviation(max_deviation),
       d_osps(static_cast<float>(osps)),
       d_osps_n(osps),
       d_tags(),
@@ -101,7 +103,7 @@ symbol_sync_ff_impl::symbol_sync_ff_impl(enum ted_type detector_type,
         throw std::runtime_error("unable to create interpolating_resampler_fff");
 
     // Block Internal Clocks
-    d_interps_per_symbol_n = GR_LCM(d_ted->inputs_per_symbol(), d_osps_n);
+    d_interps_per_symbol_n = std::lcm(d_ted->inputs_per_symbol(), d_osps_n);
     d_interps_per_ted_input_n = d_interps_per_symbol_n / d_ted->inputs_per_symbol();
     d_interps_per_output_sample_n = d_interps_per_symbol_n / d_osps_n;
 
@@ -112,13 +114,7 @@ symbol_sync_ff_impl::symbol_sync_ff_impl(enum ted_type detector_type,
     sync_reset_internal_clocks();
     d_inst_interp_period = d_inst_clock_period / d_interps_per_symbol;
 
-    if (d_interps_per_symbol > sps)
-        GR_LOG_WARN(d_logger,
-                    boost::format("block performing more interpolations per "
-                                  "symbol (%3f) than input samples per symbol "
-                                  "(%3f). Consider reducing osps or "
-                                  "increasing sps") %
-                        d_interps_per_symbol % sps);
+    check_interps();
 
     // Timing Error Detector
     d_ted->sync_reset();
@@ -135,6 +131,48 @@ symbol_sync_ff_impl::symbol_sync_ff_impl(enum ted_type detector_type,
 }
 
 symbol_sync_ff_impl::~symbol_sync_ff_impl() {}
+
+void symbol_sync_ff_impl::set_sps(float sps)
+{
+    gr::thread::scoped_lock l(d_setlock);
+
+    d_sps = sps;
+
+    const auto max_period = sps + d_max_deviation;
+    const auto min_period = sps - d_max_deviation;
+    d_clock.set_max_avg_period(max_period);
+    d_clock.set_min_avg_period(min_period);
+    d_clock.set_nom_avg_period(sps);
+    d_clock.set_avg_period(sps);
+    d_clock.set_inst_period(sps);
+    d_clock.set_phase(0.0f);
+
+    d_inst_output_period = sps / d_osps;
+    d_inst_clock_period = sps;
+    d_avg_clock_period = sps;
+
+    sync_reset_internal_clocks();
+
+    d_inst_interp_period = d_inst_clock_period / d_interps_per_symbol;
+
+    check_interps();
+
+    d_ted->sync_reset();
+    d_interp->sync_reset(sps);
+    set_relative_rate(d_osps / sps);
+}
+
+void symbol_sync_ff_impl::check_interps()
+{
+    if (d_interps_per_symbol > d_sps) {
+        d_logger->warn("block performing more interpolations per "
+                       "symbol ({:g}) than input samples per symbol "
+                       "({:g}). Consider reducing osps or "
+                       "increasing sps",
+                       d_interps_per_symbol,
+                       d_sps);
+    }
+}
 
 //
 // Block Internal Clocks
@@ -179,7 +217,6 @@ void symbol_sync_ff_impl::collect_tags(uint64_t nitems_rd, int count)
     d_new_tags.clear();
     get_tags_in_range(d_new_tags, 0, nitems_rd, nitems_rd + count);
     d_tags.insert(d_tags.end(), d_new_tags.begin(), d_new_tags.end());
-    std::sort(d_tags.begin(), d_tags.end(), tag_t::offset_compare);
 }
 
 bool symbol_sync_ff_impl::find_sync_tag(uint64_t nitems_rd,
@@ -246,11 +283,10 @@ bool symbol_sync_ff_impl::find_sync_tag(uint64_t nitems_rd,
 
         if (!(timing_offset >= -1.0f && timing_offset <= 1.0f)) {
             // the time_est/clock_est tag's payload is invalid
-            GR_LOG_WARN(d_logger,
-                        boost::format("ignoring time_est/clock_est tag with"
-                                      " value %.2f, outside of allowed "
-                                      "range [-1.0, 1.0]") %
-                            timing_offset);
+            d_logger->warn("ignoring time_est/clock_est tag with"
+                           " value {:.2f}, outside of allowed "
+                           "range [-1.0, 1.0]",
+                           timing_offset);
             found = false;
             continue;
         }
@@ -390,6 +426,8 @@ int symbol_sync_ff_impl::general_work(int noutput_items,
                                       gr_vector_const_void_star& input_items,
                                       gr_vector_void_star& output_items)
 {
+    gr::thread::scoped_lock l(d_setlock);
+
     // max input to consume
     const int ni = ninput_items[0] - static_cast<int>(d_interp->ntaps());
     if (ni <= 0)

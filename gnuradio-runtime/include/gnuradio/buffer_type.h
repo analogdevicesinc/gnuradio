@@ -16,9 +16,7 @@
 
 #include <cstdint>
 #include <functional>
-#include <mutex>
 #include <string>
-#include <typeinfo>
 #include <vector>
 
 namespace gr {
@@ -111,7 +109,7 @@ public:
                                     buf_owner);
     }
 
-    buftype<classname, factory_class>() : buffer_type_base(typeid(classname).name()) {}
+    buftype() : buffer_type_base(typeid(classname).name()) {}
 };
 
 } // namespace gr

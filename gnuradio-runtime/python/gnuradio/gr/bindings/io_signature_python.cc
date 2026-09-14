@@ -14,12 +14,14 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(io_signature.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(2d21df486462de11f4eb25681101c0c6)                     */
+/* BINDTOOL_HEADER_FILE_HASH(749209af8901aa05aa68915c3a8cd941)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <algorithm>
+#include <vector>
 
 namespace py = pybind11;
 
@@ -36,13 +38,49 @@ void bind_io_signature(py::module& m)
     py::class_<io_signature, std::shared_ptr<io_signature>>(
         m, "io_signature", D(io_signature))
 
-        .def(py::init(&io_signature::make),
+        // vector initializer
+        .def(py::init([](int min,
+                         int max,
+                         const std::vector<size_t>& sizeof_stream_items,
+                         const gr::gr_vector_buffer_type& buftypes) {
+                 if (buftypes.empty()) {
+                     return io_signature::make(
+                         min,
+                         max,
+                         sizeof_stream_items,
+                         gr::gr_vector_buffer_type(sizeof_stream_items.size(),
+                                                   io_signature::default_buftype::type));
+                 }
+                 return io_signature::make(min, max, sizeof_stream_items, buftypes);
+             }),
              py::arg("min_streams"),
              py::arg("max_streams"),
              py::arg("sizeof_stream_item"),
-             py::arg("buftype") = gr::buffer_double_mapped::type,
+             py::arg("buftypes") = gr::gr_vector_buffer_type(),
              D(io_signature, make))
 
+        // all-the-same-size initializer
+        .def(py::init([](int min, int max, size_t sizeof_stream_item) {
+                 return io_signature::make(
+                     min, max, std::vector<size_t>{ sizeof_stream_item });
+             }),
+             py::arg("min_streams"),
+             py::arg("max_streams"),
+             py::arg("sizeof_stream_item"),
+             D(io_signature, make))
+
+        // all-the-same-size initializer, explicit buffer types
+        .def(py::init([](int min,
+                         int max,
+                         size_t sizeof_stream_item,
+                         const gr::gr_vector_buffer_type& buftypes) {
+                 return io_signature::make(min, max, { sizeof_stream_item }, buftypes);
+             }),
+             py::arg("min_streams"),
+             py::arg("max_streams"),
+             py::arg("sizeof_stream_item"),
+             py::arg("buftypes"),
+             D(io_signature, make))
 
         .def_static("make2",
                     &io_signature::make2,
@@ -50,8 +88,8 @@ void bind_io_signature(py::module& m)
                     py::arg("max_streams"),
                     py::arg("sizeof_stream_item1"),
                     py::arg("sizeof_stream_item2"),
-                    py::arg("buftype1") = gr::buffer_double_mapped::type,
-                    py::arg("buftype2") = gr::buffer_double_mapped::type,
+                    py::arg("buftype1") = io_signature::default_buftype::type,
+                    py::arg("buftype2") = io_signature::default_buftype::type,
                     D(io_signature, make2))
 
 
@@ -62,9 +100,9 @@ void bind_io_signature(py::module& m)
                     py::arg("sizeof_stream_item1"),
                     py::arg("sizeof_stream_item2"),
                     py::arg("sizeof_stream_item3"),
-                    py::arg("buftype1") = gr::buffer_double_mapped::type,
-                    py::arg("buftype2") = gr::buffer_double_mapped::type,
-                    py::arg("buftype3") = gr::buffer_double_mapped::type,
+                    py::arg("buftype1") = io_signature::default_buftype::type,
+                    py::arg("buftype2") = io_signature::default_buftype::type,
+                    py::arg("buftype3") = io_signature::default_buftype::type,
                     D(io_signature, make3))
 
         .def_static(
@@ -75,16 +113,19 @@ void bind_io_signature(py::module& m)
             py::arg("sizeof_stream_items"),
             D(io_signature, makev))
 
-        .def_static("makev",
-                    py::overload_cast<int,
-                                      int,
-                                      const std::vector<int>&,
-                                      gr::gr_vector_buffer_type>(&io_signature::makev),
-                    py::arg("min_streams"),
-                    py::arg("max_streams"),
-                    py::arg("sizeof_stream_items"),
-                    py::arg("buftypes"),
-                    D(io_signature, makev))
+        .def_static(
+            "makev",
+            [](int min,
+               int max,
+               const std::vector<size_t>& sizeof_stream_items,
+               const gr::gr_vector_buffer_type& buftypes) {
+                return io_signature::make(min, max, sizeof_stream_items, buftypes);
+            },
+            py::arg("min_streams"),
+            py::arg("max_streams"),
+            py::arg("sizeof_stream_items"),
+            py::arg("buftypes") = gr::gr_vector_buffer_type(),
+            D(io_signature, makev))
 
 
         .def("min_streams", &io_signature::min_streams, D(io_signature, min_streams))
@@ -99,9 +140,15 @@ void bind_io_signature(py::module& m)
              D(io_signature, sizeof_stream_item))
 
 
-        .def("sizeof_stream_items",
-             &io_signature::sizeof_stream_items,
-             D(io_signature, sizeof_stream_items))
+        .def("__str__", [](const io_signature& sig) { return fmt::format("{}", sig); })
+        .def("__repr__",
+             [](const io_signature& sig) {
+                 auto str = fmt::format("<gr::io_signature ({})>", sig);
+                 // TODO: implement this in the formatter through alternate format
+                 // specifier #
+                 std::replace(str.begin(), str.end(), '\n', ';');
+                 return str;
+             })
 
         ;
 }

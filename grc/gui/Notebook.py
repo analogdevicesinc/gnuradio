@@ -15,7 +15,7 @@ from . import Actions
 from .StateCache import StateCache
 from .Constants import MIN_WINDOW_WIDTH, MIN_WINDOW_HEIGHT
 from .DrawingArea import DrawingArea
-
+from .. import paths
 
 log = logging.getLogger(__name__)
 
@@ -89,6 +89,8 @@ class Page(Gtk.HBox):
 
         self.process = None
         self.saved = True
+        if not self.file_path:
+            self.saved = False
 
         # import the file
         initial_state = flow_graph.parent_platform.parse_flow_graph(file_path)
@@ -145,7 +147,11 @@ class Page(Gtk.HBox):
             generator
         """
         platform = self.flow_graph.parent_platform
-        return platform.Generator(self.flow_graph, os.path.dirname(self.file_path))
+        if self.flow_graph.get_option('generate_options').startswith('hb'):
+            output_dir = paths.get_state_directory()
+        else:
+            output_dir = os.path.dirname(self.file_path)
+        return platform.Generator(self.flow_graph, output_dir)
 
     def _handle_button(self, button):
         """

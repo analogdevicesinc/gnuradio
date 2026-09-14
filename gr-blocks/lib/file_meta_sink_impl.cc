@@ -17,7 +17,6 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <boost/format.hpp>
 #include <cstdio>
 #include <stdexcept>
 
@@ -42,6 +41,7 @@
 namespace gr {
 namespace blocks {
 
+using pmt::mp;
 
 file_meta_sink::sptr file_meta_sink::make(size_t itemsize,
                                           const std::string& filename,
@@ -155,7 +155,7 @@ bool file_meta_sink_impl::_open(FILE** fp, const char* filename)
     if ((fd = ::open(filename,
                      O_WRONLY | O_CREAT | O_TRUNC | OUR_O_LARGEFILE | OUR_O_BINARY,
                      0664)) < 0) {
-        GR_LOG_ERROR(d_logger, boost::format("%s: %s") % filename % strerror(errno));
+        d_logger->error("[::open] {:s}: {:s}", filename, strerror(errno));
         return false;
     }
 
@@ -165,7 +165,7 @@ bool file_meta_sink_impl::_open(FILE** fp, const char* filename)
     }
 
     if ((*fp = fdopen(fd, "wb")) == NULL) {
-        GR_LOG_ERROR(d_logger, boost::format("%s: %s") % filename % strerror(errno));
+        d_logger->error("[fdopen] {:s}: {:s}", filename, strerror(errno));
         ::close(fd); // don't leak file descriptor if fdopen fails.
     }
 
@@ -372,7 +372,7 @@ int file_meta_sink_impl::work(int noutput_items,
                               gr_vector_const_void_star& input_items,
                               gr_vector_void_star& output_items)
 {
-    char* inbuf = (char*)input_items[0];
+    const char* inbuf = (const char*)input_items[0];
     int nwritten = 0;
 
     do_update(); // update d_fp is reqd

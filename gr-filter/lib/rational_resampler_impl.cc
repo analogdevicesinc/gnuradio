@@ -13,11 +13,16 @@
 #endif
 
 #include "rational_resampler_impl.h"
+
+/* ensure that tweakme.h is included before the bundled spdlog/fmt header, see
+ * https://github.com/gabime/spdlog/issues/2922 */
+#include <spdlog/tweakme.h>
+
 #include <gnuradio/fft/window.h>
 #include <gnuradio/filter/firdes.h>
-#include <gnuradio/integer_math.h>
 #include <gnuradio/io_signature.h>
-#include <boost/format.hpp>
+#include <spdlog/fmt/fmt.h>
+#include <numeric>
 #include <stdexcept>
 
 namespace gr {
@@ -41,7 +46,8 @@ std::vector<TAP_T> design_resampler_filter(const unsigned interpolation,
 {
 
     if (fractional_bw >= 0.5 || fractional_bw <= 0) {
-        throw std::range_error("Invalid fractional_bandwidth, must be in (0, 0.5)");
+        throw std::range_error(fmt::format(
+            "Invalid fractional_bandwidth {:.2f}, must be in (0, 0.5)", fractional_bw));
     }
 
     // These are default values used to generate the filter when no taps are known
@@ -118,16 +124,16 @@ rational_resampler_impl<IN_T, OUT_T, TAP_T>::rational_resampler_impl(
         fractional_bw = 0.4;
     }
 
-    auto d = GR_GCD(interpolation, decimation);
+    auto d = std::gcd(interpolation, decimation);
 
     if (!taps.empty() && (d > 1)) {
-        GR_LOG_INFO(
-            d_logger,
-            boost::format(
-                "Rational resampler has user-provided taps but interpolation (%1%) and "
-                "decimation (%2%) have a GCD of %3%, which increases the complexity of "
-                "the filterbank. Consider reducing these values by the GCD.") %
-                interpolation % decimation % d);
+        this->d_logger->info(
+            "Rational resampler has user-provided taps but interpolation ({:d}) and "
+            "decimation ({:d}) have a GCD of {:d}, which increases the complexity of "
+            "the filterbank. Consider reducing these values by the GCD.",
+            interpolation,
+            decimation,
+            d);
     }
 
     std::vector<TAP_T> staps;

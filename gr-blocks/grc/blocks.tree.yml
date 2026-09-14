@@ -38,6 +38,8 @@
   - blocks_file_meta_source
   - blocks_file_meta_sink
   - blocks_tagged_file_sink
+  - blocks_sigmf_source_minimal
+  - blocks_sigmf_sink_minimal
 - IQ Correction:
   - blocks_correctiq_auto
   - blocks_correctiq_man
@@ -88,6 +90,7 @@
   - blocks_msg_meta_to_pair
 - Misc:
   - blocks_throttle
+  - blocks_throttle2
   - blocks_vector_source_x
   - blocks_head
   - blocks_skiphead
@@ -130,7 +133,9 @@
   - blocks_repeat
   - blocks_regenerate_bb
   - blocks_stretch_ff
+  - blocks_blockinterleaver_xx
 - Stream Tag Tools:
+  - blocks_burst_to_stream
   - blocks_tag_debug
   - blocks_tag_gate
   - blocks_tag_share
@@ -168,3 +173,4 @@
   - blocks_vco_c
 - Variables:
   - variable_tag_object
+  - variable_save_restore

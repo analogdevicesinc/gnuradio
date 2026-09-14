@@ -17,7 +17,7 @@
 #include <cmath>
 
 NumberDisplayForm::NumberDisplayForm(int nplots, gr::qtgui::graph_t type, QWidget* parent)
-    : QWidget(parent)
+    : QWidget(parent), d_format(FORMAT_FLOAT)
 {
     d_nplots = nplots;
     d_graph_type = type;
@@ -35,29 +35,18 @@ NumberDisplayForm::NumberDisplayForm(int nplots, gr::qtgui::graph_t type, QWidge
         d_indicator.push_back(new QwtThermo());
         d_indicator[i]->setScale(-1, 1);
 
-#if QWT_VERSION < 0x060100
-#else
         d_indicator[i]->setOriginMode(QwtThermo::OriginCustom);
         d_indicator[i]->setOrigin(0.0);
-#endif /* if QWT_VERSION < 0x060100 */
 
         switch (type) {
         case (gr::qtgui::NUM_GRAPH_HORIZ):
-#if QWT_VERSION < 0x060100
-            d_indicator[i]->setOrientation(Qt::Horizontal, QwtThermo::BottomScale);
-#else
             d_indicator[i]->setOrientation(Qt::Horizontal);
-#endif /* if QWT_VERSION < 0x060100 */
             d_layout->addWidget(d_label[i], 2 * i, 0);
             d_layout->addWidget(d_text_box[i], 2 * i, 1);
             d_layout->addWidget(d_indicator[i], 2 * i + 1, 1);
             break;
         case (gr::qtgui::NUM_GRAPH_VERT):
-#if QWT_VERSION < 0x060100
-            d_indicator[i]->setOrientation(Qt::Vertical, QwtThermo::LeftScale);
-#else
             d_indicator[i]->setOrientation(Qt::Vertical);
-#endif /* if QWT_VERSION < 0x060100 */
             d_layout->addWidget(d_label[i], 0, i);
             d_layout->addWidget(d_text_box[i], 1, i);
             d_layout->addWidget(d_indicator[i], 2, i);
@@ -148,6 +137,8 @@ NumberDisplayForm::NumberDisplayForm(int nplots, gr::qtgui::graph_t type, QWidge
     setLayout(d_layout);
 }
 
+void NumberDisplayForm::set_display_format(DisplayFormat format) { d_format = format; }
+
 NumberDisplayForm::~NumberDisplayForm()
 {
     // Qt deletes children when parent is deleted
@@ -166,7 +157,7 @@ void NumberDisplayForm::mousePressEvent(QMouseEvent* e)
         for (unsigned int i = 0; i < d_nplots; ++i) {
             d_label_menu[i]->setTitle(label(i).c_str());
         }
-        d_menu->exec(e->globalPos());
+        d_menu->exec(e->globalPosition().toPoint());
     }
 }
 
@@ -197,6 +188,8 @@ void NumberDisplayForm::saveFigure()
     QString filename, filetype;
     QFileDialog* filebox = new QFileDialog(0, "Save Image", "./", types);
     filebox->setViewMode(QFileDialog::Detail);
+    filebox->setAcceptMode(QFileDialog::AcceptSave);
+    filebox->setFileMode(QFileDialog::AnyFile);
     if (filebox->exec()) {
         filename = filebox->selectedFiles()[0];
         filetype = filebox->selectedNameFilter();
@@ -205,30 +198,41 @@ void NumberDisplayForm::saveFigure()
     }
 
     if (filetype.contains(".jpg")) {
-        qpix.save(filename, "JPEG");
+        qpix.save(filename + ".jpg", "JPEG");
     } else if (filetype.contains(".png")) {
-        qpix.save(filename, "PNG");
+        qpix.save(filename + ".png", "PNG");
     } else if (filetype.contains(".bmp")) {
-        qpix.save(filename, "BMP");
+        qpix.save(filename + ".bmp", "BMP");
     } else if (filetype.contains(".tiff")) {
-        qpix.save(filename, "TIFF");
+        qpix.save(filename + ".tiff", "TIFF");
     } else {
-        qpix.save(filename, "JPEG");
+        qpix.save(filename + ".jpg", "JPEG");
     }
 
     delete filebox;
 }
 
+
 void NumberDisplayForm::newData(const QEvent* updateEvent)
 {
     if (!d_stop_state) {
-        NumberUpdateEvent* tevent = (NumberUpdateEvent*)updateEvent;
+        const NumberUpdateEvent* tevent = (const NumberUpdateEvent*)updateEvent;
         const std::vector<float> samples = tevent->getSamples();
 
         for (unsigned int i = 0; i < d_nplots; ++i) {
             float f = d_factor[i] * samples[i];
-            d_text_box[i]->setText(
-                QString("%1 %2").arg(f, 4, ' ').arg(QString(d_unit[i].c_str())));
+            QString s;
+            switch (d_format) {
+            case FORMAT_INT:
+                s = QString("%1 %2")
+                        .arg(static_cast<long long>(f))
+                        .arg(QString(d_unit[i].c_str()));
+                break;
+            default:
+                s = QString("%1 %2").arg(f, 4, ' ').arg(QString(d_unit[i].c_str()));
+                break;
+            }
+            d_text_box[i]->setText(s);
             d_indicator[i]->setValue(f);
             d_min[i] = std::min(d_min[i], f);
             d_max[i] = std::max(d_max[i], f);
@@ -268,22 +272,14 @@ void NumberDisplayForm::setGraphType(const gr::qtgui::graph_t type)
     for (unsigned int i = 0; i < d_nplots; ++i) {
         switch (d_graph_type) {
         case (gr::qtgui::NUM_GRAPH_HORIZ):
-#if QWT_VERSION < 0x060100
-            d_indicator[i]->setOrientation(Qt::Horizontal, QwtThermo::BottomScale);
-#else
             d_indicator[i]->setOrientation(Qt::Horizontal);
-#endif /* if QWT_VERSION < 0x060100 */
             d_indicator[i]->setVisible(true);
             d_layout->addWidget(d_label[i], 2 * i + off, 0);
             d_layout->addWidget(d_text_box[i], 2 * i + off, 1);
             d_layout->addWidget(d_indicator[i], 2 * i + 1 + off, 1);
             break;
         case (gr::qtgui::NUM_GRAPH_VERT):
-#if QWT_VERSION < 0x060100
-            d_indicator[i]->setOrientation(Qt::Vertical, QwtThermo::LeftScale);
-#else
             d_indicator[i]->setOrientation(Qt::Vertical);
-#endif /* if QWT_VERSION < 0x060100 */
             d_indicator[i]->setVisible(true);
             d_layout->addWidget(d_label[i], 0 + off, i);
             d_layout->addWidget(d_text_box[i], 1 + off, i);
@@ -304,11 +300,7 @@ void NumberDisplayForm::setColor(unsigned int which, const QColor& min, const QC
     QwtLinearColorMap* map = new QwtLinearColorMap();
     map->setColorInterval(min, max);
 
-#if QWT_VERSION < 0x060000
-    d_indicator[which]->setFillColor(max);
-#else
     d_indicator[which]->setColorMap(map);
-#endif /* QWT_VERSION < 0x060000 */
 }
 
 void NumberDisplayForm::setColorMin(unsigned int which, QString min)
@@ -342,9 +334,6 @@ void NumberDisplayForm::setScale(unsigned int which, int min, int max)
     d_min[which] = min;
     d_max[which] = max;
     d_indicator[which]->setScale(min, max);
-#if QWT_VERSION < 0x060100
-    d_indicator[which]->setRange(min, max);
-#endif
 }
 
 void NumberDisplayForm::setScaleMin(unsigned int which, int min)
@@ -361,24 +350,16 @@ gr::qtgui::graph_t NumberDisplayForm::graphType() const { return d_graph_type; }
 
 QColor NumberDisplayForm::colorMin(unsigned int which) const
 {
-#if QWT_VERSION < 0x060000
-    return d_indicator[which]->fillColor();
-#else
     QwtLinearColorMap* map =
         static_cast<QwtLinearColorMap*>(d_indicator[which]->colorMap());
     return map->color1();
-#endif /* QWT_VERSION < 0x060000 */
 }
 
 QColor NumberDisplayForm::colorMax(unsigned int which) const
 {
-#if QWT_VERSION < 0x060000
-    return d_indicator[which]->fillColor();
-#else
     QwtLinearColorMap* map =
         static_cast<QwtLinearColorMap*>(d_indicator[which]->colorMap());
     return map->color2();
-#endif /* QWT_VERSION < 0x060000 */
 }
 
 std::string NumberDisplayForm::label(unsigned int which) const
@@ -411,7 +392,7 @@ std::string NumberDisplayForm::title() const { return d_title->text().toStdStrin
 void NumberDisplayForm::setTitle(const std::string& title)
 {
     std::string t = title;
-    if (t.length() > 0)
+    if (!t.empty())
         t = "<b><FONT SIZE=4>" + title + "</b>";
     d_title->setText(QString(t.c_str()));
     setGraphType(d_graph_type);

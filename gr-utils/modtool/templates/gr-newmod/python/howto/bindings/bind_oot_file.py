@@ -1,8 +1,6 @@
 import warnings
 import argparse
-import os
 from gnuradio.bindtool import BindingGenerator
-import pathlib
 import sys
 import tempfile
 
@@ -13,14 +11,12 @@ parser.add_argument('--module', type=str,
 parser.add_argument('--output_dir', default=tempfile.gettempdir(),
                     help='Output directory of generated bindings')
 parser.add_argument('--prefix', help='Prefix of Installed GNU Radio')
-parser.add_argument('--src', help='Directory of gnuradio source tree',
-                    default=os.path.dirname(os.path.abspath(__file__)) + '/../../..')
 
 parser.add_argument(
     '--filename', help="File to be parsed")
 
 parser.add_argument(
-    '--defines', help='Set additional defines for precompiler', default=(), nargs='*')
+    '--defines', help='Set additional defines for preprocessor', default=(), nargs='*')
 parser.add_argument(
     '--include', help='Additional Include Dirs, separated', default=(), nargs='*')
 
@@ -38,12 +34,12 @@ args = parser.parse_args()
 
 prefix = args.prefix
 output_dir = args.output_dir
-defines = tuple(','.join(args.defines).split(','))
+defines = tuple([d for d in ','.join(args.defines).split(',') if d])
 includes = ','.join(args.include)
 name = args.module
 
 namespace = ['gr', name]
-prefix_include_root = name
+prefix_include_root = "gnuradio/" + name
 
 
 with warnings.catch_warnings():

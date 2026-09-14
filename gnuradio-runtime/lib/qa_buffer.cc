@@ -18,7 +18,6 @@
 #include <gnuradio/buffer_reader.h>
 #include <gnuradio/random.h>
 #include <boost/test/unit_test.hpp>
-#include <cstdlib>
 
 
 static void leak_check(void f())
@@ -114,7 +113,7 @@ static void t1_body()
     int ia = r1->items_available();
     BOOST_CHECK_EQUAL(write_counter, ia);
 
-    int* rp = (int*)r1->read_pointer();
+    const int* rp = (const int*)r1->read_pointer();
     BOOST_CHECK(rp != 0);
 
     for (int i = 0; i < ia / 2; i++) {
@@ -127,7 +126,7 @@ static void t1_body()
     // read the rest
 
     ia = r1->items_available();
-    rp = (int*)r1->read_pointer();
+    rp = (const int*)r1->read_pointer();
     BOOST_CHECK(rp != 0);
 
     for (int i = 0; i < ia; i++) {
@@ -157,7 +156,7 @@ static void t2_body()
     int write_counter = 0;
     int n;
     int* wp = 0;
-    int* rp = 0;
+    const int* rp = 0;
 
     // Write 3/4 of buffer
 
@@ -172,7 +171,7 @@ static void t2_body()
 
     int m = r1->items_available();
     BOOST_CHECK_EQUAL(n, m);
-    rp = (int*)r1->read_pointer();
+    rp = (const int*)r1->read_pointer();
 
     for (int i = 0; i < m; i++) {
         BOOST_CHECK_EQUAL(read_counter, *rp);
@@ -196,7 +195,7 @@ static void t2_body()
 
     m = r1->items_available();
     BOOST_CHECK_EQUAL(n, m);
-    rp = (int*)r1->read_pointer();
+    rp = (const int*)r1->read_pointer();
 
     for (int i = 0; i < m; i++) {
         BOOST_CHECK_EQUAL(read_counter, *rp);
@@ -244,7 +243,7 @@ static void t3_body()
         int r = (int)(N * random.ran1());
 
         int m = reader[r]->items_available();
-        int* rp = (int*)reader[r]->read_pointer();
+        const int* rp = (const int*)reader[r]->read_pointer();
 
         for (int i = 0; i < m; i++) {
             BOOST_CHECK_EQUAL(read_counter[r], *rp);

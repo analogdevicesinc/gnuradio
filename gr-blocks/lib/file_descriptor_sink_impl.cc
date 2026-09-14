@@ -20,7 +20,6 @@
 #include <cerrno>
 #include <cstddef>
 #include <cstdio>
-#include <stdexcept>
 
 #ifdef HAVE_IO_H
 #include <io.h>
@@ -58,7 +57,7 @@ int file_descriptor_sink_impl::work(int noutput_items,
             if (errno == EINTR)
                 continue;
             else {
-                GR_LOG_ERROR(d_logger, strerror(errno));
+                d_logger->error("{:s}", strerror(errno));
                 return -1; // indicate we're done
             }
         } else {

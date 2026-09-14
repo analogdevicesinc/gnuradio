@@ -1,6 +1,6 @@
 /*
  * Copyright 2020 Free Software Foundation, Inc.
- * Copyright 2021 Marcus Müller
+ * Copyright 2021,2022 Marcus Müller
  *
  * This file is part of GNU Radio
  *
@@ -14,8 +14,8 @@
 /* If manual edits are made, the following tags should be modified accordingly.    */
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
-/* BINDTOOL_HEADER_FILE(logger.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(3e2c7677a98ddd539794627cd5a43d93)                     */
+/* BINDTOOL_HEADER_FILE(logger.h)                                                  */
+/* BINDTOOL_HEADER_FILE_HASH(b6745a64dce4f006d5bece226c75a01e)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -37,6 +37,7 @@ void bind_logger(py::module& m)
         .value("info", spdlog::level::info)
         .value("warn", spdlog::level::warn)
         .value("err", spdlog::level::err)
+        .value("error", spdlog::level::err)
         .value("critical", spdlog::level::critical)
         .value("off", spdlog::level::off);
 
@@ -62,54 +63,62 @@ void bind_logger(py::module& m)
         .def("get_string_level", &logger::get_string_level, D(logger, get_string_level))
         .def(
             "trace",
-            [](logger& log, const std::string& msg) { log.trace(msg); },
+            [](logger& log, const std::string& msg) { log.trace("{:s}", msg); },
             py::arg("msg"),
             D(logger, trace))
         .def(
             "debug",
-            [](logger& log, const std::string& msg) { log.debug(msg); },
+            [](logger& log, const std::string& msg) { log.debug("{:s}", msg); },
             py::arg("msg"),
             D(logger, debug))
         .def(
             "info",
-            [](logger& log, const std::string& msg) { log.info(msg); },
+            [](logger& log, const std::string& msg) { log.info("{:s}", msg); },
             py::arg("msg"),
             D(logger, info))
         .def(
             "notice",
-            [](logger& log, const std::string& msg) { log.notice(msg); },
+            [](logger& log, const std::string& msg) { log.notice("{:s}", msg); },
             py::arg("msg"),
             D(logger, notice))
         .def(
             "warn",
-            [](logger& log, const std::string& msg) { log.warn(msg); },
+            [](logger& log, const std::string& msg) { log.warn("{:s}", msg); },
             py::arg("msg"),
             D(logger, warn))
         .def(
             "error",
-            [](logger& log, const std::string& msg) { log.error(msg); },
+            [](logger& log, const std::string& msg) { log.error("{:s}", msg); },
             py::arg("msg"),
             D(logger, error))
         .def(
             "crit",
-            [](logger& log, const std::string& msg) { log.crit(msg); },
+            [](logger& log, const std::string& msg) { log.crit("{:s}", msg); },
             py::arg("msg"),
             D(logger, crit))
         .def(
             "alert",
-            [](logger& log, const std::string& msg) { log.alert(msg); },
+            [](logger& log, const std::string& msg) { log.alert("{:s}", msg); },
             py::arg("msg"),
             D(logger, alert))
         .def(
             "fatal",
-            [](logger& log, const std::string& msg) { log.fatal(msg); },
+            [](logger& log, const std::string& msg) { log.fatal("{:s}", msg); },
             py::arg("msg"),
             D(logger, fatal))
         .def(
             "emerg",
-            [](logger& log, const std::string& msg) { log.emerg(msg); },
+            [](logger& log, const std::string& msg) { log.emerg("{:s}", msg); },
             py::arg("msg"),
-            D(logger, emerg));
+            D(logger, emerg))
+        .def(
+            "log",
+            [](logger& log, spdlog::level::level_enum level, const std::string& msg) {
+                log.log(level, "{:s}", msg);
+            },
+            py::arg("level"),
+            py::arg("msg"),
+            D(logger, log));
 
     using logging = gr::logging;
 
@@ -120,6 +129,10 @@ void bind_logger(py::module& m)
              D(logging, singleton))
         .def("default_level", &logging::default_level, D(logging, default_level))
         .def("debug_level", &logging::debug_level, D(logging, debug_level))
+        .def("set_default_level",
+             &logging::set_default_level,
+             D(logging, set_default_level))
+        .def("set_debug_level", &logging::set_debug_level, D(logging, set_debug_level))
         .def("add_default_sink",
              &logging::add_default_sink,
              py::arg("sink"),

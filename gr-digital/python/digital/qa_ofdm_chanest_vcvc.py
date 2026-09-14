@@ -293,7 +293,7 @@ class qa_ofdm_chanest_vcvc (gr_unittest.TestCase):
 
         def run_flow_graph(sync_sym1, sync_sym2, data_sym):
             top_block = gr.top_block()
-            carr_offset = random.randint(-max_offset / 2, max_offset / 2) * 2
+            carr_offset = random.randint(-max_offset // 2, max_offset // 2) * 2
             tx_data = shift_tuple(sync_sym1, carr_offset) + \
                 shift_tuple(sync_sym2, carr_offset) + \
                 shift_tuple(data_sym, carr_offset)
@@ -348,7 +348,7 @@ class qa_ofdm_chanest_vcvc (gr_unittest.TestCase):
                 if rx_sym_est[i] != data_sym[i]:
                     bit_errors += 1
         # This is much more than we could allow
-        self.assertTrue(bit_errors < n_iter)
+        self.assertLess(bit_errors, n_iter)
 
 
 if __name__ == '__main__':

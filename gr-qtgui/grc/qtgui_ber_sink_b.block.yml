@@ -323,9 +323,7 @@ inputs:
 
 templates:
     imports: |-
-        from PyQt5 import Qt
-        from gnuradio import qtgui
-        import sip
+        from PyQt6 import sip
         import numpy
     make: |-
         <%
@@ -367,7 +365,7 @@ templates:
             self.${id}.set_line_marker(i, markers[i])
             self.${id}.set_line_alpha(i, alphas[i])
 
-        ${win} = sip.wrapinstance(self.${id}.qwidget(), Qt.QWidget)
+        ${win} = sip.wrapinstance(self.${id}.qwidget(), QtWidgets.QWidget)
         ${gui_hint() % win}
 
 documentation: |-

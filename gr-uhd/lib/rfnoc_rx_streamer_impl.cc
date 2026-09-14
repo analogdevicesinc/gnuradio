@@ -12,10 +12,10 @@
 
 #include "gr_uhd_common.h"
 #include "rfnoc_rx_streamer_impl.h"
+#include <gnuradio/high_res_timer.h>
 #include <gnuradio/io_signature.h>
 #include <uhd/convert.hpp>
 #include <uhd/rfnoc/node.hpp>
-#include <boost/format.hpp>
 
 const pmt::pmt_t EOB_KEY = pmt::string_to_symbol("rx_eob");
 const pmt::pmt_t CMD_TIME_KEY = pmt::mp("time");
@@ -32,10 +32,17 @@ rfnoc_rx_streamer::sptr rfnoc_rx_streamer::make(rfnoc_graph::sptr graph,
                                                 const size_t num_chans,
                                                 const ::uhd::stream_args_t& stream_args,
                                                 const size_t vlen,
-                                                const bool issue_stream_cmd_on_start)
+                                                const bool issue_stream_cmd_on_start,
+                                                const bool start_time_set,
+                                                const ::uhd::time_spec_t& start_time)
 {
-    return gnuradio::make_block_sptr<rfnoc_rx_streamer_impl>(
-        graph, num_chans, stream_args, vlen, issue_stream_cmd_on_start);
+    return gnuradio::make_block_sptr<rfnoc_rx_streamer_impl>(graph,
+                                                             num_chans,
+                                                             stream_args,
+                                                             vlen,
+                                                             issue_stream_cmd_on_start,
+                                                             start_time_set,
+                                                             start_time);
 }
 
 
@@ -43,7 +50,9 @@ rfnoc_rx_streamer_impl::rfnoc_rx_streamer_impl(rfnoc_graph::sptr graph,
                                                const size_t num_chans,
                                                const ::uhd::stream_args_t& stream_args,
                                                const size_t vlen,
-                                               const bool issue_stream_cmd_on_start)
+                                               const bool issue_stream_cmd_on_start,
+                                               const bool start_time_set,
+                                               const ::uhd::time_spec_t& start_time)
     : gr::sync_block(
           "rfnoc_rx_streamer",
           gr::io_signature::make(0, 0, 0),
@@ -58,7 +67,9 @@ rfnoc_rx_streamer_impl::rfnoc_rx_streamer_impl(rfnoc_graph::sptr graph,
       d_streamer(graph->create_rx_streamer(num_chans, stream_args)),
       d_unique_id(
           std::dynamic_pointer_cast<::uhd::rfnoc::node_t>(d_streamer)->get_unique_id()),
-      d_issue_stream_cmd_on_start(issue_stream_cmd_on_start)
+      d_issue_stream_cmd_on_start(issue_stream_cmd_on_start),
+      d_start_time_set(start_time_set),
+      d_start_time(start_time)
 {
     // nop
 }
@@ -71,7 +82,7 @@ rfnoc_rx_streamer_impl::~rfnoc_rx_streamer_impl() {}
  *****************************************************************************/
 bool rfnoc_rx_streamer_impl::check_topology(int, int)
 {
-    GR_LOG_DEBUG(d_logger, "Committing graph...");
+    d_logger->debug("Committing graph...");
     d_graph->commit();
     return true;
 }
@@ -89,10 +100,10 @@ bool rfnoc_rx_streamer_impl::start()
             stream_cmd.stream_now = true;
         }
 
-        GR_LOG_DEBUG(d_logger, "Sending start stream command...");
+        d_logger->debug("Sending start stream command...");
         d_streamer->issue_stream_cmd(stream_cmd);
     } else {
-        GR_LOG_DEBUG(d_logger, "Starting RX streamer without stream command...");
+        d_logger->debug("Starting RX streamer without stream command...");
     }
     return true;
 }
@@ -122,7 +133,7 @@ int rfnoc_rx_streamer_impl::work(int noutput_items,
         // vector will be received, but it won't be available in the output_items.
         // We need to store the partial vector, and prepend it to the next
         // run.
-        GR_LOG_WARN(d_logger, "Received fractional vector! Expect signal fragmentation.");
+        d_logger->warn("Received fractional vector! Expect signal fragmentation.");
     }
 
     using ::uhd::rx_metadata_t;
@@ -132,7 +143,7 @@ int rfnoc_rx_streamer_impl::work(int noutput_items,
 
     case rx_metadata_t::ERROR_CODE_TIMEOUT:
         // its ok to timeout, perhaps the user is doing finite streaming
-        GR_LOG_DEBUG(d_logger, "UHD recv() call timed out.");
+        d_logger->debug("UHD recv() call timed out.");
         break;
 
     case rx_metadata_t::ERROR_CODE_OVERFLOW:
@@ -141,10 +152,9 @@ int rfnoc_rx_streamer_impl::work(int noutput_items,
         break;
 
     default:
-        GR_LOG_WARN(
-            d_logger,
-            str(boost::format("RFNoC Streamer block received error %s (Code: 0x%x)") %
-                d_metadata.strerror() % d_metadata.error_code));
+        d_logger->warn("RFNoC Streamer block received error {:s} (Code: {})",
+                       d_metadata.strerror(),
+                       static_cast<int>(d_metadata.error_code));
     }
 
     if (d_metadata.end_of_burst) {
@@ -180,12 +190,16 @@ void rfnoc_rx_streamer_impl::flush()
     }
 
     const size_t itemsize = output_signature()->sizeof_stream_item(0);
-    while (true) {
+    // If we don't get an error, time out after 2 seconds
+    gr::high_res_timer_type end_time =
+        gr::high_res_timer_now() + gr::high_res_timer_tps() * 2;
+    while (gr::high_res_timer_now() < end_time) {
         d_streamer->recv(outputs, nbytes / itemsize / d_vlen, d_metadata, 0.0);
         if (d_metadata.error_code != ::uhd::rx_metadata_t::ERROR_CODE_NONE) {
-            break;
+            return;
         }
     }
+    d_logger->warn("Streamer timed out waiting for expected error on flush");
 }
 
 } /* namespace uhd */

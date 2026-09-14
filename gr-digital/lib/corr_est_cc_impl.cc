@@ -18,8 +18,6 @@
 #include <gnuradio/io_signature.h>
 #include <gnuradio/math.h>
 #include <volk/volk.h>
-#include <boost/format.hpp>
-#include <boost/math/special_functions/round.hpp>
 
 namespace gr {
 namespace digital {
@@ -137,11 +135,11 @@ void corr_est_cc_impl::_set_mark_delay(unsigned int mark_delay)
 
     if (mark_delay >= d_symbols.size()) {
         d_mark_delay = d_symbols.size() - 1;
-        GR_LOG_WARN(d_logger,
-                    boost::format("set_mark_delay: asked for %1% but due "
-                                  "to the symbol size constraints, "
-                                  "mark delay set to %2%.") %
-                        mark_delay % d_mark_delay);
+        d_logger->warn("set_mark_delay: asked for {:d} but due "
+                       "to the symbol size constraints, "
+                       "mark delay set to {:d}.",
+                       mark_delay,
+                       d_mark_delay);
     } else {
         d_mark_delay = mark_delay;
     }
@@ -189,7 +187,7 @@ int corr_est_cc_impl::work(int noutput_items,
 {
     gr::thread::scoped_lock lock(d_setlock);
 
-    const gr_complex* in = (gr_complex*)input_items[0];
+    const gr_complex* in = (const gr_complex*)input_items[0];
     gr_complex* out = (gr_complex*)output_items[0];
     gr_complex* corr;
     if (output_items.size() > 1)
@@ -284,7 +282,8 @@ int corr_est_cc_impl::work(int noutput_items,
         // Estimated scaling factor for the input stream to normalize
         // the output to +/-1.
         uint32_t maxi;
-        volk_32fc_index_max_32u_manual(&maxi, (gr_complex*)in, noutput_items, "generic");
+        volk_32fc_index_max_32u_manual(
+            &maxi, const_cast<gr_complex*>(in), noutput_items, "generic");
         d_scale = 1 / std::abs(in[maxi]);
 
         // Calculate the phase offset of the incoming signal.

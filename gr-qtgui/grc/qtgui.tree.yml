@@ -12,6 +12,7 @@
     - qtgui_number_sink
     - qtgui_vector_sink_f
     - qtgui_sink_x
+    - qtgui_matrix_sink
 - GUI Widgets:
   - QT:
     - qtgui_tab_widget
@@ -20,6 +21,7 @@
     - variable_qtgui_check_box
     - variable_qtgui_push_button
     - variable_qtgui_entry
+    - variable_qtgui_numeric_entry
     - variable_qtgui_label
     - qtgui_edit_box_msg
     - qtgui_auto_correlator_sink
@@ -38,4 +40,4 @@
     - variable_qtgui_msg_push_button
     - variable_qtgui_toggle_button_msg
     - variable_qtgui_toggle_switch
-    
+    - qtgui_rfnoc_f15_display

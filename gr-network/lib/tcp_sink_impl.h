@@ -12,9 +12,8 @@
 #define INCLUDED_NETWORK_TCP_SINK_IMPL_H
 
 #include <gnuradio/network/tcp_sink.h>
-#include <boost/asio.hpp>
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/thread/thread.hpp>
+#include <asio.hpp>
+#include <thread>
 
 namespace gr {
 namespace network {
@@ -30,19 +29,19 @@ protected:
 
     bool d_thread_running;
     bool d_stop_thread;
-    boost::thread* d_listener_thread;
+    std::thread* d_listener_thread;
     bool d_start_new_listener;
     bool d_initial_connection;
 
     size_t d_block_size;
     bool d_is_ipv6;
 
-    boost::system::error_code ec;
+    asio::error_code ec;
 
-    boost::asio::io_service d_io_service;
-    boost::asio::ip::tcp::endpoint d_endpoint;
-    boost::asio::ip::tcp::socket* d_tcpsocket = NULL;
-    boost::asio::ip::tcp::acceptor* d_acceptor = NULL;
+    asio::io_context d_io_context;
+    asio::ip::tcp::endpoint d_endpoint;
+    asio::ip::tcp::socket* d_tcpsocket = NULL;
+    asio::ip::tcp::acceptor* d_acceptor = NULL;
 
     bool d_connected;
 
@@ -60,8 +59,8 @@ public:
     bool start() override;
     bool stop() override;
 
-    void accept_handler(boost::asio::ip::tcp::socket* new_connection,
-                        const boost::system::error_code& error);
+    void accept_handler(asio::ip::tcp::socket* new_connection,
+                        const asio::error_code& error);
 
     int work(int noutput_items,
              gr_vector_const_void_star& input_items,

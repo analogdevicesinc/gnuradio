@@ -13,7 +13,6 @@
 
 #include <gnuradio/fec/api.h>
 #include <gnuradio/logger.h>
-#include <boost/format.hpp>
 #include <memory>
 
 namespace gr {
@@ -52,12 +51,12 @@ protected:
 
 public:
     friend class decoder;
-    virtual void generic_work(void* inbuffer, void* outbuffer) = 0;
+    virtual void generic_work(const void* inbuffer, void* outbuffer) = 0;
     static int base_unique_id;
     int my_id;
     int unique_id();
     std::string d_name;
-    std::string alias() { return (boost::format("%s%d") % d_name % unique_id()).str(); }
+    std::string alias() { return d_name + std::to_string(unique_id()); }
 
 public:
     typedef std::shared_ptr<generic_decoder> sptr;

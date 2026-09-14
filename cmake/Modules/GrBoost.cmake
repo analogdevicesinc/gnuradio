@@ -10,21 +10,29 @@ if(DEFINED __INCLUDED_GR_BOOST_CMAKE)
 endif()
 set(__INCLUDED_GR_BOOST_CMAKE TRUE)
 
+include(CMakeOverloads)
+
+# Workaround for behavior change in cmake 4.2, that effects MINGW environments
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "4.2")
+    if (MINGW)
+        set(CMAKE_FIND_PACKAGE_SORT_DIRECTION "ASC")
+    endif(MINGW)
+endif(CMAKE_VERSION VERSION_GREATER_EQUAL "4.2")
+
 ########################################################################
 # Setup Boost and handle some system specific things
 ########################################################################
 
-set(BOOST_REQUIRED_COMPONENTS
-    date_time
-    program_options
-    system
-    regex
-    thread
-)
+set(BOOST_REQUIRED_COMPONENTS date_time program_options regex thread)
 
-if(UNIX AND NOT BOOST_ROOT AND EXISTS "/usr/lib64")
+if(UNIX
+   AND NOT BOOST_ROOT
+   AND EXISTS "/usr/lib64")
     list(APPEND BOOST_LIBRARYDIR "/usr/lib64") #fedora 64-bit fix
-endif(UNIX AND NOT BOOST_ROOT AND EXISTS "/usr/lib64")
+endif(
+    UNIX
+    AND NOT BOOST_ROOT
+    AND EXISTS "/usr/lib64")
 
 if(WIN32)
     #The following libraries are either used indirectly,
@@ -37,19 +45,18 @@ if(WIN32)
     #these libraries should be listed in the main components
     #list once the minimum version of boost had been bumped
     #to a version which always contains these components.
-    list(APPEND BOOST_REQUIRED_COMPONENTS
-        atomic
-        chrono
-    )
+    list(APPEND BOOST_REQUIRED_COMPONENTS atomic chrono)
 endif(WIN32)
 
 if(MSVC)
-    if (NOT DEFINED BOOST_ALL_DYN_LINK)
+    if(NOT DEFINED BOOST_ALL_DYN_LINK)
         set(BOOST_ALL_DYN_LINK TRUE)
     endif()
-    set(BOOST_ALL_DYN_LINK "${BOOST_ALL_DYN_LINK}" CACHE BOOL "boost enable dynamic linking")
+    set(BOOST_ALL_DYN_LINK
+        "${BOOST_ALL_DYN_LINK}"
+        CACHE BOOL "boost enable dynamic linking")
     if(BOOST_ALL_DYN_LINK)
-        add_definitions(-DBOOST_ALL_DYN_LINK) #setup boost auto-linking in msvc
+        # add_definitions(-DBOOST_ALL_DYN_LINK) #setup boost auto-linking in msvc
     else(BOOST_ALL_DYN_LINK)
         unset(BOOST_REQUIRED_COMPONENTS) #empty components list for static link
     endif(BOOST_ALL_DYN_LINK)
@@ -61,22 +68,115 @@ endif(MSVC)
 # this list. To disable Boost versions, see below.
 
 set(Boost_ADDITIONAL_VERSIONS
-    "1.53" "1.54.0" "1.54"
-    "1.55.0" "1.55" "1.56.0" "1.56" "1.57.0" "1.57" "1.58.0" "1.58" "1.59.0" "1.59"
-    "1.60.0" "1.60" "1.61.0" "1.61" "1.62.0" "1.62" "1.63.0" "1.63" "1.64.0" "1.64"
-    "1.65.0" "1.65" "1.66.0" "1.66" "1.67.0" "1.67" "1.68.0" "1.68" "1.69.0" "1.69"
-    "1.71.0" "1.71"
-)
+    "1.53"
+    "1.54.0"
+    "1.54"
+    "1.55.0"
+    "1.55"
+    "1.56.0"
+    "1.56"
+    "1.57.0"
+    "1.57"
+    "1.58.0"
+    "1.58"
+    "1.59.0"
+    "1.59"
+    "1.60.0"
+    "1.60"
+    "1.61.0"
+    "1.61"
+    "1.62.0"
+    "1.62"
+    "1.63.0"
+    "1.63"
+    "1.64.0"
+    "1.64"
+    "1.65.0"
+    "1.65"
+    "1.66.0"
+    "1.66"
+    "1.67.0"
+    "1.67"
+    "1.68.0"
+    "1.68"
+    "1.69.0"
+    "1.69"
+    "1.70.0"
+    "1.70"
+    "1.71.0"
+    "1.71"
+    "1.72.0"
+    "1.72"
+    "1.73.0"
+    "1.73"
+    "1.74.0"
+    "1.74"
+    "1.75.0"
+    "1.75"
+    "1.76.0"
+    "1.76"
+    "1.77.0"
+    "1.77"
+    "1.78.0"
+    "1.78"
+    "1.79.0"
+    "1.79"
+    "1.80.0"
+    "1.80"
+    "1.81.0"
+    "1.81"
+    "1.82.0"
+    "1.82"
+    "1.83.0"
+    "1.83"
+    "1.84.0"
+    "1.84"
+    "1.85.0"
+    "1.85"
+    "1.86.0"
+    "1.86"
+    "1.87.0"
+    "1.87"
+    "1.88.0"
+    "1.88"
+    "1.89.0"
+    "1.89")
 
-find_package(Boost ${GR_BOOST_MIN_VERSION} REQUIRED ${BOOST_REQUIRED_COMPONENTS}
-                                           OPTIONAL_COMPONENTS unit_test_framework)
+# check whether to set REQUIRED or not
+# if not set, default is to require Boost
+if(NOT DEFINED GR_BOOST_REQUIRED)
+    # GR_BOOST_REQUIRED is not set; use the default
+    set(GR_BOOST_REQUIRED "REQUIRED")
+elseif(GR_BOOST_REQUIRED)
+    # GR_BOOST_REQUIRED is set to TRUE/ON/1
+    set(GR_BOOST_REQUIRED "REQUIRED")
+else()
+    # GR_BOOST_REQUIRED is not set to TRUE/ON/1
+    set(GR_BOOST_REQUIRED "")
+endif()
+
+gr_find_package(
+    Boost ${GR_BOOST_MIN_VERSION} ${GR_BOOST_REQUIRED}
+    COMPONENTS ${BOOST_REQUIRED_COMPONENTS}
+    OPTIONAL_COMPONENTS unit_test_framework)
+
+# With Conan and modern CMake, component-specific FOUND variables 
+# like Boost_UNIT_TEST_FRAMEWORK_FOUND are not always set. 
+# Instead, Conan provides imported targets (e.g., Boost::unit_test_framework), 
+# and the presence of these targets means the component is available.
+if(TARGET Boost::unit_test_framework)
+    set(Boost_UNIT_TEST_FRAMEWORK_FOUND TRUE)
+else()
+    set(Boost_UNIT_TEST_FRAMEWORK_FOUND FALSE)
+endif()
+message(STATUS "Boost_UNIT_TEST_FRAMEWORK_FOUND=${Boost_UNIT_TEST_FRAMEWORK_FOUND}")
 
 # Boost 1.52 disabled, see https://svn.boost.org/trac/boost/ticket/7669
 # Similar problems with Boost 1.46 and 1.47.
 
-OPTION(ENABLE_BAD_BOOST "Enable known bad versions of Boost" OFF)
+option(ENABLE_BAD_BOOST "Enable known bad versions of Boost" OFF)
 if(ENABLE_BAD_BOOST)
-  MESSAGE(STATUS "Enabling use of known bad versions of Boost.")
+    message(STATUS "Enabling use of known bad versions of Boost.")
 endif(ENABLE_BAD_BOOST)
 
 # For any unsuitable Boost version, add the version number below in
@@ -85,18 +185,22 @@ endif(ENABLE_BAD_BOOST)
 #     XX is the major version ('10' for version 1)
 #     YY is the minor version number ('46' for 1.46)
 #     ZZ is the patcher version number (typically just '00')
-set(Boost_NOGO_VERSIONS
-  104600 104601 104700 105200
-  )
+set(Boost_NOGO_VERSIONS 104600 104601 104700 105200)
 
 foreach(ver ${Boost_NOGO_VERSIONS})
-  if("${Boost_VERSION}" STREQUAL "${ver}")
-    if(NOT ENABLE_BAD_BOOST)
-      MESSAGE(STATUS "WARNING: Found a known bad version of Boost (v${Boost_VERSION}). Disabling.")
-      set(Boost_FOUND FALSE)
-    else(NOT ENABLE_BAD_BOOST)
-      MESSAGE(STATUS "WARNING: Found a known bad version of Boost (v${Boost_VERSION}). Continuing anyway.")
-      set(Boost_FOUND TRUE)
-    endif(NOT ENABLE_BAD_BOOST)
-  endif("${Boost_VERSION}" STREQUAL "${ver}")
+    if("${Boost_VERSION}" STREQUAL "${ver}")
+        if(NOT ENABLE_BAD_BOOST)
+            message(
+                STATUS
+                    "WARNING: Found a known bad version of Boost (v${Boost_VERSION}). Disabling."
+            )
+            set(Boost_FOUND FALSE)
+        else(NOT ENABLE_BAD_BOOST)
+            message(
+                STATUS
+                    "WARNING: Found a known bad version of Boost (v${Boost_VERSION}). Continuing anyway."
+            )
+            set(Boost_FOUND TRUE)
+        endif(NOT ENABLE_BAD_BOOST)
+    endif("${Boost_VERSION}" STREQUAL "${ver}")
 endforeach(ver)

@@ -71,11 +71,10 @@ ldpc_G_matrix_impl::ldpc_G_matrix_impl(const std::string filename) : fec_mtrx_im
 
     // if(!test_if_equal) {
     if (test_if_not_equal > 0) {
-        GR_LOG_ERROR(d_logger,
-                     "Error in ldpc_G_matrix_impl constructor. It appears "
-                     "that the given alist file did not contain either a "
-                     "valid parity check matrix of the form H = [P' I] or "
-                     "a generator matrix of the form G = [I P].\n");
+        d_logger->error("Error in ldpc_G_matrix_impl constructor. It appears "
+                        "that the given alist file did not contain either a "
+                        "valid parity check matrix of the form H = [P' I] or "
+                        "a generator matrix of the form G = [I P].\n");
         throw std::runtime_error("ldpc_G_matrix: Bad matrix definition");
     }
 
@@ -115,7 +114,7 @@ ldpc_G_matrix_impl::ldpc_G_matrix_impl(const std::string filename) : fec_mtrx_im
     d_G_transp_ptr = gsl_matrix_alloc(d_n, d_k);
     gsl_matrix_transpose_memcpy(d_G_transp_ptr, G);
 
-    d_H_sptr = matrix_sptr((matrix*)H_ptr);
+    d_H_sptr = matrix_sptr((matrix*)H_ptr, matrix_free);
 
     // Free memory
     gsl_matrix_free(P);
@@ -268,7 +267,6 @@ ldpc_G_matrix_impl::~ldpc_G_matrix_impl()
 {
     // Call the gsl_matrix_free function to free memory.
     gsl_matrix_free(d_G_transp_ptr);
-    gsl_matrix_free(d_H_obj);
 }
 } /* namespace code */
 } /* namespace fec */

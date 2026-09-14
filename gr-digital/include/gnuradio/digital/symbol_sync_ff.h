@@ -1,6 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Copyright (C) 2017 Free Software Foundation, Inc.
+ * Copyright (C) 2023 Daniel Estevez <daniel@destevez.net>
  *
  * This file is part of GNU Radio
  *
@@ -73,7 +74,7 @@ public:
      * User specified nominal clock period in samples per symbol.
      *
      * \param loop_bw
-     * Approximate normailzed loop bandwidth of the symbol clock tracking
+     * Approximate normalized loop bandwidth of the symbol clock tracking
      * loop. It should nominally be close to 0, but greater than 0.  If
      * unsure, start with a number around 2*pi*0.040, and experiment to find
      * the value that works best for your situation.
@@ -180,6 +181,14 @@ public:
     virtual float beta() const = 0;
 
     /*!
+     * \brief Returns the nominal clock period in samples per symbol.
+     *
+     * \details
+     * See the doecumentation for set_sps() for more details.
+     */
+    virtual float sps() const = 0;
+
+    /*!
      * \brief Set the normalized approximate loop bandwidth.
      *
      * \details
@@ -254,7 +263,7 @@ public:
      *
      * \details
      * Sets the PI filter proportional gain, alpha.
-     * This gain directly mutliplies the clock phase/timing error
+     * This gain directly multiplies the clock phase/timing error
      * term in the PI filter when advancing the loop.
      * It most directly affects the instantaneous clock period estimate,
      * T_inst, and instantaneous clock phase estimate, tau.
@@ -296,6 +305,17 @@ public:
      * \param beta    PI filter integral gain
      */
     virtual void set_beta(float beta) = 0;
+
+    /*!
+     * \brief Set the nominal clock period in samples per symbol.
+     *
+     * \details
+     * Sets the nominal clock period, resetting some of the tracking
+     * loop variables to adjust to the new clock period.
+     *
+     * \param sps     User specified nominal clock period in samples per symbol.
+     */
+    virtual void set_sps(float sps) = 0;
 };
 
 } /* namespace digital */

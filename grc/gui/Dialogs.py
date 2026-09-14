@@ -7,12 +7,13 @@
 
 import sys
 import textwrap
-from shutil import which as find_executable
+import glob
 
-from gi.repository import Gtk, GLib, Gdk
+from gi.repository import Gtk, GLib, Gdk, Gio
 
-from . import Utils, Actions, Constants
+from . import Actions, Constants, Utils
 from ..core import Messages
+from ..core.utils.system import get_modifier_key
 
 
 class SimpleTextDisplay(Gtk.TextView):
@@ -176,6 +177,7 @@ class MessageDialogWrapper(Gtk.MessageDialog):
             self, transient_for=parent, modal=True, destroy_with_parent=True,
             message_type=message_type, buttons=buttons
         )
+        self.set_keep_above(True)
         if title:
             self.set_title(title)
         if markup:
@@ -306,7 +308,7 @@ def show_help(parent):
         *Press Ctrl+K or see menu for Keyboard - Shortcuts
         \
     """)
-    markup = markup.replace("Ctrl", Utils.get_modifier_key())
+    markup = markup.replace("Ctrl", get_modifier_key())
 
     MessageDialogWrapper(
         parent, Gtk.MessageType.INFO, Gtk.ButtonsType.CLOSE, title='Help', markup=markup
@@ -348,7 +350,7 @@ def show_keyboard_shortcuts(parent):
     <u>Ctrl++/-</u>: Zoom in and out
     \
     """)
-    markup = markup.replace("Ctrl", Utils.get_modifier_key())
+    markup = markup.replace("Ctrl", get_modifier_key())
 
     MessageDialogWrapper(
         parent, Gtk.MessageType.INFO, Gtk.ButtonsType.CLOSE, title='Keyboard - Shortcuts', markup=markup
@@ -406,56 +408,36 @@ def choose_editor(parent, config):
     """
     Give the option to either choose an editor or use the default.
     """
-    if config.editor and find_executable(config.editor):
-        return config.editor
-
-    buttons = (
-        'Choose Editor', Gtk.ResponseType.YES,
-        'Use Default', Gtk.ResponseType.NO,
-        Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL
+    mime = "text/x-python-script" if sys.platform == "darwin" else "text/x-python"
+    content_type = Gio.content_type_from_mime_type(mime)
+    if content_type == "*":
+        # fallback to plain text on Windows if no useful x-python association
+        content_type = Gio.content_type_from_mime_type("text/plain")
+    dialog = Gtk.AppChooserDialog.new_for_content_type(
+        parent,
+        Gtk.DialogFlags.MODAL,
+        content_type,
     )
-    response = MessageDialogWrapper(
-        parent, message_type=Gtk.MessageType.QUESTION, buttons=Gtk.ButtonsType.NONE,
-        title='Choose Editor', markup='Would you like to choose the editor to use?',
-        default_response=Gtk.ResponseType.YES, extra_buttons=buttons
-    ).run_and_destroy()
+    dialog.set_heading("Choose an editor below")
+    widget = dialog.get_widget()
+    widget.set_default_text("Choose an editor")
+    widget.set_show_default(True)
+    widget.set_show_recommended(True)
+    widget.set_show_fallback(True)
 
-    # Handle the initial default/choose/cancel response
-    # User wants to choose the editor to use
-    editor = ''
-    if response == Gtk.ResponseType.YES:
-        file_dialog = Gtk.FileChooserDialog(
-            'Select an Editor...', None,
-            Gtk.FileChooserAction.OPEN,
-            ('gtk-cancel', Gtk.ResponseType.CANCEL,
-             'gtk-open', Gtk.ResponseType.OK),
-            transient_for=parent
-        )
-        file_dialog.set_select_multiple(False)
-        file_dialog.set_local_only(True)
-        file_dialog.set_current_folder('/usr/bin')
-        try:
-            if file_dialog.run() == Gtk.ResponseType.OK:
-                editor = file_dialog.get_filename()
-        finally:
-            file_dialog.hide()
-
-    # Go with the default editor
-    elif response == Gtk.ResponseType.NO:
-        try:
-            process = None
-            if sys.platform.startswith('linux'):
-                process = find_executable('xdg-open')
-            elif sys.platform.startswith('darwin'):
-                process = find_executable('open')
-            if process is None:
-                raise ValueError("Can't find default editor executable")
-            # Save
-            editor = config.editor = process
-        except Exception:
-            Messages.send(
-                '>>> Unable to load the default editor. Please choose an editor.\n')
-
-    if editor == '':
-        Messages.send('>>> No editor selected.\n')
+    editor = None
+    response = dialog.run()
+    if response == Gtk.ResponseType.OK:
+        appinfo = dialog.get_app_info()
+        editor = config.editor = execpath(appinfo.get_executable())
+    dialog.destroy()
     return editor
+
+
+def execpath(fname):
+    # for macos, search the Application directory for the fullpath
+    if sys.platform == "darwin":
+        found_paths = glob.glob("/Applications/*/Contents/MacOS/" + fname)
+        if found_paths:
+            return found_paths[0]
+    return fname

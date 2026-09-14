@@ -1,5 +1,6 @@
 #
 # Copyright 2006,2007,2014 Free Software Foundation, Inc.
+# Copyright 2023 Marcus Müller
 #
 # This file is part of GNU Radio
 #
@@ -9,8 +10,8 @@
 
 import functools
 
-# from .runtime_swig import hier_block2_swig, dot_graph
 from .gr_python import hier_block2_pb
+from .gr_python import logger
 
 import pmt
 
@@ -19,24 +20,25 @@ def _multiple_endpoints(func):
     @functools.wraps(func)
     def wrapped(self, *points):
         if not points:
-            raise ValueError(
-                "At least one block required for " + func.__name__)
+            raise ValueError("At least one block required for " + func.__name__)
         elif len(points) == 1:
             try:
                 block = points[0].to_basic_block()
             except AttributeError:
-                raise ValueError(
-                    "At least two endpoints required for " + func.__name__)
+                raise ValueError("At least two endpoints required for " + func.__name__)
             func(self, block)
         else:
             try:
-                endp = [(p.to_basic_block(), 0) if hasattr(p, 'to_basic_block')
-                        else (p[0].to_basic_block(), p[1]) for p in points]
+                endp = [
+                    (p.to_basic_block(), 0) if hasattr(p, "to_basic_block") else (p[0].to_basic_block(), p[1])
+                    for p in points
+                ]
             except (ValueError, TypeError, AttributeError) as err:
                 raise ValueError("Unable to coerce endpoints: " + str(err))
 
             for (src, src_port), (dst, dst_port) in zip(endp, endp[1:]):
                 func(self, src, src_port, dst, dst_port)
+
     return wrapped
 
 
@@ -49,6 +51,7 @@ def _optional_endpoints(func):
             except (ValueError, TypeError) as err:
                 raise ValueError("Unable to coerce endpoints: " + str(err))
         func(self, src.to_basic_block(), srcport, dst.to_basic_block(), dstport)
+
     return wrapped
 
 
@@ -67,25 +70,42 @@ class hier_block2(object):
     Provides convenience functions and allows proper Python subclassing.
     """
 
-    def __init__(self, name, input_signature, output_signature):
+    def __init__(self, name: str, input_signature, output_signature, underlying_impl=None):
         """
         Create a hierarchical block with a given name and I/O signatures.
-        """
-        self._impl = hier_block2_pb(name, input_signature, output_signature)
 
-    def __getattr__(self, name):
-        """
-        Pass-through member requests to the C++ object.
-        """
+        Wrap the methods of the underlying C++ `hier_block_pb` in an impl
+        object, and add the methods of that to this object.
 
-        try:
-            object.__getattribute__(self, "_impl")
-        except AttributeError as exception:
-            raise RuntimeError(
-                "{0}: invalid state -- did you forget to call {0}.__init__ in "
-                "a derived class?".format(object.__getattribute__(self.__class__, "__name__"))) from exception
+        Add a python-side logger, to allow Python hierarchical blocks to do their own identifiable logging.
+        """
+        self._impl = underlying_impl or hier_block2_pb(name, input_signature, output_signature)
+        self.logger = logger(f"Py Hier Blk {name}")
+        self._forward_impl_members()
 
-        return getattr(self._impl, name)
+    def _forward_impl_members(self):
+        """
+        Make all public-facing function of the underlying hier block implementation available as members.
+
+        Does not take the __getattr__ route, as that doesn't permit autocompletion to work.
+        """
+        for member in dir(self._impl):
+            # can't necessarily use hasattr on an object that hasn't finished going through the __init__ chain
+            if member.startswith("_") or member in dir(self):
+                continue
+            setattr(self, member, getattr(self._impl, member))
+
+    def __repr__(self):
+        """
+        Return a representation of the block useful for debugging
+        """
+        return f"<python hier block {self.name()} wrapping GNU Radio hier_block2_pb object {id(self._impl):x}>"
+
+    def __str__(self):
+        """
+        Return a string representation useful for human-aimed printing
+        """
+        return f"Python hierarchical block {self.name()}"
 
     # FIXME: these should really be implemented
     # in the original C++ class (gr_hier_block2), then they would all be inherited here

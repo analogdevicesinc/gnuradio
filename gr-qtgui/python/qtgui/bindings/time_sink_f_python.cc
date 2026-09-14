@@ -54,7 +54,7 @@ void bind_time_sink_f(py::module& m)
              D(time_sink_f, make))
 
 
-        .def("exec_", &time_sink_f::exec_, D(time_sink_f, exec_))
+        .def("exec", &time_sink_f::exec, D(time_sink_f, exec))
 
 
         .def(
@@ -243,14 +243,14 @@ void bind_time_sink_f(py::module& m)
 
 
         .def("enable_tags",
-             (void (time_sink_f::*)(unsigned int, bool)) & time_sink_f::enable_tags,
+             (void(time_sink_f::*)(unsigned int, bool)) & time_sink_f::enable_tags,
              py::arg("which"),
              py::arg("en"),
              D(time_sink_f, enable_tags, 0))
 
 
         .def("enable_tags",
-             (void (time_sink_f::*)(bool)) & time_sink_f::enable_tags,
+             (void(time_sink_f::*)(bool)) & time_sink_f::enable_tags,
              py::arg("en"),
              D(time_sink_f, enable_tags, 1))
 

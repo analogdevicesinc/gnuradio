@@ -16,7 +16,7 @@
 #include <gnuradio/qtgui/qtgui_types.h>
 #include <qwt_scale_draw.h>
 #include <QColor>
-
+#include <cmath>
 
 /***********************************************************************
  * Widget to provide mouse pointer coordinate text
@@ -24,11 +24,7 @@
 class FreqDisplayZoomer : public QwtPlotZoomer, public FreqOffsetAndPrecisionClass
 {
 public:
-#if QWT_VERSION < 0x060100
-    FreqDisplayZoomer(QwtPlotCanvas* canvas, const unsigned int freqPrecision)
-#else  /* QWT_VERSION < 0x060100 */
     FreqDisplayZoomer(QWidget* canvas, const unsigned int freqPrecision)
-#endif /* QWT_VERSION < 0x060100 */
         : QwtPlotZoomer(canvas), FreqOffsetAndPrecisionClass(freqPrecision)
     {
         setTrackerMode(QwtPicker::AlwaysOn);
@@ -44,7 +40,7 @@ protected:
     using QwtPlotZoomer::trackerText;
     QwtText trackerText(QPoint const& p) const override
     {
-        QwtDoublePoint dp = QwtPlotZoomer::invTransform(p);
+        QPointF dp = QwtPlotZoomer::invTransform(p);
         QwtText t(QString("%1 %2, %3 %4")
                       .arg(dp.x(), 0, 'f', getFrequencyPrecision())
                       .arg(d_unitType.c_str())
@@ -94,13 +90,8 @@ FrequencyDisplayPlot::FrequencyDisplayPlot(int nplots, QWidget* parent)
                                           QPen(default_colors[i]),
                                           QSize(7, 7));
 
-#if QWT_VERSION < 0x060000
-        d_plot_curve[i]->setRawData(d_xdata.data(), d_ydata[i].data(), d_numPoints);
-        d_plot_curve[i]->setSymbol(*symbol);
-#else
         d_plot_curve[i]->setRawSamples(d_xdata.data(), d_ydata[i].data(), d_numPoints);
         d_plot_curve[i]->setSymbol(symbol);
-#endif
         setLineColor(i, default_colors[i]);
     }
 
@@ -109,12 +100,8 @@ FrequencyDisplayPlot::FrequencyDisplayPlot(int nplots, QWidget* parent)
     d_min_fft_plot_curve->attach(this);
     const QColor default_min_fft_color = Qt::magenta;
     setMinFFTColor(default_min_fft_color);
-#if QWT_VERSION < 0x060000
-    d_min_fft_plot_curve->setRawData(d_xdata.data(), d_min_fft_data.data(), d_numPoints);
-#else
     d_min_fft_plot_curve->setRawSamples(
         d_xdata.data(), d_min_fft_data.data(), d_numPoints);
-#endif
     d_min_fft_plot_curve->setVisible(false);
     d_min_fft_plot_curve->setZ(0);
 
@@ -122,12 +109,8 @@ FrequencyDisplayPlot::FrequencyDisplayPlot(int nplots, QWidget* parent)
     d_max_fft_plot_curve->attach(this);
     QColor default_max_fft_color = Qt::darkYellow;
     setMaxFFTColor(default_max_fft_color);
-#if QWT_VERSION < 0x060000
-    d_max_fft_plot_curve->setRawData(d_xdata.data(), d_max_fft_data.data(), d_numPoints);
-#else
     d_max_fft_plot_curve->setRawSamples(
         d_xdata.data(), d_max_fft_data.data(), d_numPoints);
-#endif
     d_max_fft_plot_curve->setVisible(false);
     d_max_fft_plot_curve->setZ(0);
 
@@ -176,10 +159,6 @@ FrequencyDisplayPlot::FrequencyDisplayPlot(int nplots, QWidget* parent)
 
     d_zoomer = new FreqDisplayZoomer(canvas(), 0);
 
-#if QWT_VERSION < 0x060000
-    d_zoomer->setSelectionFlags(QwtPicker::RectSelection | QwtPicker::DragSelection);
-#endif
-
     d_zoomer->setMousePattern(
         QwtEventPattern::MouseSelect2, Qt::RightButton, Qt::ControlModifier);
     d_zoomer->setMousePattern(QwtEventPattern::MouseSelect3, Qt::RightButton);
@@ -192,16 +171,6 @@ FrequencyDisplayPlot::FrequencyDisplayPlot(int nplots, QWidget* parent)
     _resetXAxisPoints();
 
     // Turn off min/max hold plots in legend
-#if QWT_VERSION < 0x060100
-    QWidget* w;
-    w = legend()->find(d_min_fft_plot_curve);
-    ((QwtLegendItem*)w)->setChecked(true);
-    ((QwtLegendItem*)w)->setVisible(false);
-    w = legend()->find(d_max_fft_plot_curve);
-    ((QwtLegendItem*)w)->setChecked(true);
-    ((QwtLegendItem*)w)->setVisible(false);
-    legend()->setVisible(false);
-#else /* QWT_VERSION < 0x060100 */
     QWidget* w;
     w = ((QwtLegend*)legend())->legendWidget(itemToInfo(d_min_fft_plot_curve));
     ((QwtLegendLabel*)w)->setChecked(true);
@@ -210,8 +179,6 @@ FrequencyDisplayPlot::FrequencyDisplayPlot(int nplots, QWidget* parent)
     w = ((QwtLegend*)legend())->legendWidget(itemToInfo(d_max_fft_plot_curve));
     ((QwtLegendLabel*)w)->setChecked(true);
     ((QwtLegendLabel*)w)->setVisible(false);
-
-#endif /* QWT_VERSION < 0x060100 */
 
     d_trigger_line = new QwtPlotMarker();
     d_trigger_line->setLineStyle(QwtPlotMarker::HLine);
@@ -308,7 +275,7 @@ void FrequencyDisplayPlot::replot()
     QwtPlot::replot();
 }
 
-void FrequencyDisplayPlot::plotNewData(const std::vector<double*> dataPoints,
+void FrequencyDisplayPlot::plotNewData(const std::vector<const double*> dataPoints,
                                        const int64_t numDataPoints,
                                        const double noiseFloorAmplitude,
                                        const double peakFrequency,
@@ -330,25 +297,13 @@ void FrequencyDisplayPlot::plotNewData(const std::vector<double*> dataPoints,
                 for (unsigned int i = 0; i < d_nplots; ++i) {
                     d_ydata[i].resize(d_numPoints);
 
-#if QWT_VERSION < 0x060000
-                    d_plot_curve[i]->setRawData(
-                        d_xdata.data(), d_ydata[i].data(), d_numPoints);
-#else
                     d_plot_curve[i]->setRawSamples(
                         d_xdata.data(), d_ydata[i].data(), d_numPoints);
-#endif
                 }
-#if QWT_VERSION < 0x060000
-                d_min_fft_plot_curve->setRawData(
-                    d_xdata.data(), d_min_fft_data.data(), d_numPoints);
-                d_max_fft_plot_curve->setRawData(
-                    d_xdata.data(), d_max_fft_data.data(), d_numPoints);
-#else
                 d_min_fft_plot_curve->setRawSamples(
                     d_xdata.data(), d_min_fft_data.data(), d_numPoints);
                 d_max_fft_plot_curve->setRawSamples(
                     d_xdata.data(), d_max_fft_data.data(), d_numPoints);
-#endif
                 _resetXAxisPoints();
                 clearMaxData();
                 clearMinData();
@@ -406,8 +361,8 @@ void FrequencyDisplayPlot::plotNewData(const double* dataPoints,
                                        const double peakAmplitude,
                                        const double timeInterval)
 {
-    std::vector<double*> vecDataPoints;
-    vecDataPoints.push_back((double*)dataPoints);
+    std::vector<const double*> vecDataPoints;
+    vecDataPoints.push_back(dataPoints);
     plotNewData(vecDataPoints,
                 numDataPoints,
                 noiseFloorAmplitude,
@@ -456,7 +411,7 @@ void FrequencyDisplayPlot::setMaxFFTVisible(const bool visibleFlag)
     d_max_fft_plot_curve->setVisible(visibleFlag);
 }
 
-const bool FrequencyDisplayPlot::getMaxFFTVisible() const { return d_max_fft_visible; }
+bool FrequencyDisplayPlot::getMaxFFTVisible() const { return d_max_fft_visible; }
 
 void FrequencyDisplayPlot::setMinFFTVisible(const bool visibleFlag)
 {
@@ -464,7 +419,7 @@ void FrequencyDisplayPlot::setMinFFTVisible(const bool visibleFlag)
     d_min_fft_plot_curve->setVisible(visibleFlag);
 }
 
-const bool FrequencyDisplayPlot::getMinFFTVisible() const { return d_min_fft_visible; }
+bool FrequencyDisplayPlot::getMinFFTVisible() const { return d_min_fft_visible; }
 
 void FrequencyDisplayPlot::_resetXAxisPoints()
 {
@@ -480,7 +435,7 @@ void FrequencyDisplayPlot::_resetXAxisPoints()
 
     // Set up zoomer base for maximum unzoom x-axis
     // and reset to maximum unzoom level
-    QwtDoubleRect zbase = d_zoomer->zoomBase();
+    QRectF zbase = d_zoomer->zoomBase();
     d_zoomer->zoom(zbase);
     d_zoomer->setZoomBase(zbase);
     d_zoomer->setZoomBase(true);
@@ -514,16 +469,7 @@ void FrequencyDisplayPlot::showCFMarker(const bool show)
         d_marker_cf->hide();
 }
 
-void FrequencyDisplayPlot::onPickerPointSelected(const QwtDoublePoint& p)
-{
-    QPointF point = p;
-    // fprintf(stderr,"onPickerPointSelected %f %f %d\n", point.x(), point.y(),
-    // d_xdata_multiplier);
-    point.setX(point.x() * d_xdata_multiplier);
-    emit plotPointSelected(point);
-}
-
-void FrequencyDisplayPlot::onPickerPointSelected6(const QPointF& p)
+void FrequencyDisplayPlot::onPickerPointSelected(const QPointF& p)
 {
     QPointF point = p;
     // fprintf(stderr,"onPickerPointSelected %f %f %d\n", point.x(), point.y(),
@@ -535,7 +481,7 @@ void FrequencyDisplayPlot::onPickerPointSelected6(const QPointF& p)
 void FrequencyDisplayPlot::setYLabel(const std::string& label, const std::string& unit)
 {
     std::string l = label;
-    if (unit.length() > 0)
+    if (!unit.empty())
         l += " (" + unit + ")";
     setAxisTitle(QwtPlot::yLeft, QString(l.c_str()));
     static_cast<FreqDisplayZoomer*>(d_zoomer)->setYUnit(unit);
@@ -574,7 +520,7 @@ void FrequencyDisplayPlot::setMarkerLowerIntensityVisible(bool visible)
     else
         d_lower_intensity_marker->setLineStyle(QwtPlotMarker::NoLine);
 }
-const bool FrequencyDisplayPlot::getMarkerLowerIntensityVisible() const
+bool FrequencyDisplayPlot::getMarkerLowerIntensityVisible() const
 {
     return d_marker_lower_intensity_visible;
 }
@@ -599,7 +545,7 @@ void FrequencyDisplayPlot::setMarkerUpperIntensityVisible(bool visible)
         d_upper_intensity_marker->setLineStyle(QwtPlotMarker::NoLine);
 }
 
-const bool FrequencyDisplayPlot::getMarkerUpperIntensityVisible() const
+bool FrequencyDisplayPlot::getMarkerUpperIntensityVisible() const
 {
     return d_marker_upper_intensity_visible;
 }
@@ -613,11 +559,7 @@ void FrequencyDisplayPlot::setMarkerPeakAmplitudeColor(QColor c)
     symbol.setSize(8);
     symbol.setPen(QPen(c));
     symbol.setBrush(QBrush(c));
-#if QWT_VERSION < 0x060000
-    d_marker_peak_amplitude->setSymbol(symbol);
-#else
     d_marker_peak_amplitude->setSymbol(&symbol);
-#endif
 }
 const QColor FrequencyDisplayPlot::getMarkerPeakAmplitudeColor() const
 {
@@ -644,7 +586,7 @@ void FrequencyDisplayPlot::setMarkerNoiseFloorAmplitudeVisible(bool visible)
         d_marker_noise_floor_amplitude->setLineStyle(QwtPlotMarker::NoLine);
 }
 
-const bool FrequencyDisplayPlot::getMarkerNoiseFloorAmplitudeVisible() const
+bool FrequencyDisplayPlot::getMarkerNoiseFloorAmplitudeVisible() const
 {
     return d_marker_noise_floor_amplitude_visible;
 }

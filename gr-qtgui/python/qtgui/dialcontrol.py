@@ -9,10 +9,8 @@
 #
 #
 
-from PyQt5.QtWidgets import QFrame, QVBoxLayout, QLabel
-from PyQt5 import Qt
-from PyQt5.QtCore import Qt as Qtc
-from PyQt5.QtCore import QSize
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtWidgets import QFrame, QVBoxLayout, QLabel, QDial
 from gnuradio import gr
 import pmt
 
@@ -23,7 +21,7 @@ class LabeledDialControl(QFrame):
                  minsize=100, isFloat=False, scaleFactor=1, showvalue=False,
                  outputmsgname='value'):
         QFrame.__init__(self, parent)
-        self.numberControl = DialControl(minimum, maximum, defaultvalue, backgroundColor,
+        self.numberControl = DialControl(minimum, maximum, defaultvalue / scaleFactor, backgroundColor,
                                          self.valChanged, changedCallback, minsize)
 
         layout = QVBoxLayout()
@@ -34,10 +32,10 @@ class LabeledDialControl(QFrame):
         self.scaleFactor = scaleFactor
         self.lbl = lbl
         self.lblcontrol = QLabel(lbl, self)
-        self.lblcontrol.setAlignment(Qtc.AlignCenter)
+        self.lblcontrol.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         if self.showvalue:
-            textstr = self.buildTextStr(defaultvalue * self.scaleFactor)
+            textstr = self.buildTextStr(defaultvalue)
             self.lblcontrol.setText(textstr)
 
         if len or self.showvalue:
@@ -48,7 +46,7 @@ class LabeledDialControl(QFrame):
 
         layout.addWidget(self.numberControl)
 
-        layout.setAlignment(Qtc.AlignCenter)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setLayout(layout)
         self.show()
 
@@ -75,10 +73,10 @@ class LabeledDialControl(QFrame):
         self.lblcontrol.setText(textstr)
 
 
-class DialControl(Qt.QDial):
+class DialControl(QDial):
     def __init__(self, minimum=0, maximum=100, defaultvalue=0, backgroundColor='default',
                  lablelCallback=None, changedCallback=None, minsize=100):
-        Qt.QDial.__init__(self)
+        QDial.__init__(self)
 
         if backgroundColor != "default":
             self.setStyleSheet("background-color: " + backgroundColor + ";")
@@ -86,9 +84,9 @@ class DialControl(Qt.QDial):
         self.minsize = minsize
         self.changedCallback = changedCallback
         self.lablelCallback = lablelCallback
-        super().setMinimum(minimum)
-        super().setMaximum(maximum)
-        super().setValue(defaultvalue)
+        super().setMinimum(int(minimum))
+        super().setMaximum(int(maximum))
+        super().setValue(int(defaultvalue))
         super().valueChanged.connect(self.sliderMoved)
 
     def minimumSizeHint(self):

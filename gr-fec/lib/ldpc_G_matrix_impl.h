@@ -49,8 +49,6 @@ private:
     // GSL matrix structure for transpose of G
     gsl_matrix* d_G_transp_ptr;
 
-    gsl_matrix* d_H_obj;
-
     //! Get the generator matrix (used during encoding)
     const gsl_matrix* G_transpose() const;
 
@@ -67,8 +65,10 @@ public:
                 unsigned int frame_size,
                 unsigned int max_iterations) const override;
 
+    //! Redefine these here as part of the public interface
     unsigned int n() const override { return fec_mtrx_impl::n(); }
 
+    //! Redefine these here as part of the public interface
     unsigned int k() const override { return fec_mtrx_impl::k(); }
 
     gsl_matrix* generate_H();

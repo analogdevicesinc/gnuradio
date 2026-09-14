@@ -26,8 +26,12 @@ namespace zeromq {
 base_impl::base_impl(int type,
                      size_t itemsize,
                      size_t vlen,
+                     char* address,
                      int timeout,
                      bool pass_tags,
+                     int hwm,
+                     bool sink,
+                     bool bind,
                      const std::string& key)
     : d_context(1),
       d_socket(d_context, type),
@@ -43,16 +47,61 @@ base_impl::base_impl(int type,
     if (major < 3) {
         d_timeout *= 1000;
     }
+
+    /* Set ZMQ_LINGER so socket won't infinitely block during teardown */
+#if USE_NEW_CPPZMQ_SET_GET
+    d_socket.set(zmq::sockopt::linger, LINGER_DEFAULT);
+#else
+    d_socket.setsockopt(ZMQ_LINGER, &LINGER_DEFAULT, sizeof(LINGER_DEFAULT));
+#endif
+
+    /* Set high watermark */
+    if (hwm >= 0) {
+#if USE_NEW_CPPZMQ_SET_GET
+        if (sink) {
+            d_socket.set(zmq::sockopt::sndhwm, hwm);
+        } else {
+            d_socket.set(zmq::sockopt::rcvhwm, hwm);
+        }
+#else
+#ifdef ZMQ_SNDHWM
+        if (sink) {
+            d_socket.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
+        } else {
+            d_socket.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
+        }
+#else // major < 3
+        uint64_t tmp = hwm;
+        d_socket.setsockopt(ZMQ_HWM, &tmp, sizeof(tmp));
+#endif
+#endif
+    }
+
+    /* Linger and HWM apply to subsequent connections. */
+    if (bind) {
+        d_socket.bind(address);
+    } else {
+        d_socket.connect(address);
+    }
 }
 
-base_impl::~base_impl() {}
+base_impl::~base_impl()
+{
+    d_context.shutdown();
+    d_socket.close();
+    d_context.close();
+}
 
 std::string base_impl::last_endpoint()
 {
+#if USE_NEW_CPPZMQ_SET_GET
+    return d_socket.get(zmq::sockopt::last_endpoint);
+#else
     char addr[256];
     size_t addr_len = sizeof(addr);
     d_socket.getsockopt(ZMQ_LAST_ENDPOINT, addr, &addr_len);
     return std::string(addr, addr_len - 1);
+#endif
 }
 
 
@@ -63,24 +112,10 @@ base_sink_impl::base_sink_impl(int type,
                                int timeout,
                                bool pass_tags,
                                int hwm,
+                               bool bind,
                                const std::string& key)
-    : base_impl(type, itemsize, vlen, timeout, pass_tags, key)
+    : base_impl(type, itemsize, vlen, address, timeout, pass_tags, hwm, true, bind, key)
 {
-    /* Set high watermark */
-    if (hwm >= 0) {
-#ifdef ZMQ_SNDHWM
-        d_socket.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
-#else // major < 3
-        uint64_t tmp = hwm;
-        d_socket.setsockopt(ZMQ_HWM, &tmp, sizeof(tmp));
-#endif
-    }
-
-    /* Set ZMQ_LINGER so socket won't infinitely block during teardown */
-    d_socket.setsockopt(ZMQ_LINGER, &LINGER_DEFAULT, sizeof(LINGER_DEFAULT));
-
-    /* Bind */
-    d_socket.bind(address);
 }
 
 int base_sink_impl::send_message(const void* in_buf,
@@ -135,26 +170,12 @@ base_source_impl::base_source_impl(int type,
                                    int timeout,
                                    bool pass_tags,
                                    int hwm,
+                                   bool bind,
                                    const std::string& key)
-    : base_impl(type, itemsize, vlen, timeout, pass_tags, key),
+    : base_impl(type, itemsize, vlen, address, timeout, pass_tags, hwm, false, bind, key),
       d_consumed_bytes(0),
       d_consumed_items(0)
 {
-    /* Set high watermark */
-    if (hwm >= 0) {
-#ifdef ZMQ_RCVHWM
-        d_socket.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
-#else // major < 3
-        uint64_t tmp = hwm;
-        d_socket.setsockopt(ZMQ_HWM, &tmp, sizeof(tmp));
-#endif
-    }
-
-    /* Set ZMQ_LINGER so socket won't infinitely block during teardown */
-    d_socket.setsockopt(ZMQ_LINGER, &LINGER_DEFAULT, sizeof(LINGER_DEFAULT));
-
-    /* Connect */
-    d_socket.connect(address);
 }
 
 bool base_source_impl::has_pending() { return d_msg.size() > d_consumed_bytes; }
@@ -192,15 +213,19 @@ bool base_source_impl::load_message(bool wait)
 {
     /* Poll for input */
     zmq::pollitem_t items[] = { { static_cast<void*>(d_socket), 0, ZMQ_POLLIN, 0 } };
-    zmq::poll(&items[0], 1, wait ? d_timeout : 0);
+    zmq::poll(&items[0], 1, std::chrono::milliseconds{ wait ? d_timeout : 0 });
 
     if (!(items[0].revents & ZMQ_POLLIN))
         return false;
 
-    /* Is this the start or continuation of a multi-part message? */
+        /* Is this the start or continuation of a multi-part message? */
+#if USE_NEW_CPPZMQ_SET_GET
+    auto more = d_socket.get(zmq::sockopt::rcvmore);
+#else
     int64_t more = 0;
     size_t more_len = sizeof(more);
     d_socket.getsockopt(ZMQ_RCVMORE, &more, &more_len);
+#endif
 
     /* Reset */
     d_msg.rebuild();
@@ -217,15 +242,19 @@ bool base_source_impl::load_message(bool wait)
     if (!ok) {
         // This shouldn't happen since we polled POLLIN, but ZMQ wants us to check
         // the return value.
-        GR_LOG_WARN(d_logger, "Failed to recv() message.");
+        d_logger->warn("Failed to recv() message.");
         return false;
     }
 
     /* Throw away key and get the first message. Avoid blocking if a multi-part
      * message is not sent */
     if (!d_key.empty() && !more) {
+#if USE_NEW_CPPZMQ_SET_GET
+        auto is_multipart = d_socket.get(zmq::sockopt::rcvmore);
+#else
         int64_t is_multipart;
         d_socket.getsockopt(ZMQ_RCVMORE, &is_multipart, &more_len);
+#endif
 
         d_msg.rebuild();
         if (is_multipart) {
@@ -235,7 +264,7 @@ bool base_source_impl::load_message(bool wait)
             const bool multi_ok = d_socket.recv(&d_msg);
 #endif
             if (!multi_ok) {
-                GR_LOG_ERROR(d_logger, "Failure to receive multi-part message.");
+                d_logger->error("Failure to receive multi-part message.");
             }
         } else {
             return false;

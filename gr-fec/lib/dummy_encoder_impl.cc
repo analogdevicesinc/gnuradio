@@ -15,7 +15,6 @@
 #include "dummy_encoder_impl.h"
 #include <gnuradio/fec/generic_encoder.h>
 #include <volk/volk.h>
-#include <boost/format.hpp>
 #include <sstream>
 
 namespace gr {
@@ -56,9 +55,9 @@ bool dummy_encoder_impl::set_frame_size(unsigned int frame_size)
 {
     bool ret = true;
     if (frame_size > d_max_frame_size) {
-        GR_LOG_INFO(d_logger,
-                    boost::format("tried to set frame to %1%; max possible is %2%") %
-                        frame_size % d_max_frame_size);
+        d_logger->info("tried to set frame to {:d}; max possible is {:d}",
+                       frame_size,
+                       d_max_frame_size);
         frame_size = d_max_frame_size;
         ret = false;
     }
@@ -70,7 +69,7 @@ bool dummy_encoder_impl::set_frame_size(unsigned int frame_size)
 
 double dummy_encoder_impl::rate() { return 1.0; }
 
-void dummy_encoder_impl::generic_work(void* inbuffer, void* outbuffer)
+void dummy_encoder_impl::generic_work(const void* inbuffer, void* outbuffer)
 {
     const unsigned char* in = (const unsigned char*)inbuffer;
     unsigned char* out = (unsigned char*)outbuffer;

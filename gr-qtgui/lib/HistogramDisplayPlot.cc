@@ -17,7 +17,6 @@
 #include <gnuradio/math.h>
 #include <qwt_legend.h>
 #include <qwt_scale_draw.h>
-#include <boost/math/special_functions/round.hpp>
 #include <QColor>
 #include <cmath>
 
@@ -28,11 +27,7 @@
 class HistogramDisplayZoomer : public QwtPlotZoomer, public TimePrecisionClass
 {
 public:
-#if QWT_VERSION < 0x060100
-    HistogramDisplayZoomer(QwtPlotCanvas* canvas, const unsigned int timeprecision)
-#else  /* QWT_VERSION < 0x060100 */
     HistogramDisplayZoomer(QWidget* canvas, const unsigned int timeprecision)
-#endif /* QWT_VERSION < 0x060100 */
         : QwtPlotZoomer(canvas), TimePrecisionClass(timeprecision)
     {
         setTrackerMode(QwtPicker::AlwaysOn);
@@ -49,7 +44,7 @@ protected:
     QwtText trackerText(const QPoint& p) const override
     {
         QwtText t;
-        QwtDoublePoint dp = QwtPlotZoomer::invTransform(p);
+        QPointF dp = QwtPlotZoomer::invTransform(p);
         if ((dp.y() > 0.0001) && (dp.y() < 10000)) {
             t.setText(QString("%1, %2").arg(dp.x(), 0, 'f', 4).arg(dp.y(), 0, 'f', 0));
         } else {
@@ -71,10 +66,6 @@ HistogramDisplayPlot::HistogramDisplayPlot(unsigned int nplots, QWidget* parent)
     : DisplayPlot(nplots, parent), d_xdata(d_bins)
 {
     d_zoomer = new HistogramDisplayZoomer(canvas(), 0);
-
-#if QWT_VERSION < 0x060000
-    d_zoomer->setSelectionFlags(QwtPicker::RectSelection | QwtPicker::DragSelection);
-#endif
 
     d_zoomer->setMousePattern(
         QwtEventPattern::MouseSelect2, Qt::RightButton, Qt::ControlModifier);
@@ -118,13 +109,8 @@ HistogramDisplayPlot::HistogramDisplayPlot(unsigned int nplots, QWidget* parent)
         QwtSymbol* symbol = new QwtSymbol(
             QwtSymbol::NoSymbol, QBrush(colors[i]), QPen(colors[i]), QSize(7, 7));
 
-#if QWT_VERSION < 0x060000
-        d_plot_curve[i]->setRawData(d_xdata.data(), d_ydata[i].data(), d_bins);
-        d_plot_curve[i]->setSymbol(*symbol);
-#else
         d_plot_curve[i]->setRawSamples(d_xdata.data(), d_ydata[i].data(), d_bins);
         d_plot_curve[i]->setSymbol(symbol);
-#endif
     }
 
     _resetXAxisPoints(-1, 1);
@@ -137,7 +123,7 @@ HistogramDisplayPlot::~HistogramDisplayPlot()
 
 void HistogramDisplayPlot::replot() { QwtPlot::replot(); }
 
-void HistogramDisplayPlot::plotNewData(const std::vector<double*> dataPoints,
+void HistogramDisplayPlot::plotNewData(const std::vector<const double*> dataPoints,
                                        const uint64_t numDataPoints,
                                        const double timeInterval)
 {
@@ -171,8 +157,8 @@ void HistogramDisplayPlot::plotNewData(const std::vector<double*> dataPoints,
             unsigned int index;
             for (unsigned int n = 0; n < d_nplots; ++n) {
                 for (uint64_t point = 0; point < numDataPoints; point++) {
-                    index = boost::math::iround(1e-20 + (dataPoints[n][point] - d_left) /
-                                                            d_width);
+                    index =
+                        std::lround(1e-20 + (dataPoints[n][point] - d_left) / d_width);
                     if (index < d_bins)
                         d_ydata[n][static_cast<unsigned int>(index)] += 1;
                 }
@@ -204,22 +190,18 @@ void HistogramDisplayPlot::_resetXAxisPoints(double left, double right)
         throw std::runtime_error("HistogramDisplayPlot::_resetXAxisPoints left and/or "
                                  "right values are invalid");
 
-    d_left = left * (1 - copysign(0.1, left));
-    d_right = right * (1 + copysign(0.1, right));
+    d_left = left;
+    d_right = right;
     d_width = (d_right - d_left) / (d_bins);
     for (unsigned int loc = 0; loc < d_bins; loc++) {
-        d_xdata[loc] = d_left + loc * d_width;
+        d_xdata[loc] = d_left + (loc + 0.5) * d_width; // center the value in each bin
     }
-#if QWT_VERSION < 0x060100
-    axisScaleDiv(QwtPlot::xBottom)->setInterval(d_left, d_right);
-#else  /* QWT_VERSION < 0x060100 */
     QwtScaleDiv scalediv(d_left, d_right);
     setAxisScaleDiv(QwtPlot::xBottom, scalediv);
-#endif /* QWT_VERSION < 0x060100 */
 
     // Set up zoomer base for maximum unzoom x-axis
     // and reset to maximum unzoom level
-    QwtDoubleRect zbase = d_zoomer->zoomBase();
+    QRectF zbase = d_zoomer->zoomBase();
 
     if (d_semilogx) {
         setAxisScale(QwtPlot::xBottom, 1e-1, d_right);
@@ -261,11 +243,7 @@ void HistogramDisplayPlot::setSemilogx(bool en)
     if (!d_semilogx) {
         setAxisScaleEngine(QwtPlot::xBottom, new QwtLinearScaleEngine);
     } else {
-#if QWT_VERSION < 0x060100
-        setAxisScaleEngine(QwtPlot::xBottom, new QwtLog10ScaleEngine);
-#else  /* QWT_VERSION < 0x060100 */
         setAxisScaleEngine(QwtPlot::xBottom, new QwtLogScaleEngine);
-#endif /* QWT_VERSION < 0x060100 */
     }
 }
 
@@ -274,21 +252,13 @@ void HistogramDisplayPlot::setSemilogy(bool en)
     if (d_semilogy != en) {
         d_semilogy = en;
 
-#if QWT_VERSION < 0x060100
-        double max = axisScaleDiv(QwtPlot::yLeft)->upperBound();
-#else  /* QWT_VERSION < 0x060100 */
         double max = axisScaleDiv(QwtPlot::yLeft).upperBound();
-#endif /* QWT_VERSION < 0x060100 */
 
         if (!d_semilogy) {
             setAxisScaleEngine(QwtPlot::yLeft, new QwtLinearScaleEngine);
             setYaxis(-pow(10.0, max / 10.0), pow(10.0, max / 10.0));
         } else {
-#if QWT_VERSION < 0x060100
-            setAxisScaleEngine(QwtPlot::yLeft, new QwtLog10ScaleEngine);
-#else  /* QWT_VERSION < 0x060100 */
             setAxisScaleEngine(QwtPlot::yLeft, new QwtLogScaleEngine);
-#endif /* QWT_VERSION < 0x060100 */
             setYaxis(1e-10, 10.0 * log10(100 * max));
         }
     }
@@ -315,17 +285,12 @@ void HistogramDisplayPlot::setMarkerAlpha(unsigned int which, int alpha)
         d_plot_curve[which]->setPen(pen);
 
         // And set the new color for the markers
-#if QWT_VERSION < 0x060000
-        QwtSymbol sym = (QwtSymbol)d_plot_curve[which]->symbol();
-        setLineMarker(which, sym.style());
-#else
-        QwtSymbol* sym = (QwtSymbol*)d_plot_curve[which]->symbol();
+        QwtSymbol* sym = const_cast<QwtSymbol*>(d_plot_curve[which]->symbol());
         if (sym) {
             sym->setColor(color);
             sym->setPen(pen);
             d_plot_curve[which]->setSymbol(sym);
         }
-#endif
     }
 }
 
@@ -355,18 +320,12 @@ void HistogramDisplayPlot::setLineColor(unsigned int which, QColor color)
         pen.setColor(color);
         d_plot_curve[which]->setPen(pen);
 
-#if QWT_VERSION < 0x060000
-        d_plot_curve[which]->setPen(pen);
-        QwtSymbol sym = (QwtSymbol)d_plot_curve[which]->symbol();
-        setLineMarker(which, sym.style());
-#else
-        QwtSymbol* sym = (QwtSymbol*)d_plot_curve[which]->symbol();
+        QwtSymbol* sym = const_cast<QwtSymbol*>(d_plot_curve[which]->symbol());
         if (sym) {
             sym->setColor(color);
             sym->setPen(pen);
             d_plot_curve[which]->setSymbol(sym);
         }
-#endif
     }
 }
 
@@ -381,11 +340,7 @@ void HistogramDisplayPlot::setNumBins(unsigned int bins)
         d_ydata[i].clear();
         d_ydata[i].resize(d_bins);
 
-#if QWT_VERSION < 0x060000
-        d_plot_curve[i]->setRawData(d_xdata.data(), d_ydata[i].data(), d_bins);
-#else
         d_plot_curve[i]->setRawSamples(d_xdata.data(), d_ydata[i].data(), d_bins);
-#endif
     }
 }
 

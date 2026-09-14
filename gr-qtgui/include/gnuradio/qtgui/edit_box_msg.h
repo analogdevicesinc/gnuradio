@@ -11,14 +11,10 @@
 #ifndef INCLUDED_QTGUI_EDIT_BOX_MSG_H
 #define INCLUDED_QTGUI_EDIT_BOX_MSG_H
 
-#ifdef ENABLE_PYTHON
-#include <Python.h>
-#endif
-
 #include <gnuradio/block.h>
 #include <gnuradio/qtgui/api.h>
 #include <gnuradio/qtgui/qtgui_types.h>
-#include <qapplication.h>
+#include <QApplication>
 
 namespace gr {
 namespace qtgui {
@@ -121,7 +117,7 @@ public:
                      const std::string& key = "",
                      QWidget* parent = NULL);
 
-    virtual void exec_() = 0;
+    virtual void exec() = 0;
     virtual QWidget* qwidget() = 0;
 
     QApplication* d_qApplication;

@@ -11,13 +11,9 @@
 #ifndef INCLUDED_QTGUI_VECTOR_SINK_F_H
 #define INCLUDED_QTGUI_VECTOR_SINK_F_H
 
-#ifdef ENABLE_PYTHON
-#include <Python.h>
-#endif
-
 #include <gnuradio/qtgui/api.h>
 #include <gnuradio/sync_block.h>
-#include <qapplication.h>
+#include <QApplication>
 
 namespace gr {
 namespace qtgui {
@@ -65,7 +61,7 @@ public:
                      int nconnections = 1,
                      QWidget* parent = NULL);
 
-    virtual void exec_() = 0;
+    virtual void exec() = 0;
     virtual QWidget* qwidget() = 0;
 
     virtual unsigned int vlen() const = 0;
@@ -110,6 +106,7 @@ public:
 
     virtual void enable_menu(bool en = true) = 0;
     virtual void enable_grid(bool en = true) = 0;
+    virtual void disable_legend() = 0;
     virtual void enable_autoscale(bool en = true) = 0;
     virtual void clear_max_hold() = 0;
     virtual void clear_min_hold() = 0;

@@ -14,6 +14,8 @@
 
 #include "message_strobe_random_impl.h"
 #include <gnuradio/io_signature.h>
+#include <chrono>
+#include <thread>
 
 namespace gr {
 namespace blocks {
@@ -44,6 +46,7 @@ message_strobe_random_impl::message_strobe_random_impl(
       pd(d_mean_ms),
       nd(d_mean_ms, d_std_ms),
       ud(d_mean_ms - d_std_ms, d_mean_ms + d_std_ms),
+      ed(1.0f / d_mean_ms),
       d_finished(false),
       d_msg(msg),
       d_port(pmt::mp("strobe"))
@@ -62,6 +65,7 @@ void message_strobe_random_impl::set_mean(float mean_ms)
     pd = std::poisson_distribution<>(d_mean_ms);
     nd = std::normal_distribution<>(d_mean_ms, d_std_ms);
     ud = std::uniform_real_distribution<>(d_mean_ms - d_std_ms, d_mean_ms + d_std_ms);
+    ed = std::exponential_distribution<>(1.0f / d_mean_ms);
 }
 
 float message_strobe_random_impl::mean() const { return d_mean_ms; }
@@ -77,12 +81,13 @@ long message_strobe_random_impl::next_delay()
 {
     switch (d_dist) {
     case STROBE_POISSON:
-        // return d_variate_poisson->operator()();
         return static_cast<long>(pd(d_rng));
     case STROBE_GAUSSIAN:
         return static_cast<long>(nd(d_rng));
     case STROBE_UNIFORM:
         return static_cast<long>(ud(d_rng));
+    case STROBE_EXPONENTIAL:
+        return static_cast<long>(ed(d_rng));
     default:
         throw std::runtime_error(
             "message_strobe_random_impl::d_distribution is very unhappy with you");
@@ -100,8 +105,8 @@ message_strobe_random_impl::~message_strobe_random_impl()
 void message_strobe_random_impl::run()
 {
     while (!d_finished) {
-        boost::this_thread::sleep(
-            boost::posix_time::milliseconds(std::max(0L, next_delay())));
+        std::this_thread::sleep_for(
+            std::chrono::milliseconds(std::max(0L, next_delay())));
         if (d_finished) {
             return;
         }

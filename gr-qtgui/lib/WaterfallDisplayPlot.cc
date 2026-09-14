@@ -20,17 +20,11 @@
 #include <qwt_scale_draw.h>
 #include <QColor>
 
-#if QWT_VERSION < 0x060100
-#include <qwt_legend_item.h>
-#else /* QWT_VERSION < 0x060100 */
 #include <qwt_legend_data.h>
 #include <qwt_legend_label.h>
-#endif /* QWT_VERSION < 0x060100 */
-
-#include <boost/date_time/posix_time/posix_time.hpp>
-namespace pt = boost::posix_time;
 
 #include <QDebug>
+#include <cmath>
 
 /***********************************************************************
  * Text scale widget to provide Y (time) axis text
@@ -67,11 +61,7 @@ class WaterfallZoomer : public QwtPlotZoomer,
                         public FreqOffsetAndPrecisionClass
 {
 public:
-#if QWT_VERSION < 0x060100
-    WaterfallZoomer(QwtPlotCanvas* canvas, const unsigned int freqPrecision)
-#else  /* QWT_VERSION < 0x060100 */
     WaterfallZoomer(QWidget* canvas, const unsigned int freqPrecision)
-#endif /* QWT_VERSION < 0x060100 */
         : QwtPlotZoomer(canvas),
           TimeScaleData(),
           FreqOffsetAndPrecisionClass(freqPrecision)
@@ -89,7 +79,7 @@ protected:
     using QwtPlotZoomer::trackerText;
     QwtText trackerText(QPoint const& p) const override
     {
-        QwtDoublePoint dp = QwtPlotZoomer::invTransform(p);
+        QPointF dp = QwtPlotZoomer::invTransform(p);
         double secs = double(dp.y() * getSecondsPerLine());
         QwtText t(QString("%1 %2, %3 s")
                       .arg(dp.x(), 0, 'f', getFrequencyPrecision())
@@ -129,15 +119,10 @@ WaterfallDisplayPlot::WaterfallDisplayPlot(int nplots, QWidget* parent)
         d_data.push_back(
             new WaterfallData(d_start_frequency, d_stop_frequency, d_numPoints, d_nrows));
 
-#if QWT_VERSION < 0x060000
-        d_spectrogram.push_back(new PlotWaterfall(d_data[i], "Spectrogram"));
-
-#else
         d_spectrogram.push_back(new QwtPlotSpectrogram("Spectrogram"));
         d_spectrogram[i]->setData(d_data[i]);
         d_spectrogram[i]->setDisplayMode(QwtPlotSpectrogram::ImageMode, true);
         d_spectrogram[i]->setColorMap(new ColorMap_MultiColor());
-#endif
 
         // a hack around the fact that we aren't using plot curves for the
         // spectrogram plots.
@@ -161,9 +146,6 @@ WaterfallDisplayPlot::WaterfallDisplayPlot(int nplots, QWidget* parent)
     // RightButton: zoom out by 1
     // Ctrl+RighButton: zoom out to full size
     d_zoomer = new WaterfallZoomer(canvas(), 0);
-#if QWT_VERSION < 0x060000
-    d_zoomer->setSelectionFlags(QwtPicker::RectSelection | QwtPicker::DragSelection);
-#endif
     d_zoomer->setMousePattern(
         QwtEventPattern::MouseSelect2, Qt::RightButton, Qt::ControlModifier);
     d_zoomer->setMousePattern(QwtEventPattern::MouseSelect3, Qt::RightButton);
@@ -189,7 +171,7 @@ void WaterfallDisplayPlot::resetAxis()
     setAxisScale(QwtPlot::xBottom, d_start_frequency, d_stop_frequency);
 
     // Load up the new base zoom settings
-    QwtDoubleRect zbase = d_zoomer->zoomBase();
+    QRectF zbase = d_zoomer->zoomBase();
     d_zoomer->zoom(zbase);
     d_zoomer->setZoomBase(zbase);
     d_zoomer->setZoomBase(true);
@@ -241,7 +223,7 @@ double WaterfallDisplayPlot::getStartFrequency() const { return d_start_frequenc
 
 double WaterfallDisplayPlot::getStopFrequency() const { return d_stop_frequency; }
 
-void WaterfallDisplayPlot::plotNewData(const std::vector<double*> dataPoints,
+void WaterfallDisplayPlot::plotNewData(const std::vector<const double*> dataPoints,
                                        const int64_t numDataPoints,
                                        const double timePerFFT,
                                        const gr::high_res_timer_type timestamp,
@@ -336,8 +318,8 @@ void WaterfallDisplayPlot::plotNewData(const double* dataPoints,
                                        const gr::high_res_timer_type timestamp,
                                        const int droppedFrames)
 {
-    std::vector<double*> vecDataPoints;
-    vecDataPoints.push_back((double*)dataPoints);
+    std::vector<const double*> vecDataPoints;
+    vecDataPoints.push_back(dataPoints);
     plotNewData(vecDataPoints, numDataPoints, timePerFFT, timestamp, droppedFrames);
 }
 
@@ -345,11 +327,7 @@ void WaterfallDisplayPlot::setIntensityRange(const double minIntensity,
                                              const double maxIntensity)
 {
     for (unsigned int i = 0; i < d_nplots; ++i) {
-#if QWT_VERSION < 0x060000
-        d_data[i]->setRange(QwtDoubleInterval(minIntensity, maxIntensity));
-#else
         d_data[i]->setInterval(Qt::ZAxis, QwtInterval(minIntensity, maxIntensity));
-#endif
 
         emit updatedLowerIntensityLevel(minIntensity);
         emit updatedUpperIntensityLevel(maxIntensity);
@@ -360,22 +338,14 @@ void WaterfallDisplayPlot::setIntensityRange(const double minIntensity,
 
 double WaterfallDisplayPlot::getMinIntensity(unsigned int which) const
 {
-#if QWT_VERSION < 0x060000
-    QwtDoubleInterval r = d_data[which]->range();
-#else
     QwtInterval r = d_data[which]->interval(Qt::ZAxis);
-#endif
 
     return r.minValue();
 }
 
 double WaterfallDisplayPlot::getMaxIntensity(unsigned int which) const
 {
-#if QWT_VERSION < 0x060000
-    QwtDoubleInterval r = d_data[which]->range();
-#else
     QwtInterval r = d_data[which]->interval(Qt::ZAxis);
-#endif
 
     return r.maxValue();
 }
@@ -440,75 +410,40 @@ void WaterfallDisplayPlot::setIntensityColorMapType(const unsigned int which,
         switch (newType) {
         case gr::qtgui::INTENSITY_COLOR_MAP_TYPE_MULTI_COLOR: {
             d_intensity_color_map_type[which] = newType;
-#if QWT_VERSION < 0x060000
-            ColorMap_MultiColor colorMap;
-            d_spectrogram[which]->setColorMap(colorMap);
-#else
             d_spectrogram[which]->setColorMap(new ColorMap_MultiColor());
-#endif
             break;
         }
         case gr::qtgui::INTENSITY_COLOR_MAP_TYPE_WHITE_HOT: {
             d_intensity_color_map_type[which] = newType;
-#if QWT_VERSION < 0x060000
-            ColorMap_WhiteHot colorMap;
-            d_spectrogram[which]->setColorMap(colorMap);
-#else
             d_spectrogram[which]->setColorMap(new ColorMap_WhiteHot());
-#endif
             break;
         }
         case gr::qtgui::INTENSITY_COLOR_MAP_TYPE_BLACK_HOT: {
             d_intensity_color_map_type[which] = newType;
-#if QWT_VERSION < 0x060000
-            ColorMap_BlackHot colorMap;
-            d_spectrogram[which]->setColorMap(colorMap);
-#else
             d_spectrogram[which]->setColorMap(new ColorMap_BlackHot());
-#endif
             break;
         }
         case gr::qtgui::INTENSITY_COLOR_MAP_TYPE_INCANDESCENT: {
             d_intensity_color_map_type[which] = newType;
-#if QWT_VERSION < 0x060000
-            ColorMap_Incandescent colorMap;
-            d_spectrogram[which]->setColorMap(colorMap);
-#else
             d_spectrogram[which]->setColorMap(new ColorMap_Incandescent());
-#endif
             break;
         }
         case gr::qtgui::INTENSITY_COLOR_MAP_TYPE_SUNSET: {
             d_intensity_color_map_type[which] = newType;
-#if QWT_VERSION < 0x060000
-            ColorMap_Sunset colorMap;
-            d_spectrogram[which]->setColorMap(colorMap);
-#else
             d_spectrogram[which]->setColorMap(new ColorMap_Sunset());
-#endif
             break;
         }
         case gr::qtgui::INTENSITY_COLOR_MAP_TYPE_COOL: {
             d_intensity_color_map_type[which] = newType;
-#if QWT_VERSION < 0x060000
-            ColorMap_Cool colorMap;
-            d_spectrogram[which]->setColorMap(colorMap);
-#else
             d_spectrogram[which]->setColorMap(new ColorMap_Cool());
-#endif
             break;
         }
         case gr::qtgui::INTENSITY_COLOR_MAP_TYPE_USER_DEFINED: {
             d_user_defined_low_intensity_color = lowColor;
             d_user_defined_high_intensity_color = highColor;
             d_intensity_color_map_type[which] = newType;
-#if QWT_VERSION < 0x060000
-            ColorMap_UserDefined colorMap(lowColor, highColor);
-            d_spectrogram[which]->setColorMap(colorMap);
-#else
             d_spectrogram[which]->setColorMap(
                 new ColorMap_UserDefined(lowColor, highColor));
-#endif
             break;
         }
         default:
@@ -573,13 +508,6 @@ void WaterfallDisplayPlot::_updateIntensityRangeDisplay()
     rightAxis->setColorBarEnabled(true);
 
     for (unsigned int i = 0; i < d_nplots; ++i) {
-#if QWT_VERSION < 0x060000
-        rightAxis->setColorMap(d_spectrogram[i]->data()->range(),
-                               d_spectrogram[i]->colorMap());
-        setAxisScale(QwtPlot::yRight,
-                     d_spectrogram[i]->data()->range().minValue(),
-                     d_spectrogram[i]->data()->range().maxValue());
-#else
         QwtInterval intv = d_spectrogram[i]->interval(Qt::ZAxis);
         switch (d_intensity_color_map_type[i]) {
         case gr::qtgui::INTENSITY_COLOR_MAP_TYPE_MULTI_COLOR:
@@ -611,7 +539,6 @@ void WaterfallDisplayPlot::_updateIntensityRangeDisplay()
             break;
         }
         setAxisScale(QwtPlot::yRight, intv.minValue(), intv.maxValue());
-#endif
 
         plotLayout()->setAlignCanvasToScales(true);
 

@@ -27,7 +27,9 @@ public:
                   int timeout,
                   bool pass_tags,
                   int hwm,
-                  const std::string& key);
+                  const std::string& key,
+                  bool drop_on_hwm,
+                  bool bind);
 
     int work(int noutput_items,
              gr_vector_const_void_star& input_items,

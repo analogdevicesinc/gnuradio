@@ -11,8 +11,8 @@
 #define INCLUDED_DIGITAL_PACKET_HEADER_DEFAULT_H
 
 #include <gnuradio/digital/api.h>
+#include <gnuradio/digital/crc.h>
 #include <gnuradio/tags.h>
-#include <boost/crc.hpp>
 
 namespace gr {
 namespace digital {
@@ -58,7 +58,7 @@ public:
      *
      * Uses the following header format:
      * Bits 0-11: The packet length (what was stored in the tag with key \p len_tag_key)
-     * Bits 12-23: The header number (counts up everytime this function is called)
+     * Bits 12-23: The header number (counts up every time this function is called)
      * Bit 24-31: 8-Bit CRC
      * All other bits: Are set to zero
      *
@@ -91,7 +91,7 @@ protected:
     int d_bits_per_byte;
     unsigned d_header_number;
     unsigned d_mask;
-    boost::crc_optimal<8, 0x07, 0xFF, 0x00, false, false> d_crc_impl;
+    crc d_crc_impl;
 };
 
 } // namespace digital

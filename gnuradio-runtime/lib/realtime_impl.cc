@@ -12,6 +12,10 @@
 #include <config.h>
 #endif
 
+#if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
+#include <windows.h>
+#endif
+
 #include "realtime_impl.h"
 #include <gnuradio/logger.h>
 #include <gnuradio/prefs.h>
@@ -20,15 +24,14 @@
 #include <sched.h>
 #endif
 
-#include <boost/format.hpp>
 #include <algorithm>
 #include <cerrno>
 #include <cmath>
-#include <cstdio>
 #include <cstring>
 
 
-#if defined(HAVE_PTHREAD_SETSCHEDPARAM) || defined(HAVE_SCHED_SETSCHEDULER)
+#if !(defined(_WIN32) || defined(__WIN32__) || defined(WIN32)) && \
+    (defined(HAVE_PTHREAD_SETSCHEDPARAM) || defined(HAVE_SCHED_SETSCHEDULER))
 #include <pthread.h>
 
 namespace gr {
@@ -55,9 +58,6 @@ static int rescale_virtual_pri(int virtual_pri, int min_real_pri, int max_real_p
 
 
 #if defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
-
-#include <windows.h>
-
 namespace gr {
 namespace realtime {
 
@@ -111,11 +111,8 @@ rt_status_t enable_realtime_scheduling(rt_sched_param p)
         else {
             gr::logger_ptr logger, debug_logger;
             gr::configure_default_loggers(logger, debug_logger, "realtime_impl");
-            GR_LOG_ERROR(
-                logger,
-                boost::format(
-                    "pthread_setschedparam: failed to set real time priority: %s") %
-                    strerror(result));
+            logger->error("pthread_setschedparam: failed to set real time priority: {:s}",
+                          strerror(result));
             return RT_OTHER_ERROR;
         }
     }
@@ -152,9 +149,7 @@ rt_status_t enable_realtime_scheduling(rt_sched_param p)
         else {
             gr::logger_ptr logger, debug_logger;
             gr::configure_default_loggers(logger, debug_logger, "realtime_impl");
-            GR_LOG_ERROR(
-                logger,
-                boost::format("sched_setscheduler: failed to set real time priority."));
+            logger->error("sched_setscheduler: failed to set real time priority.");
             return RT_OTHER_ERROR;
         }
     }

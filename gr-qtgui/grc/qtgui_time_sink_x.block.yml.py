@@ -256,10 +256,8 @@ inputs:
 
 templates:
     imports: |-
-        from PyQt5 import Qt
-        from gnuradio import qtgui
-        from gnuradio.filter import firdes
-        import sip
+        from PyQt6 import sip
+
     callbacks:
     - set_time_domain_axis(${min}, ${max})
     - set_update_time(${update_time})
@@ -336,7 +334,7 @@ templates:
             self.${id}.set_line_alpha(i, alphas[i])
         % endif
 
-        ${win} = sip.wrapinstance(self.${id}.qwidget(), Qt.QWidget)
+        ${win} = sip.wrapinstance(self.${id}.qwidget(), QtWidgets.QWidget)
         ${gui_hint() % win}
 
 documentation: |-

@@ -9,12 +9,12 @@
 #
 #
 
-from PyQt5 import Qt
+from PyQt6.QtWidgets import QPushButton
 from gnuradio import gr
 import pmt
 
 
-class MsgPushButton(gr.sync_block, Qt.QPushButton):
+class MsgPushButton(gr.sync_block, QPushButton):
     """
     This block creates a variable push button that creates a message
     when clicked. Leave the label blank to use the variable id as
@@ -25,7 +25,7 @@ class MsgPushButton(gr.sync_block, Qt.QPushButton):
     def __init__(self, lbl, msgName, msgValue, relBackColor, relFontColor):
         gr.sync_block.__init__(self, name="MsgPushButton",
                                in_sig=None, out_sig=None)
-        Qt.QPushButton.__init__(self, lbl)
+        QPushButton.__init__(self, lbl)
 
         self.lbl = lbl
         self.msgName = msgName
@@ -57,3 +57,6 @@ class MsgPushButton(gr.sync_block, Qt.QPushButton):
         elif type(self.msgValue) == bool:
             self.message_port_pub(pmt.intern("pressed"),
                                   pmt.cons(pmt.intern(self.msgName), pmt.from_bool(self.msgValue)))
+
+    def set_new_msg(self, msg):
+        self.msgValue = msg

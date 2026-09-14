@@ -21,8 +21,10 @@ public:
                            const size_t num_chans,
                            const ::uhd::stream_args_t& stream_args,
                            const size_t vlen,
-                           const bool issue_stream_cmd_on_start);
-    ~rfnoc_rx_streamer_impl();
+                           const bool issue_stream_cmd_on_start,
+                           const bool start_time_set,
+                           const ::uhd::time_spec_t& start_time);
+    ~rfnoc_rx_streamer_impl() override;
 
     std::string get_unique_id() const override { return d_unique_id; }
 

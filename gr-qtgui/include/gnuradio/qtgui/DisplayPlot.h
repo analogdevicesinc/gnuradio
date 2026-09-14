@@ -28,22 +28,11 @@
 #include <cstdio>
 #include <vector>
 
-#if QWT_VERSION >= 0x060000
-typedef QPointF QwtDoublePoint;
-typedef QRectF QwtDoubleRect;
-
-typedef QwtInterval QwtDoubleInterval;
-#endif
-
 typedef QList<QColor> QColorList;
 Q_DECLARE_METATYPE(QColorList)
 
-#if QWT_VERSION < 0x060100
-#include <qwt_legend_item.h>
-#else /* QWT_VERSION < 0x060100 */
 #include <qwt_legend_data.h>
 #include <qwt_legend_label.h>
-#endif /* QWT_VERSION < 0x060100 */
 
 /*!
  * \brief QWidget base plot to build QTGUI plotting tools.
@@ -141,25 +130,25 @@ public:
     int getLineWidth8() const;
     int getLineWidth9() const;
 
-    const Qt::PenStyle getLineStyle1() const;
-    const Qt::PenStyle getLineStyle2() const;
-    const Qt::PenStyle getLineStyle3() const;
-    const Qt::PenStyle getLineStyle4() const;
-    const Qt::PenStyle getLineStyle5() const;
-    const Qt::PenStyle getLineStyle6() const;
-    const Qt::PenStyle getLineStyle7() const;
-    const Qt::PenStyle getLineStyle8() const;
-    const Qt::PenStyle getLineStyle9() const;
+    Qt::PenStyle getLineStyle1() const;
+    Qt::PenStyle getLineStyle2() const;
+    Qt::PenStyle getLineStyle3() const;
+    Qt::PenStyle getLineStyle4() const;
+    Qt::PenStyle getLineStyle5() const;
+    Qt::PenStyle getLineStyle6() const;
+    Qt::PenStyle getLineStyle7() const;
+    Qt::PenStyle getLineStyle8() const;
+    Qt::PenStyle getLineStyle9() const;
 
-    const QwtSymbol::Style getLineMarker1() const;
-    const QwtSymbol::Style getLineMarker2() const;
-    const QwtSymbol::Style getLineMarker3() const;
-    const QwtSymbol::Style getLineMarker4() const;
-    const QwtSymbol::Style getLineMarker5() const;
-    const QwtSymbol::Style getLineMarker6() const;
-    const QwtSymbol::Style getLineMarker7() const;
-    const QwtSymbol::Style getLineMarker8() const;
-    const QwtSymbol::Style getLineMarker9() const;
+    QwtSymbol::Style getLineMarker1() const;
+    QwtSymbol::Style getLineMarker2() const;
+    QwtSymbol::Style getLineMarker3() const;
+    QwtSymbol::Style getLineMarker4() const;
+    QwtSymbol::Style getLineMarker5() const;
+    QwtSymbol::Style getLineMarker6() const;
+    QwtSymbol::Style getLineMarker7() const;
+    QwtSymbol::Style getLineMarker8() const;
+    QwtSymbol::Style getLineMarker9() const;
 
     int getMarkerAlpha1() const;
     int getMarkerAlpha2() const;
@@ -194,9 +183,9 @@ public slots:
     virtual void setLineWidth(unsigned int which, int width);
     virtual int getLineWidth(unsigned int which) const;
     virtual void setLineStyle(unsigned int which, Qt::PenStyle style);
-    virtual const Qt::PenStyle getLineStyle(unsigned int which) const;
+    virtual Qt::PenStyle getLineStyle(unsigned int which) const;
     virtual void setLineMarker(unsigned int which, QwtSymbol::Style marker);
-    virtual const QwtSymbol::Style getLineMarker(unsigned int which) const;
+    virtual QwtSymbol::Style getLineMarker(unsigned int which) const;
     virtual void setMarkerAlpha(unsigned int which, int alpha);
     virtual int getMarkerAlpha(unsigned int which) const;
 
@@ -263,11 +252,7 @@ public slots:
 
     void resizeSlot(QSize* s);
 
-    // Because of the preprocessing of slots in QT, these are not
-    // easily separated by the version check. Make one for each
-    // version until it's worked out.
-    void onPickerPointSelected(const QwtDoublePoint& p);
-    void onPickerPointSelected6(const QPointF& p);
+    void onPickerPointSelected(const QPointF& p);
 
 signals:
     void plotPointSelected(const QPointF p);

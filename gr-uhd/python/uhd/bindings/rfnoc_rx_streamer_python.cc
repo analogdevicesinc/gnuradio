@@ -14,7 +14,7 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(rfnoc_rx_streamer.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(c9627fa218093e7f23303f35d8fe709c)                     */
+/* BINDTOOL_HEADER_FILE_HASH(8837c3361ef947a3de1287cd54ff9a3f)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -46,6 +46,8 @@ void bind_rfnoc_rx_streamer(py::module& m)
              py::arg("stream_args"),
              py::arg("vlen") = 1,
              py::arg("issue_stream_cmd_on_start") = true,
+             py::arg("start_time_set") = false,
+             py::arg("start_time") = 0,
              D(rfnoc_rx_streamer, make))
 
 

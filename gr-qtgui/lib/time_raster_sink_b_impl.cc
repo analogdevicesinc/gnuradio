@@ -79,8 +79,7 @@ time_raster_sink_b_impl::time_raster_sink_b_impl(double samp_rate,
 
 time_raster_sink_b_impl::~time_raster_sink_b_impl()
 {
-    if (!d_main_gui->isClosed())
-        d_main_gui->close();
+    QMetaObject::invokeMethod(d_main_gui, "close");
 }
 
 bool time_raster_sink_b_impl::check_topology(int ninputs, int noutputs)
@@ -93,10 +92,6 @@ void time_raster_sink_b_impl::initialize()
     if (qApp != NULL) {
         d_qApplication = qApp;
     } else {
-#if QT_VERSION >= 0x040500 && QT_VERSION < 0x050000
-        std::string style = prefs::singleton()->get_string("qtgui", "style", "raster");
-        QApplication::setGraphicsSystem(QString(style.c_str()));
-#endif
         d_qApplication = new QApplication(d_argc, &d_argv);
     }
 
@@ -118,7 +113,7 @@ void time_raster_sink_b_impl::initialize()
     set_update_time(0.1);
 }
 
-void time_raster_sink_b_impl::exec_() { d_qApplication->exec(); }
+void time_raster_sink_b_impl::exec() { d_qApplication->exec(); }
 
 QWidget* time_raster_sink_b_impl::qwidget() { return d_main_gui; }
 

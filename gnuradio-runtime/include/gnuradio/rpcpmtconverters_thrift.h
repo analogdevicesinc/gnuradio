@@ -12,8 +12,7 @@
 
 #include "thrift/gnuradio_types.h"
 #include <pmt/pmt.h>
-#include <boost/noncopyable.hpp>
-#include <boost/ptr_container/ptr_map.hpp>
+#include <map>
 
 
 namespace rpcpmtconverter {
@@ -71,16 +70,19 @@ struct to_pmt_c32vect_f : public to_pmt_f {
     pmt::pmt_t operator()(const GNURadio::Knob& knob);
 };
 
-class To_PMT : private boost::noncopyable
+class To_PMT
 {
 public:
+    To_PMT(const To_PMT&) = delete;
+    To_PMT& operator=(const To_PMT&) = delete;
+
     static To_PMT instance;
     template <typename TO_PMT_F>
     friend struct to_pmt_reg;
     pmt::pmt_t operator()(const GNURadio::Knob& knob);
 
 protected:
-    boost::ptr_map<GNURadio::BaseTypes::type, to_pmt_f> to_pmt_map;
+    std::map<GNURadio::BaseTypes::type, std::unique_ptr<to_pmt_f>> to_pmt_map;
 
 private:
     To_PMT() { ; }

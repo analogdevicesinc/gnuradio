@@ -13,7 +13,7 @@
 
 #include <gnuradio/blocks/api.h>
 #include <gnuradio/logger.h>
-#include <boost/thread.hpp>
+#include <gnuradio/thread/thread.h>
 #include <cstdio>
 
 namespace gr {
@@ -29,13 +29,18 @@ protected:
     FILE* d_new_fp; // new FILE pointer
     bool d_updated; // is there a new FILE pointer?
     bool d_is_binary;
-    boost::mutex d_mutex;
+    gr::thread::mutex d_mutex;
     bool d_unbuffered;
     bool d_append;
-    gr::logger_ptr d_logger, d_debug_logger;
+    bool d_fail_if_exists;
+    gr::logger_ptr d_base_logger;
+    gr::logger_ptr d_base_debug_logger;
 
 protected:
-    file_sink_base(const char* filename, bool is_binary, bool append);
+    file_sink_base(const char* filename,
+                   bool is_binary,
+                   bool append,
+                   bool fail_if_exists = false);
 
 public:
     file_sink_base() {}

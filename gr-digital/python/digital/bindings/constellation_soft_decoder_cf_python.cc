@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Free Software Foundation, Inc.
+ * Copyright 2024 Free Software Foundation, Inc.
  *
  * This file is part of GNU Radio
  *
@@ -14,7 +14,7 @@
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
 /* BINDTOOL_HEADER_FILE(constellation_soft_decoder_cf.h) */
-/* BINDTOOL_HEADER_FILE_HASH(e04415a59c793a639f43e03026ee8c0e)                     */
+/* BINDTOOL_HEADER_FILE_HASH(527d6cf852ef0cb863e18d886891819b)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>
@@ -35,16 +35,25 @@ void bind_constellation_soft_decoder_cf(py::module& m)
 
     py::class_<constellation_soft_decoder_cf,
                gr::sync_interpolator,
-               gr::sync_block,
-               gr::block,
-               gr::basic_block,
                std::shared_ptr<constellation_soft_decoder_cf>>(
         m, "constellation_soft_decoder_cf", D(constellation_soft_decoder_cf))
 
         .def(py::init(&constellation_soft_decoder_cf::make),
              py::arg("constellation"),
+             py::arg("npwr") = -1,
              D(constellation_soft_decoder_cf, make))
 
+
+        .def("set_npwr",
+             &constellation_soft_decoder_cf::set_npwr,
+             py::arg("npwr"),
+             D(constellation_soft_decoder_cf, set_npwr))
+
+
+        .def("set_constellation",
+             &constellation_soft_decoder_cf::set_constellation,
+             py::arg("constellation"),
+             D(constellation_soft_decoder_cf, set_constellation))
 
         ;
 }

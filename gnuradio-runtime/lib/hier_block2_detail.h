@@ -15,18 +15,19 @@
 #include <gnuradio/hier_block2.h>
 #include <gnuradio/logger.h>
 #include <flat_flowgraph.h>
-#include <boost/core/noncopyable.hpp>
 
 namespace gr {
 
 /*!
  * \ingroup internal
  */
-class GR_RUNTIME_API hier_block2_detail : boost::noncopyable
+class GR_RUNTIME_API hier_block2_detail
 {
 public:
     hier_block2_detail(hier_block2* owner);
     ~hier_block2_detail();
+    hier_block2_detail(const hier_block2_detail&) = delete;
+    hier_block2_detail& operator=(const hier_block2_detail&) = delete;
 
     void connect(basic_block_sptr block);
     void connect(basic_block_sptr src, int src_port, basic_block_sptr dst, int dst_port);
@@ -59,7 +60,8 @@ public:
 private:
     // Private implementation data
     hier_block2* d_owner;
-    hier_block2_detail* d_parent_detail;
+    std::weak_ptr<hier_block2> d_parent;
+    int d_parent_refcnt;
     flowgraph_sptr d_fg;
     std::vector<endpoint_vector_t>
         d_inputs;                // Multiple internal endpoints per external input
@@ -77,6 +79,9 @@ private:
 
     endpoint_vector_t resolve_port(int port, bool is_input);
     endpoint_vector_t resolve_endpoint(const endpoint& endp, bool is_input) const;
+    void set_parent(hier_block2* parent);
+    void reset_parent(bool force = false);
+    void reset_hier_blocks_parent();
 };
 
 } /* namespace gr */

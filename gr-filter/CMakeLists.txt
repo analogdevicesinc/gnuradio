@@ -15,70 +15,68 @@ include(GrBoost)
 ########################################################################
 include(GrComponent)
 
-GR_REGISTER_COMPONENT("gr-filter" ENABLE_GR_FILTER
-    Boost_FOUND
-    ENABLE_GNURADIO_RUNTIME
-    ENABLE_GR_FFT
-    ENABLE_GR_BLOCKS
+gr_register_component(
+    NAME "gr-filter"
+    VAR ENABLE_GR_FILTER
+    REQUIRED_COMPONENTS
+        gnuradio-runtime
+        gr-fft
+        gr-blocks
+    REQUIRED_TPLS
+        Boost_FOUND
 )
 
-SET(GR_PKG_FILTER_EXAMPLES_DIR ${GR_PKG_DATA_DIR}/examples/filter)
+set(GR_PKG_FILTER_EXAMPLES_DIR ${GR_PKG_DATA_DIR}/examples/filter)
 
 ########################################################################
 # Begin conditional configuration
 ########################################################################
 if(ENABLE_GR_FILTER)
-########################################################################
-# Add subdirectories
-########################################################################
-add_subdirectory(include/gnuradio/filter)
-add_subdirectory(lib)
+    ########################################################################
+    # Add subdirectories
+    ########################################################################
+    add_subdirectory(include/gnuradio/filter)
+    add_subdirectory(lib)
 
-# Check for scipy and pyqtgraph, but don't fail if they don't exist.
-GR_PYTHON_CHECK_MODULE_RAW(
-    "pyqtgraph"
-    "import pyqtgraph"
-    PYQTGRAPH_FOUND
-)
-GR_PYTHON_CHECK_MODULE_RAW(
-    "scipy"
-    "import scipy"
-    SCIPY_FOUND
-)
-
-if(NOT PYQTGRAPH_FOUND OR NOT SCIPY_FOUND)
-    message(WARNING
-        "PyQtGraph and Scipy are required to run the filter design tool, "
-        "but are not detected! Please make sure they are installed on "
-        "the target system."
+    # Check for scipy and pyqtgraph, but don't fail if they don't exist.
+    gr_python_check_module(
+        DESC "pyqtgraph"
+        MODULE pyqtgraph
+        VAR PYQTGRAPH_FOUND
     )
-endif(NOT PYQTGRAPH_FOUND OR NOT SCIPY_FOUND)
+    gr_python_check_module(
+        DESC "scipy"
+        MODULE scipy
+        VAR SCIPY_FOUND
+    )
 
-if(ENABLE_PYTHON)
-    add_subdirectory(python/filter)
-    add_subdirectory(python/filter/design)
-    add_subdirectory(python/filter/gui)
-    add_subdirectory(apps)
-    if(ENABLE_EXAMPLES)
-        add_subdirectory(examples)
-    endif(ENABLE_EXAMPLES)
-endif(ENABLE_PYTHON)
-if(ENABLE_GRC)
-    add_subdirectory(grc)
-endif(ENABLE_GRC)
-add_subdirectory(docs)
+    if(NOT PYQTGRAPH_FOUND OR NOT SCIPY_FOUND)
+        message(WARNING "PyQtGraph and Scipy are required to run the filter design tool, "
+                        "but are not detected! Please make sure they are installed on "
+                        "the target system.")
+    endif(NOT PYQTGRAPH_FOUND OR NOT SCIPY_FOUND)
 
-########################################################################
-# Create Pkg Config File
-########################################################################
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/gnuradio-filter.pc.in
-    ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-filter.pc
-@ONLY)
+    if(ENABLE_PYTHON)
+        add_subdirectory(python/filter)
+        add_subdirectory(python/filter/design)
+        add_subdirectory(python/filter/gui)
+        add_subdirectory(apps)
+        if(ENABLE_EXAMPLES)
+            add_subdirectory(examples)
+        endif(ENABLE_EXAMPLES)
+    endif(ENABLE_PYTHON)
+    if(ENABLE_GRC)
+        add_subdirectory(grc)
+    endif(ENABLE_GRC)
+    add_subdirectory(docs)
 
-install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-filter.pc
-    DESTINATION ${GR_LIBRARY_DIR}/pkgconfig
-)
+    ########################################################################
+    # Create Pkg Config File
+    ########################################################################
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gnuradio-filter.pc.in
+                   ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-filter.pc @ONLY)
+
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-filter.pc
+            DESTINATION ${GR_LIBRARY_DIR}/pkgconfig)
 
 endif(ENABLE_GR_FILTER)

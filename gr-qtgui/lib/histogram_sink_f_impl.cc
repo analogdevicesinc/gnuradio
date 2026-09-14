@@ -73,8 +73,7 @@ histogram_sink_f_impl::histogram_sink_f_impl(int size,
 
 histogram_sink_f_impl::~histogram_sink_f_impl()
 {
-    if (!d_main_gui->isClosed())
-        d_main_gui->close();
+    QMetaObject::invokeMethod(d_main_gui, "close");
 }
 
 bool histogram_sink_f_impl::check_topology(int ninputs, int noutputs)
@@ -87,10 +86,6 @@ void histogram_sink_f_impl::initialize()
     if (qApp != NULL) {
         d_qApplication = qApp;
     } else {
-#if QT_VERSION >= 0x040500 && QT_VERSION < 0x050000
-        std::string style = prefs::singleton()->get_string("qtgui", "style", "raster");
-        QApplication::setGraphicsSystem(QString(style.c_str()));
-#endif
         d_qApplication = new QApplication(d_argc, &d_argv);
     }
 
@@ -110,7 +105,7 @@ void histogram_sink_f_impl::initialize()
     set_update_time(0.1);
 }
 
-void histogram_sink_f_impl::exec_() { d_qApplication->exec(); }
+void histogram_sink_f_impl::exec() { d_qApplication->exec(); }
 
 QWidget* histogram_sink_f_impl::qwidget() { return d_main_gui; }
 

@@ -14,7 +14,6 @@
 
 #include "time_sink_f_impl.h"
 
-#include <gnuradio/block_detail.h>
 #include <gnuradio/buffer.h>
 #include <gnuradio/fft/fft.h>
 #include <gnuradio/io_signature.h>
@@ -23,7 +22,6 @@
 #include <qwt_symbol.h>
 #include <volk/volk.h>
 
-#include <boost/format.hpp>
 #include <cstring>
 
 namespace gr {
@@ -83,12 +81,7 @@ time_sink_f_impl::time_sink_f_impl(int size,
     declare_sample_delay(1); // delay the tags for a history of 2
 }
 
-time_sink_f_impl::~time_sink_f_impl()
-{
-    if (!d_main_gui->isClosed())
-        d_main_gui->close();
-    // d_main_gui is a qwidget destroyed with its parent
-}
+time_sink_f_impl::~time_sink_f_impl() { QMetaObject::invokeMethod(d_main_gui, "close"); }
 
 bool time_sink_f_impl::check_topology(int ninputs, int noutputs)
 {
@@ -100,10 +93,6 @@ void time_sink_f_impl::initialize()
     if (qApp != NULL) {
         d_qApplication = qApp;
     } else {
-#if QT_VERSION >= 0x040500 && QT_VERSION < 0x050000
-        std::string style = prefs::singleton()->get_string("qtgui", "style", "raster");
-        QApplication::setGraphicsSystem(QString(style.c_str()));
-#endif
         d_qApplication = new QApplication(d_argc, &d_argv);
     }
 
@@ -122,7 +111,7 @@ void time_sink_f_impl::initialize()
     set_update_time(0.1);
 }
 
-void time_sink_f_impl::exec_() { d_qApplication->exec(); }
+void time_sink_f_impl::exec() { d_qApplication->exec(); }
 
 QWidget* time_sink_f_impl::qwidget() { return d_main_gui; }
 
@@ -199,10 +188,9 @@ void time_sink_f_impl::set_trigger_mode(trigger_mode mode,
     d_trigger_count = 0;
 
     if ((d_trigger_delay < 0) || (d_trigger_delay >= d_size)) {
-        GR_LOG_WARN(
-            d_logger,
-            boost::format("Trigger delay (%1%) outside of display range (0:%2%).") %
-                (d_trigger_delay / d_samp_rate) % ((d_size - 1) / d_samp_rate));
+        d_logger->warn("Trigger delay ({:g}) outside of display range (0:{:g}).",
+                       d_trigger_delay / d_samp_rate,
+                       (d_size - 1) / d_samp_rate);
         d_trigger_delay = std::max(0, std::min(d_size - 1, d_trigger_delay));
         delay = d_trigger_delay / d_samp_rate;
     }
@@ -274,12 +262,11 @@ void time_sink_f_impl::set_nsamps(const int newsize)
 
         // If delay was set beyond the new boundary, pull it back.
         if (d_trigger_delay >= d_size) {
-            GR_LOG_WARN(d_logger,
-                        boost::format("Trigger delay (%1%) outside of display range "
-                                      "(0:%2%). Moving to 50%% point.") %
-                            (d_trigger_delay / d_samp_rate) %
-                            ((d_size - 1) / d_samp_rate));
-            d_trigger_delay = d_size - 1;
+            d_logger->warn("Trigger delay ({:g}) outside of display range "
+                           "(0:{:g}). Moving to 50% point.",
+                           d_trigger_delay / d_samp_rate,
+                           (d_size - 1) / d_samp_rate);
+            d_trigger_delay = d_size / 2;
             d_main_gui->setTriggerDelay(d_trigger_delay / d_samp_rate);
         }
 
@@ -417,10 +404,9 @@ void time_sink_f_impl::_gui_update_trigger()
         // We restrict the delay to be within the window of time being
         // plotted.
         if ((delay < 0) || (delay >= d_size)) {
-            GR_LOG_WARN(
-                d_logger,
-                boost::format("Trigger delay (%1%) outside of display range (0:%2%).") %
-                    (delay / d_samp_rate) % ((d_size - 1) / d_samp_rate));
+            d_logger->warn("Trigger delay ({:g}) outside of display range (0:{:g}).",
+                           delay / d_samp_rate,
+                           (d_size - 1) / d_samp_rate);
             delay = std::max(0, std::min(d_size - 1, delay));
             delayf = delay / d_samp_rate;
         }

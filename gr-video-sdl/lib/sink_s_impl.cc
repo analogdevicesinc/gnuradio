@@ -18,7 +18,6 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <boost/format.hpp>
 #include <cstdio>
 #include <cstring>
 #include <stdexcept>
@@ -64,10 +63,8 @@ sink_s_impl::sink_s_impl(
 
     atexit(SDL_Quit); // check if this is the way to do this
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        std::ostringstream msg;
-        msg << "Couldn't initialize SDL:" << SDL_GetError()
-            << "; SDL_Init(SDL_INIT_VIDEO) failed";
-        GR_LOG_ERROR(d_logger, msg.str());
+        d_logger->error("Couldn't initialize SDL: {:s}; SDL_Init(SDL_INIT_VIDEO) failed",
+                        SDL_GetError());
         throw std::runtime_error("video_sdl::sink_s");
     };
 
@@ -80,11 +77,9 @@ sink_s_impl::sink_s_impl(
             SDL_ANYFORMAT); // SDL_DOUBLEBUF |SDL_SWSURFACE| SDL_HWSURFACE||SDL_FULLSCREEN
 
     if (d_screen == NULL) {
-        std::ostringstream msg;
-        msg << "Unable to set SDL video mode: " << SDL_GetError()
-            << "; SDL_SetVideoMode() Failed";
-        GR_LOG_ERROR(d_logger, msg.str());
-        exit(1);
+        d_logger->error("Unable to set SDL video mode: {:s}; SDL_SetVideoMode() Failed",
+                        SDL_GetError());
+        throw std::runtime_error("video_sdl::sink_s");
     }
     if (d_image) {
         SDL_FreeYUVOverlay(d_image);
@@ -93,16 +88,13 @@ sink_s_impl::sink_s_impl(
     /* Initialize and create the YUV Overlay used for video out */
     if (!(d_image =
               SDL_CreateYUVOverlay(d_width, d_height, SDL_IYUV_OVERLAY, d_screen))) {
-        std::ostringstream msg;
-        msg << "Couldn't create a YUV overlay: " << SDL_GetError();
-        GR_LOG_ERROR(d_logger, msg.str());
+        d_logger->error("Couldn't create a YUV overlay: {:s}", SDL_GetError());
         throw std::runtime_error("video_sdl::sink_s");
     }
 
-    GR_LOG_INFO(d_debug_logger,
-                boost::format("SDL screen_mode %d bits-per-pixel") %
-                    d_screen->format->BitsPerPixel);
-    GR_LOG_INFO(d_debug_logger, boost::format("SDL overlay_mode %i") % d_image->format);
+    d_debug_logger->info("SDL screen_mode {:d} bits-per-pixel",
+                         d_screen->format->BitsPerPixel);
+    d_debug_logger->info("SDL overlay_mode {:d}", d_image->format);
 
     d_chunk_size = std::min(1, 16384 / width); // width*16;
     d_chunk_size = d_chunk_size * width;
@@ -117,9 +109,7 @@ sink_s_impl::sink_s_impl(
     // clear the surface to grey
 
     if (SDL_LockYUVOverlay(d_image)) {
-        std::ostringstream msg;
-        msg << "Couldn't lock a YUV overlay:" << SDL_GetError();
-        GR_LOG_ERROR(d_logger, msg.str());
+        d_logger->error("Couldn't lock a YUV overlay: {:s}", SDL_GetError());
         throw std::runtime_error("video_sdl::sink_s");
     }
 
@@ -240,7 +230,7 @@ int sink_s_impl::work(int noutput_items,
                       gr_vector_const_void_star& input_items,
                       gr_vector_void_star& output_items)
 {
-    short *src_pixels_0, *src_pixels_1, *src_pixels_2;
+    const short *src_pixels_0, *src_pixels_1, *src_pixels_2;
     int noutput_items_produced = 0;
     int plane;
     int delay = (int)d_avg_delay;
@@ -256,9 +246,9 @@ int sink_s_impl::work(int noutput_items,
 
     switch (input_items.size()) {
     case 3: // first channel=Y, second channel is  U , third channel is V
-        src_pixels_0 = (short*)input_items[0];
-        src_pixels_1 = (short*)input_items[1];
-        src_pixels_2 = (short*)input_items[2];
+        src_pixels_0 = (const short*)input_items[0];
+        src_pixels_1 = (const short*)input_items[1];
+        src_pixels_2 = (const short*)input_items[2];
         for (int i = 0; i < noutput_items; i += d_chunk_size) {
             copy_plane_to_surface(1, d_chunk_size, src_pixels_1);
             copy_plane_to_surface(2, d_chunk_size, src_pixels_2);
@@ -271,8 +261,8 @@ int sink_s_impl::work(int noutput_items,
         break;
     case 2:
         // first channel=Y, second channel is alternating pixels U and V
-        src_pixels_0 = (short*)input_items[0];
-        src_pixels_1 = (short*)input_items[1];
+        src_pixels_0 = (const short*)input_items[0];
+        src_pixels_1 = (const short*)input_items[1];
         for (int i = 0; i < noutput_items; i += d_chunk_size) {
             copy_plane_to_surface(12, d_chunk_size / 2, src_pixels_1);
             noutput_items_produced +=
@@ -284,7 +274,7 @@ int sink_s_impl::work(int noutput_items,
     case 1: // grey (Y) input
         /* Y component */
         plane = 0;
-        src_pixels_0 = (short*)input_items[plane];
+        src_pixels_0 = (const short*)input_items[plane];
         for (int i = 0; i < noutput_items; i += d_chunk_size) {
             noutput_items_produced +=
                 copy_plane_to_surface(plane, d_chunk_size, src_pixels_0);
@@ -292,11 +282,10 @@ int sink_s_impl::work(int noutput_items,
         }
         break;
     default: // 0 or more then 3 channels
-        std::ostringstream msg;
-        msg << "Wrong number of channels: 1, 2 or 3 channels are supported. Requested "
-               "number of channels is "
-            << input_items.size();
-        GR_LOG_ERROR(d_logger, msg.str());
+        d_logger->error(
+            "Wrong number of channels: 1, 2 or 3 channels are supported. Requested "
+            "number of channels is {:d}",
+            input_items.size());
         throw std::runtime_error("video_sdl::sink_s");
     }
 

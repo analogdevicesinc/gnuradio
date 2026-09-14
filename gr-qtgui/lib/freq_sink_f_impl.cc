@@ -94,11 +94,7 @@ freq_sink_f_impl::freq_sink_f_impl(int fftsize,
     set_trigger_mode(TRIG_MODE_FREE, 0, 0);
 }
 
-freq_sink_f_impl::~freq_sink_f_impl()
-{
-    if (!d_main_gui->isClosed())
-        d_main_gui->close();
-}
+freq_sink_f_impl::~freq_sink_f_impl() { QMetaObject::invokeMethod(d_main_gui, "close"); }
 
 bool freq_sink_f_impl::check_topology(int ninputs, int noutputs)
 {
@@ -110,10 +106,6 @@ void freq_sink_f_impl::initialize()
     if (qApp != NULL) {
         d_qApplication = qApp;
     } else {
-#if QT_VERSION >= 0x040500 && QT_VERSION < 0x050000
-        std::string style = prefs::singleton()->get_string("qtgui", "style", "raster");
-        QApplication::setGraphicsSystem(QString(style.c_str()));
-#endif
         d_qApplication = new QApplication(d_argc, &d_argv);
     }
 
@@ -135,7 +127,7 @@ void freq_sink_f_impl::initialize()
     set_update_time(0.1);
 }
 
-void freq_sink_f_impl::exec_() { d_qApplication->exec(); }
+void freq_sink_f_impl::exec() { d_qApplication->exec(); }
 
 QWidget* freq_sink_f_impl::qwidget() { return d_main_gui; }
 
@@ -144,11 +136,10 @@ void freq_sink_f_impl::set_fft_size(const int fftsize)
     if ((fftsize >= d_main_gui->MIN_FFT_SIZE) && (fftsize <= d_main_gui->MAX_FFT_SIZE))
         d_main_gui->setFFTSize(fftsize);
     else {
-        GR_LOG_INFO(d_logger,
-                    fmt::format("FFT size must be >= {} and <= {}. \nFalling back to {}.",
-                                d_main_gui->MIN_FFT_SIZE,
-                                d_main_gui->MAX_FFT_SIZE,
-                                d_main_gui->FFT_DEFAULT_SIZE));
+        d_logger->info("FFT size must be >= {} and <= {}. \nFalling back to {}.",
+                       d_main_gui->MIN_FFT_SIZE,
+                       d_main_gui->MAX_FFT_SIZE,
+                       d_main_gui->FFT_DEFAULT_SIZE);
         d_main_gui->setFFTSize(d_main_gui->FFT_DEFAULT_SIZE);
     }
 }
@@ -509,6 +500,12 @@ void freq_sink_f_impl::_test_trigger_norm(int nitems,
         d_triggered = true;
         d_trigger_count = 0;
     }
+}
+
+bool freq_sink_f_impl::start()
+{
+    set_output_multiple(d_fftsize);
+    return true;
 }
 
 int freq_sink_f_impl::work(int noutput_items,

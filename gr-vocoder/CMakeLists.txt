@@ -8,19 +8,21 @@
 ########################################################################
 # Setup dependencies
 ########################################################################
-include(GrBoost)
+# ---- crickets
 
 ########################################################################
 # Register component
 ########################################################################
 include(GrComponent)
-GR_REGISTER_COMPONENT("gr-vocoder" ENABLE_GR_VOCODER
-    Boost_FOUND
-    ENABLE_GNURADIO_RUNTIME
-    ENABLE_GR_FFT
-    ENABLE_GR_BLOCKS
-    ENABLE_GR_FILTER
-    ENABLE_GR_ANALOG
+gr_register_component(
+    NAME "gr-vocoder"
+    VAR ENABLE_GR_VOCODER
+    REQUIRED_COMPONENTS
+      gnuradio-runtime
+      gr-fft
+      gr-blocks
+      gr-filter
+      gr-analog
 )
 
 SET(GR_PKG_VOCODER_EXAMPLES_DIR ${GR_PKG_DATA_DIR}/examples/vocoder)
@@ -33,7 +35,7 @@ if(ENABLE_GR_VOCODER)
 ########################################################################
 ## CODEC2 Support
 ########################################################################
-find_package(Codec2)
+gr_find_package(Codec2)
 if(LIBCODEC2_FOUND)
   GR_APPEND_SUBCOMPONENT("codec2")
   #message(STATUS "libcodec2 modes: ${CODEC2_MODES}")
@@ -49,7 +51,7 @@ endif(LIBCODEC2_FOUND)
 ########################################################################
 ## GSM Support
 ########################################################################
-find_package(GSM)
+gr_find_package(GSM)
 if(LIBGSM_FOUND)
   GR_APPEND_SUBCOMPONENT("gsm")
 endif(LIBGSM_FOUND)

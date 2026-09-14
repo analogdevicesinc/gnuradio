@@ -24,13 +24,14 @@ class test_dtv(gr_unittest.TestCase):
 
     def setUp(self):
         self.tb = gr.top_block()
+        self.outfile = "vv.cfile"
 
     def tearDown(self):
         self.tb = None
+        os.remove(self.outfile)
 
     def test_000(self):
         infile = ts_in_file
-        outfile = "vv.cfile"
         testfile = complex_out_file
         file_source = blocks.file_source(
             gr.sizeof_char * 1, infile, False, 0, 0)
@@ -68,14 +69,14 @@ class test_dtv(gr_unittest.TestCase):
         cellinterleaver = dtv.dvbt2_cellinterleaver_cc(
             dtv.FECFRAME_NORMAL,
             dtv.MOD_64QAM,
-            2,
+            3,
             3)
         framemapper = dtv.dvbt2_framemapper_cc(
             dtv.FECFRAME_NORMAL,
             dtv.C2_3,
             dtv.MOD_64QAM,
             dtv.ROTATION_ON,
-            2,
+            3,
             3,
             dtv.CARRIERS_NORMAL,
             dtv.FFTSIZE_4K,
@@ -83,7 +84,7 @@ class test_dtv(gr_unittest.TestCase):
             dtv.L1_MOD_16QAM,
             dtv.PILOT_PP7,
             2,
-            7,
+            8,
             dtv.PAPR_TR,
             dtv.VERSION_111,
             dtv.PREAMBLE_T2_SISO,
@@ -96,7 +97,7 @@ class test_dtv(gr_unittest.TestCase):
             dtv.FFTSIZE_4K,
             dtv.PILOT_PP7,
             dtv.GI_1_32,
-            7,
+            8,
             dtv.PAPR_TR,
             dtv.VERSION_111,
             dtv.PREAMBLE_T2_SISO
@@ -106,7 +107,7 @@ class test_dtv(gr_unittest.TestCase):
             dtv.FFTSIZE_4K,
             dtv.PILOT_PP7,
             dtv.GI_1_32,
-            7,
+            8,
             dtv.PAPR_TR,
             dtv.VERSION_111,
             dtv.PREAMBLE_T2_SISO,
@@ -120,7 +121,7 @@ class test_dtv(gr_unittest.TestCase):
             dtv.FFTSIZE_4K,
             dtv.PILOT_PP7,
             dtv.GI_1_32,
-            7,
+            8,
             dtv.PAPR_TR,
             dtv.VERSION_111,
             3.0,
@@ -136,12 +137,12 @@ class test_dtv(gr_unittest.TestCase):
             dtv.CARRIERS_NORMAL,
             dtv.FFTSIZE_4K,
             dtv.GI_1_32,
-            7,
+            8,
             dtv.PREAMBLE_T2_SISO,
             dtv.SHOWLEVELS_OFF,
             3.01
         )
-        file_sink = blocks.file_sink(gr.sizeof_gr_complex * 1, outfile, False)
+        file_sink = blocks.file_sink(gr.sizeof_gr_complex * 1, self.outfile, False)
         file_sink.set_unbuffered(True)
         self.tb.connect(
             file_source,
@@ -162,14 +163,12 @@ class test_dtv(gr_unittest.TestCase):
         self.tb.run()
         file_sink.close()
 
-        self.assertEqual(getsize(outfile), getsize(testfile))
+        self.assertEqual(getsize(self.outfile), getsize(testfile))
 
-        out_data = np.fromfile(outfile, dtype=np.float32)
-        expected_data = np.fromfile(testfile, dtype=np.float32)
-        os.remove(outfile)
+        out_data = np.fromfile(self.outfile, dtype=np.float32)
+        expected_data = np.fromfile(testfile, dtype=np.dtype("<f"))
 
         self.assertFloatTuplesAlmostEqual(out_data, expected_data, 5)
-        pass
 
 
 if __name__ == '__main__':

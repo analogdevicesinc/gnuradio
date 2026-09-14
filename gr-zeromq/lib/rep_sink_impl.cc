@@ -19,19 +19,29 @@
 namespace gr {
 namespace zeromq {
 
-rep_sink::sptr rep_sink::make(
-    size_t itemsize, size_t vlen, char* address, int timeout, bool pass_tags, int hwm)
+rep_sink::sptr rep_sink::make(size_t itemsize,
+                              size_t vlen,
+                              char* address,
+                              int timeout,
+                              bool pass_tags,
+                              int hwm,
+                              bool bind)
 {
     return gnuradio::make_block_sptr<rep_sink_impl>(
-        itemsize, vlen, address, timeout, pass_tags, hwm);
+        itemsize, vlen, address, timeout, pass_tags, hwm, bind);
 }
 
-rep_sink_impl::rep_sink_impl(
-    size_t itemsize, size_t vlen, char* address, int timeout, bool pass_tags, int hwm)
+rep_sink_impl::rep_sink_impl(size_t itemsize,
+                             size_t vlen,
+                             char* address,
+                             int timeout,
+                             bool pass_tags,
+                             int hwm,
+                             bool bind)
     : gr::sync_block("rep_sink",
                      gr::io_signature::make(1, 1, itemsize * vlen),
                      gr::io_signature::make(0, 0, 0)),
-      base_sink_impl(ZMQ_REP, itemsize, vlen, address, timeout, pass_tags, hwm)
+      base_sink_impl(ZMQ_REP, itemsize, vlen, address, timeout, pass_tags, hwm, bind)
 {
     /* All is delegated */
 }
@@ -50,7 +60,7 @@ int rep_sink_impl::work(int noutput_items,
         /* We only wait if its the first iteration, for the others we'll
          * let the scheduler retry */
         zmq::pollitem_t items[] = { { static_cast<void*>(d_socket), 0, ZMQ_POLLIN, 0 } };
-        zmq::poll(&items[0], 1, first ? d_timeout : 0);
+        zmq::poll(&items[0], 1, std::chrono::milliseconds{ first ? d_timeout : 0 });
 
         /* If we don't have anything, we're done */
         if (!(items[0].revents & ZMQ_POLLIN))
@@ -65,7 +75,7 @@ int rep_sink_impl::work(int noutput_items,
 #endif
         if (!ok) {
             // Should not happen, we've checked POLLIN.
-            GR_LOG_ERROR(d_logger, "Failed to receive message.");
+            d_logger->error("Failed to receive message.");
             break;
         }
 

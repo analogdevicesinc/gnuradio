@@ -8,57 +8,53 @@
 ########################################################################
 # Setup dependencies
 ########################################################################
-include(GrBoost)
 
 ########################################################################
 # External dependencies
 ########################################################################
-find_package(SoapySDR 0.7.2)
+gr_find_package(SoapySDR 0.7.2)
 
 ########################################################################
 # Register component
 ########################################################################
 include(GrComponent)
-GR_REGISTER_COMPONENT("gr-soapy" ENABLE_GR_SOAPY
-    Boost_FOUND
-    SoapySDR_FOUND
-    ENABLE_GNURADIO_RUNTIME
+gr_register_component(
+    NAME "gr-soapy"
+    VAR ENABLE_GR_SOAPY
+    REQUIRED_COMPONENTS gnuradio-runtime
+    REQUIRED_TPLS SoapySDR_FOUND
 )
-SET(GR_PKG_SOAPY_EXAMPLES_DIR ${GR_PKG_DATA_DIR}/examples/soapy)
+set(GR_PKG_SOAPY_EXAMPLES_DIR ${GR_PKG_DATA_DIR}/examples/soapy)
 
 ########################################################################
 # Begin conditional configuration
 ########################################################################
 if(ENABLE_GR_SOAPY)
-message(STATUS "  SOAPY Version: ${SoapySDR_VERSION}")
+    message(STATUS "  SOAPY Version: ${SoapySDR_VERSION}")
 
-########################################################################
-# Add subdirectories
-########################################################################
-add_subdirectory(include/gnuradio/soapy)
-add_subdirectory(lib)
-add_subdirectory(docs)
-if(ENABLE_PYTHON)
-    add_subdirectory(python/soapy)
-    if(ENABLE_EXAMPLES)
-        add_subdirectory(examples/grc)
-    endif(ENABLE_EXAMPLES)
-endif(ENABLE_PYTHON)
-if(ENABLE_GRC)
-    add_subdirectory(grc)
-endif(ENABLE_GRC)
+    ########################################################################
+    # Add subdirectories
+    ########################################################################
+    add_subdirectory(include/gnuradio/soapy)
+    add_subdirectory(lib)
+    add_subdirectory(docs)
+    if(ENABLE_PYTHON)
+        add_subdirectory(python/soapy)
+        if(ENABLE_EXAMPLES)
+            add_subdirectory(examples/grc)
+        endif(ENABLE_EXAMPLES)
+    endif(ENABLE_PYTHON)
+    if(ENABLE_GRC)
+        add_subdirectory(grc)
+    endif(ENABLE_GRC)
 
-########################################################################
-# Create Pkg Config File
-########################################################################
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/gnuradio-soapy.pc.in
-    ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-soapy.pc
-@ONLY)
+    ########################################################################
+    # Create Pkg Config File
+    ########################################################################
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gnuradio-soapy.pc.in
+                   ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-soapy.pc @ONLY)
 
-install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-soapy.pc
-    DESTINATION ${GR_LIBRARY_DIR}/pkgconfig
-)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-soapy.pc
+            DESTINATION ${GR_LIBRARY_DIR}/pkgconfig)
 
 endif(ENABLE_GR_SOAPY)

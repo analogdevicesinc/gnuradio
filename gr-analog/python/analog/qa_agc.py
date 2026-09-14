@@ -436,7 +436,7 @@ class test_agc(gr_unittest.TestCase):
         dst_data = dst1.data()
         self.assertComplexTuplesAlmostEqual(expected_result, dst_data, 4)
 
-    def test_006_sets(self):
+    def test_006_000_agc3_setters(self):
         agc = analog.agc3_cc(1e-3, 1e-1, 1)
 
         agc.set_attack_rate(1)
@@ -449,8 +449,8 @@ class test_agc(gr_unittest.TestCase):
         self.assertAlmostEqual(agc.reference(), 1.1)
         self.assertAlmostEqual(agc.gain(), 1.1)
 
-    def test_006(self):
-        ''' Test the complex AGC loop (attack and decay rate inputs) '''
+    def test_006_001_agc3(self, stride=1):
+        ''' Test the complex AGC loop agc3 (attack and decay rate inputs) '''
         tb = self.tb
 
         sampling_freq = 100
@@ -463,17 +463,103 @@ class test_agc(gr_unittest.TestCase):
         head = blocks.head(gr.sizeof_gr_complex, N)
 
         ref = 1
-        agc = analog.agc3_cc(1e-2, 1e-3, ref)
+        # attack_rate, decay_rate, reference, initial gain, stride
+        agc = analog.agc3_cc(1e-2, 1e-3, ref, ref, stride)
 
-        tb.connect(src1, head)
-        tb.connect(head, agc)
-        tb.connect(agc, dst1)
+        tb.connect(src1, agc)
+        tb.connect(agc, head)
+        tb.connect(head, dst1)
 
         tb.run()
         dst_data = dst1.data()
-        M = 100
-        result = [abs(x) for x in dst_data[N - M:]]
-        self.assertFloatTuplesAlmostEqual(result, M * [ref, ], 4)
+        self.assertEqual(len(dst_data), N, "unexpected data length")
+        result = [abs(x) for x in dst_data]
+        for idx, x in enumerate(result):
+            self.assertAlmostEqual(x, ref, 4,
+                                   f"failed at pos {idx} (stride = {stride})")
+
+    def test_006_002_agc3_striding(self):
+        for spacing in (2, 4, 5, 17, 233):
+            self.test_006_001_agc3(stride=spacing)
+
+    def test_006_003_agc3_setter_errors(self):
+        default_src = analog.agc3_cc()
+        settables = ("attack_rate", "decay_rate", "reference", "gain",
+                     "max_gain")
+        troublemakers = (getattr(default_src, f"set_{prop}")
+                         for prop in settables)
+        for troublemaker in troublemakers:
+            with self.assertRaises(ValueError):
+                troublemaker(-3.0)
+
+    def test_006_004_agc3(self, stride=1):
+        '''This test is performed employing an AM signal.
+        AGC should throw out the recovered carrier without any effect
+        of modulation in order to pass the test'''
+        tb = self.tb
+        samp_rate = 1e4
+        carrier_freq = 200
+        envelope_freq = 5
+        N = samp_rate / envelope_freq  # period
+        ref = 1.0
+        m = 0.99
+
+        mul = blocks.multiply_cc(1)
+        carrier_src = analog.sig_source_c(
+            samp_rate, analog.GR_COS_WAVE, carrier_freq, 1.0, 0.0, 0)
+        envelope_src = analog.sig_source_c(
+            samp_rate, analog.GR_COS_WAVE, envelope_freq, m, 1, 0)
+        agc3 = analog.agc3_cc((0.8), (0.7), ref, 1.0, stride)
+        skip = blocks.skiphead(gr.sizeof_gr_complex, int(N))
+        head = blocks.head(gr.sizeof_gr_complex, int(N))
+        dst = blocks.vector_sink_c()
+
+        tb.connect((carrier_src, 0), (mul, 0))
+        tb.connect((envelope_src, 0), (mul, 1))
+        tb.connect((mul, 0), (agc3, 0))
+        tb.connect((agc3, 0), (skip, 0))
+        tb.connect((skip, 0), (head, 0))
+        tb.connect((head, 0), (dst, 0))
+
+        tb.run()
+        dst_data = dst.data()
+        self.assertEqual(len(dst_data), N, "unexpected data length")
+        result = [abs(x) for x in dst_data]
+        for idx, x in enumerate(result):
+            self.assertAlmostEqual(x, ref, None,
+                                   f"failed at pos {idx} (stride = {stride})", 0.1)
+
+    def test_006_005_agc3_max_gain(self):
+        max_gain = 65536.0
+        input_data = [0j] * 16 + [3.5e-24 + 0j] + [1e-3 + 0j] * 500
+
+        src = blocks.vector_source_c(input_data)
+        agc = analog.agc3_cc(1e-1, 1e-2, 1.0, 1.0, 1, max_gain)
+        dst = blocks.vector_sink_c()
+
+        self.tb.connect(src, agc, dst)
+        self.tb.run()
+
+        self.assertLessEqual(agc.gain(), max_gain)
+
+        max_output = max(abs(x) for x in dst.data())
+        self.assertLessEqual(max_output, max_gain * 1e-3)
+
+    def test_007_agc3_constructor_arguments(self):
+        attack_rate = 1.1e-3
+        decay_rate = 1.2e-4
+        reference = 1.3
+        gain = 1.4
+        iir_update_decim = 2
+        max_gain = 1.5e4
+
+        agc3 = analog.agc3_cc(attack_rate, decay_rate, reference, gain, iir_update_decim, max_gain)
+
+        self.assertAlmostEqual(agc3.attack_rate(), attack_rate)
+        self.assertAlmostEqual(agc3.decay_rate(), decay_rate)
+        self.assertAlmostEqual(agc3.reference(), reference)
+        self.assertAlmostEqual(agc3.gain(), gain)
+        self.assertAlmostEqual(agc3.max_gain(), max_gain)
 
     def test_100(self):
         ''' Test complex feedforward agc with constant input '''

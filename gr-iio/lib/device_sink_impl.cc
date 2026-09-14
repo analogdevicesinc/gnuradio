@@ -15,8 +15,6 @@
 #include "device_source_impl.h"
 #include <gnuradio/io_signature.h>
 
-#include <boost/format.hpp>
-
 #include <string>
 #include <vector>
 
@@ -32,16 +30,16 @@ device_sink::sptr device_sink::make(const std::string& uri,
                                     unsigned int interpolation,
                                     bool cyclic)
 {
-    return gnuradio::get_initial_sptr(
-        new device_sink_impl(device_source_impl::get_context(uri),
-                             true,
-                             device,
-                             channels,
-                             device_phy,
-                             params,
-                             buffer_size,
-                             interpolation,
-                             cyclic));
+    return gnuradio::make_block_sptr<device_sink_impl>(
+        device_source_impl::get_context(uri),
+        true,
+        device,
+        channels,
+        device_phy,
+        params,
+        buffer_size,
+        interpolation,
+        cyclic);
 }
 
 device_sink::sptr device_sink::make_from(iio_context* ctx,
@@ -182,7 +180,14 @@ int device_sink_impl::work(int noutput_items,
     int ret;
 
     if (d_len_tag_key != pmt::PMT_NIL) {
-        for (size_t i = 0; i < input_items.size(); i++) {
+
+        size_t ninputs;
+        if (override_tagged_input_channels > 0)
+            ninputs = override_tagged_input_channels;
+        else
+            ninputs = input_items.size();
+
+        for (size_t i = 0; i < ninputs; i++) {
             auto items_read = nitems_read(i);
             get_tags_in_range(d_tags, i, items_read, items_read + 1, d_len_tag_key);
 
@@ -191,7 +196,7 @@ int device_sink_impl::work(int noutput_items,
                                          "disable tagged input or tag your stream!");
             }
 
-            auto required_size = buffer_size / (interpolation + 1);
+            long required_size = buffer_size / (interpolation + 1);
             for (auto& tag : d_tags) {
                 auto packet_len = pmt::to_long(tag.value);
                 if (packet_len != required_size) {
@@ -218,7 +223,7 @@ int device_sink_impl::work(int noutput_items,
         iio_strerror(-ret, buf, sizeof(buf));
         std::string error(buf);
 
-        GR_LOG_WARN(d_logger, boost::format("Unable to push buffer: %d") % error);
+        d_logger->warn("Unable to push buffer: {:s}", error);
         return WORK_DONE; /* EOF */
     }
 

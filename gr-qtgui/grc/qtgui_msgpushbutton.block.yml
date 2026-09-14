@@ -50,7 +50,6 @@ outputs:
     optional: false
 
 templates:
-    imports: from gnuradio import qtgui
     var_make: self.${id} = None
     make: |-
         <%
@@ -61,6 +60,8 @@ templates:
 
         ${gui_hint() % win}
 
+    callbacks:
+    - set_new_msg(${value})
 documentation: |-
     This block creates a variable push button that creates a message when clicked. Leave the label blank to use the variable id as the label.
 
@@ -68,4 +69,6 @@ documentation: |-
 
     The GUI hint can be used to position the widget within the application. The hint is of the form [tab_id@tab_index]: [row, col, row_span, col_span]. Both the tab specification and the grid position are optional.
 
+    This block replaces the deprecated “QT GUI Push Button” and provides a message-based interface for button events.
+    
 file_format: 1

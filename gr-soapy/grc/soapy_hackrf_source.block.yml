@@ -36,7 +36,7 @@ parameters:
     default: 'freq'
 
   - id: amp
-    label: 'Amp On (+14 dB)'
+    label: 'Amp On (+11 dB)'
     category: RF Options
     dtype: bool
     default: 'False'
@@ -50,7 +50,7 @@ parameters:
     hide: part
 
   - id: vga
-    label: VGA Gain (0dB - 62dB)'
+    label: 'VGA Gain (0dB - 62dB)'
     category: RF Options
     dtype: real
     default: '16'

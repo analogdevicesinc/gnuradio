@@ -12,8 +12,9 @@
 #define INCLUDED_PMT_H
 
 #include <pmt/api.h>
-#include <boost/any.hpp>
-#include <boost/noncopyable.hpp>
+
+#include <string_view>
+#include <any>
 #include <complex>
 #include <cstdint>
 #include <iosfwd>
@@ -160,10 +161,10 @@ PMT_API bool to_bool(pmt_t val);
 PMT_API bool is_symbol(const pmt_t& obj);
 
 //! Return the symbol whose name is \p s.
-PMT_API pmt_t string_to_symbol(const std::string& s);
+PMT_API pmt_t string_to_symbol(std::string_view s);
 
 //! Alias for pmt_string_to_symbol
-PMT_API pmt_t intern(const std::string& s);
+PMT_API pmt_t intern(std::string_view s);
 
 
 /*!
@@ -638,6 +639,25 @@ PMT_API pmt_t dcons(const pmt_t& x, const pmt_t& y);
 //! Make an empty dictionary
 PMT_API pmt_t make_dict();
 
+/*!
+ * \brief Make a dictionary from an existing mapping type.
+ * The constraint for this to work is the ability for the map_t to iterate over [key,
+ * value] pairs, that is, to be able to be used in a
+ *
+ * <pre>for(const auto& [key, val] : prototype)</pre>
+ *
+ * loop.
+ */
+template <typename map_t>
+pmt_t dict_from_mapping(const map_t& prototype)
+{
+    pmt_t protodict = make_dict();
+    for (const auto& [key, value] : prototype) {
+        protodict = dict_add(protodict, key, value);
+    }
+    return protodict;
+}
+
 //! Return a new dictionary with \p key associated with \p value.
 PMT_API pmt_t dict_add(const pmt_t& dict, const pmt_t& key, const pmt_t& value);
 
@@ -664,7 +684,7 @@ PMT_API pmt_t dict_values(pmt_t dict);
 
 /*
  * ------------------------------------------------------------------------
- *   Any (wraps boost::any -- can be used to wrap pretty much anything)
+ *   Any (wraps std::any -- can be used to wrap pretty much anything)
  *
  * Cannot be serialized or used across process boundaries.
  * See http://www.boost.org/doc/html/any.html
@@ -675,13 +695,13 @@ PMT_API pmt_t dict_values(pmt_t dict);
 PMT_API bool is_any(pmt_t obj);
 
 //! make an any
-PMT_API pmt_t make_any(const boost::any& any);
+PMT_API pmt_t make_any(const std::any& any);
 
-//! Return underlying boost::any
-PMT_API boost::any any_ref(pmt_t obj);
+//! Return underlying std::any
+PMT_API std::any any_ref(pmt_t obj);
 
 //! Store \p any in \p obj
-PMT_API void any_set(pmt_t obj, const boost::any& any);
+PMT_API void any_set(pmt_t obj, const std::any& any);
 
 
 /*
@@ -840,34 +860,51 @@ PMT_API pmt_t member(pmt_t obj, pmt_t list);
 PMT_API bool subsetp(pmt_t list1, pmt_t list2);
 
 /*!
- * \brief Return a list of length 1 containing \p x1
+ * \brief Return a list of length 1 containing \p x1, that is
+ * cons(x1, NIL)
+ * Note that PMT lists are nested pairs.
+ * Use pmt::make_tuple to generate a list in the common sense.
  */
 PMT_API pmt_t list1(const pmt_t& x1);
 
 /*!
- * \brief Return a list of length 2 containing \p x1, \p x2
+ * \brief Return a list of length 2 containing \p x1, \p x2, that is
+ * cons(x1, cons(x2, NIL))
+ * Note that PMT lists are nested pairs.
+ * Use pmt::make_tuple to generate a list in the common sense.
  */
 PMT_API pmt_t list2(const pmt_t& x1, const pmt_t& x2);
 
 /*!
- * \brief Return a list of length 3 containing \p x1, \p x2, \p x3
+ * \brief Return a list of length 3 containing \p x1, \p x2, \p x3, that is
+ * cons(x1, cons(x2, cons(x3, NIL)))
+ * Note that PMT lists are nested pairs.
+ * Use pmt::make_tuple to generate a list in the common sense.
  */
 PMT_API pmt_t list3(const pmt_t& x1, const pmt_t& x2, const pmt_t& x3);
 
 /*!
- * \brief Return a list of length 4 containing \p x1, \p x2, \p x3, \p x4
+ * \brief Return a list of length 4 containing \p x1, \p x2, \p x3, \p x4, that is
+ * cons(x1, cons(x2, cons(x3, cons(x4, NIL))))
+ * Note that PMT lists are nested pairs.
+ * Use pmt::make_tuple to generate a list in the common sense.
  */
 PMT_API pmt_t list4(const pmt_t& x1, const pmt_t& x2, const pmt_t& x3, const pmt_t& x4);
 
 /*!
- * \brief Return a list of length 5 containing \p x1, \p x2, \p x3, \p x4, \p x5
+ * \brief Return a list of length 5 containing \p x1, \p x2, \p x3, \p x4, \p x5,
+ * that is cons(x1, cons(x2, cons(x3, cons(x4, cons(x5, NIL)))))
+ * Note that PMT lists are nested pairs.
+ * Use pmt::make_tuple to generate a list in the common sense.
  */
 PMT_API pmt_t list5(
     const pmt_t& x1, const pmt_t& x2, const pmt_t& x3, const pmt_t& x4, const pmt_t& x5);
 
 /*!
  * \brief Return a list of length 6 containing \p x1, \p x2, \p x3, \p x4, \p
- * x5, \p x6
+ * x5, \p x6, that is cons(x1, cons(x2, cons(x3, cons(x4, cons(x5, cons(x6, NIL))))))
+ * Note that PMT lists are nested pairs.
+ * Use pmt::make_tuple to generate a list in the common sense.
  */
 PMT_API pmt_t list6(const pmt_t& x1,
                     const pmt_t& x2,
@@ -878,6 +915,8 @@ PMT_API pmt_t list6(const pmt_t& x1,
 
 /*!
  * \brief Return \p list with \p item added to it.
+ * Note that PMT lists are nested pairs, e.g. cons(x1, cons(x2, cons(x3, NIL)))
+ * Use pmt::make_tuple to generate a list in the common sense.
  */
 PMT_API pmt_t list_add(pmt_t list, const pmt_t& item);
 

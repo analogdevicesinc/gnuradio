@@ -16,7 +16,7 @@ import time
 # this test tests message strobe and message debug blocks against each other
 # similar tests contained in message_strobe class
 
-# this tests only the store port and the message retrival methods of the debug block
+# this tests only the store port and the message retrieval methods of the debug block
 # print() and print_pdu() were omitted as they print to stdout
 
 
@@ -42,12 +42,12 @@ class qa_message_debug(gr_unittest.TestCase):
 
         self.assertAlmostEqual(msg_debug.num_messages(),
                                0, delta=2)  # 1st call, expect 0
-        time.sleep(1)  # floor(1000/100) = 10
+        time.sleep(1.05)  # floor(1050/100) = 10
         self.assertAlmostEqual(msg_debug.num_messages(),
-                               10, delta=3)  # 2nd call == 1
-        time.sleep(1)  # floor(2000/100) = 15
+                               10, delta=8)  # 2nd call == 10
+        time.sleep(1)  # floor(2050/100) = 20
         self.assertAlmostEqual(msg_debug.num_messages(),
-                               20, delta=3)  # 3th call == 3
+                               20, delta=10)  # 3rd call == 20
 
         # change test message
         msg_strobe.to_basic_block()._post(pmt.intern("set_msg"), pmt.intern(new_msg))
@@ -56,7 +56,7 @@ class qa_message_debug(gr_unittest.TestCase):
         self.tb.stop()
         self.tb.wait()
         # check data
-        # first received message matchs initial test message
+        # first received message matches initial test message
         self.assertAlmostEqual(pmt.to_python(msg_debug.get_message(
             0)), test_str, "mismatch initial test string")
 

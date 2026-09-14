@@ -39,7 +39,6 @@ private:
     const std::string d_args;
 
     size_t d_mtu = 0;
-    size_t d_nchan;
     std::string d_stream_args;
     std::vector<size_t> d_channels;
     std::string d_soapy_type;
@@ -66,8 +65,9 @@ protected:
     block_impl(block_impl&&) = delete;
     block_impl& operator=(const block_impl&) = delete;
     block_impl& operator=(block_impl&&) = delete;
-    virtual ~block_impl();
+    ~block_impl() override;
 
+    size_t d_nchan;
     std::mutex d_device_mutex;
     device_ptr_t d_device;
     SoapySDR::Stream* d_stream = nullptr;
@@ -192,15 +192,14 @@ public:
     std::vector<unsigned>
     read_registers(const std::string& name, unsigned addr, size_t length) const override;
 
-    virtual arginfo_list_t get_setting_info() const override;
-    virtual void write_setting(const std::string& key, const std::string& value) override;
-    virtual std::string read_setting(const std::string& key) const override;
-    virtual arginfo_list_t get_setting_info(size_t channel) const override;
-    virtual void write_setting(size_t channel,
-                               const std::string& key,
-                               const std::string& value) override;
-    virtual std::string read_setting(size_t channel,
-                                     const std::string& key) const override;
+    arginfo_list_t get_setting_info() const override;
+    void write_setting(const std::string& key, const std::string& value) override;
+    std::string read_setting(const std::string& key) const override;
+    arginfo_list_t get_setting_info(size_t channel) const override;
+    void write_setting(size_t channel,
+                       const std::string& key,
+                       const std::string& value) override;
+    std::string read_setting(size_t channel, const std::string& key) const override;
 
     std::vector<std::string> list_gpio_banks() const override;
     void write_gpio(const std::string& bank, unsigned value) override;
@@ -244,7 +243,7 @@ protected:
      * The gain will be distributed automatically across available
      * elements according to Soapy API.
      * @param val the new amplification value in dB
-     * @param channel an avalaible channel on the device
+     * @param channel an available channel on the device
      */
     void cmd_handler_gain(pmt::pmt_t val, size_t channel);
 

@@ -20,10 +20,28 @@ from ..tools import SequenceCompleter, ask_yes_no
 from .base import common_params, block_name, run, cli_input, ModToolException
 
 
+class BlockType(click.ParamType):
+    name = "blocktype"
+
+    def convert(self, value, param, ctx):
+        if value in ModToolAdd.block_types:
+            return value
+        else:
+            self.fail(f"Invalid blocktype: '{value}'")
+
+    def shell_complete(self, ctx, param, incomplete: str):
+        return [
+            click.shell_completion.CompletionItem(name, help=description)
+            for name, description in ModToolAdd.block_types.items()
+            if name.startswith(incomplete)
+        ]
+
+
 @click.command('add')
-@click.option('-t', '--block-type', type=click.Choice(ModToolAdd.block_types),
+@click.option('-t', '--block-type', type=BlockType(),
               help=f"One of {', '.join(ModToolAdd.block_types)}.")
 @click.option('--license-file',
+              type=click.Path(file_okay=True, dir_okay=False, readable=True),
               help="File containing the license header for every source code file.")
 @click.option('--copyright',
               help="Name of the copyright holder (you or your company) MUST be a quoted string.")
@@ -38,7 +56,7 @@ from .base import common_params, block_name, run, cli_input, ModToolException
 @click.option('-l', '--lang', type=click.Choice(ModToolAdd.language_candidates),
               help="Programming Language")
 @common_params
-@block_name
+@click.argument("blockname", nargs=1, required=False, metavar="BLOCK_NAME")
 def cli(**kwargs):
     """Adds a block to the out-of-tree module."""
     kwargs['cli'] = True
@@ -134,7 +152,7 @@ def get_arglist(self):
             fg='cyan'),
             prompt_suffix='',
             default='',
-            show_default=False)
+            show_default=False) if not self.info['yes'] else ''
 
 
 def get_py_qa(self):
@@ -142,7 +160,7 @@ def get_py_qa(self):
     if self.add_py_qa is None:
         if not (self.info['blocktype'] in ('noblock') or self.skip_subdirs['python']):
             self.add_py_qa = ask_yes_no(click.style(
-                'Add Python QA code?', fg='cyan'), True)
+                'Add Python QA code?', fg='cyan'), True) if not self.info['yes'] else True
         else:
             self.add_py_qa = False
 
@@ -152,6 +170,6 @@ def get_cpp_qa(self):
     if self.add_cc_qa is None:
         if self.info['lang'] == 'cpp':
             self.add_cc_qa = ask_yes_no(click.style('Add C++ QA code?', fg='cyan'),
-                                        not self.add_py_qa)
+                                        not self.add_py_qa) if not self.info['yes'] else not self.add_py_qa
         else:
             self.add_cc_qa = False

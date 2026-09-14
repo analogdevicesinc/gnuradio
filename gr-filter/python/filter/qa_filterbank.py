@@ -81,8 +81,8 @@ class test_filterbank_vcvcf(gr_unittest.TestCase):
         results = []
         results2 = []
         for ds, ts, ts2 in zip(data_sets, taps1, taps2):
-            results.append(convolution(ds[-len(ts):] + ds[:-1], ts))
-            results2.append(convolution(ds[-len(ts):] + ds[:-1], ts2))
+            results.append(convolution(ds[-(len(ts) - 1):] + ds, ts))
+            results2.append(convolution(ds[-(len(ts) - 1):] + ds, ts2))
         # Convert results from 2D arrays to 1D arrays for ease of comparison.
         comb_results = []
         for rs in zip(*results):
@@ -111,7 +111,7 @@ class test_filterbank_vcvcf(gr_unittest.TestCase):
         fb.set_taps(taps2)
         outdata2 = None
         # Wait until we have new data.
-        while (not outdata2) or outdata[0] == outdata2[0]:
+        while (not outdata2) or abs(outdata2[0] - outdata[0]) < 1e-6:
             time.sleep(waittime)
             outdata2 = snk.level()
         self.tb.stop()

@@ -58,11 +58,8 @@ cpp_templates:
     declarations: 'blocks::copy::sptr ${id};'
     make: |-
         this->${id} = blocks::copy::make(${type.size}*${vlen});
-        self->${id}.set_enabled(${enabled});
+        this->${id}->set_enabled(${enabled});
     callbacks:
     - set_enabled(${enabled})
-    translations:
-        'True': 'true'
-        'False': 'false'
 
 file_format: 1

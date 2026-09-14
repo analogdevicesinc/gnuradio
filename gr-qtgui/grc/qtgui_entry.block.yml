@@ -21,6 +21,13 @@ parameters:
     label: Default Value
     dtype: ${ type }
     default: '0'
+-   id: entry_signal
+    label: Update Trigger
+    dtype: enum
+    default: editingFinished
+    options: [returnPressed, editingFinished]
+    option_labels: ["'Enter'", "'Enter' or focus lost"]
+    hide: part
 -   id: gui_hint
     label: GUI Hint
     dtype: gui_hint
@@ -29,22 +36,21 @@ value: ${ value }
 
 templates:
     imports: |-
-        from PyQt5 import Qt
         from gnuradio import eng_notation
     var_make: self.${id} = ${id} = ${value}
     callbacks:
     - self.set_${id}(${value})
-    - Qt.QMetaObject.invokeMethod(self._${id}_line_edit, "setText", Qt.Q_ARG("QString",
+    - QtCore.QMetaObject.invokeMethod(self._${id}_line_edit, "setText", QtCore.Q_ARG("QString",
         ${type.str}(${id})))
     make: |-
         <%
             win = 'self._%s_tool_bar'%id
         %>
-        ${win} = Qt.QToolBar(self)
-        ${win}.addWidget(Qt.QLabel("${no_quotes(label,repr(id))}" + ": "))
-        self._${id}_line_edit = Qt.QLineEdit(str(self.${id}))
+        ${win} = QtWidgets.QToolBar(self)
+        ${win}.addWidget(QtWidgets.QLabel("${no_quotes(label,repr(id))}" + ": "))
+        self._${id}_line_edit = QtWidgets.QLineEdit(str(self.${id}))
         self._${id}_tool_bar.addWidget(self._${id}_line_edit)
-        self._${id}_line_edit.returnPressed.connect(
+        self._${id}_line_edit.${entry_signal}.connect(
             lambda: self.set_${id}(${type.conv}(str(self._${id}_line_edit.text()))))
         ${gui_hint() % win}
 
@@ -69,7 +75,7 @@ cpp_templates:
         this->_${id}_tool_bar->addWidget(_${id}_label);
         this->_${id}_line_edit = new QLineEdit(QString::number(this->${id}));
         this->_${id}_tool_bar->addWidget(this->_${id}_line_edit);
-        QObject::connect(this->_${id}_line_edit, &QLineEdit::returnPressed, this, [this] () {this->set_${id}(this->_${id}_line_edit->text().toInt());});
+        QObject::connect(this->_${id}_line_edit, &QLineEdit::${entry_signal}, this, [this] () {this->set_${id}(this->_${id}_line_edit->text().toInt());});
 
         ${gui_hint() % win}
 documentation: |-

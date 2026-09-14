@@ -27,7 +27,9 @@ header_format_crc::sptr header_format_crc::make(const std::string& len_key_name,
 
 header_format_crc::header_format_crc(const std::string& len_key_name,
                                      const std::string& num_key_name)
-    : header_format_base(), d_header_number(0)
+    : header_format_base(),
+      d_header_number(0),
+      d_crc_impl(8, 0x07, 0xFF, 0x00, false, false)
 {
     d_len_key_name = pmt::intern(len_key_name);
     d_num_key_name = pmt::intern(num_key_name);
@@ -47,10 +49,11 @@ bool header_format_crc::format(int nbytes_in,
     // for 12-bit representation?
     nbytes_in &= 0x0FFF;
 
-    d_crc_impl.reset();
-    d_crc_impl.process_bytes((void const*)&nbytes_in, 2);
-    d_crc_impl.process_bytes((void const*)&d_header_number, 2);
-    uint8_t crc = d_crc_impl();
+    unsigned char buffer[] = { (unsigned char)(nbytes_in & 0xFF),
+                               (unsigned char)(nbytes_in >> 8),
+                               (unsigned char)(d_header_number & 0xFF),
+                               (unsigned char)(d_header_number >> 8) };
+    uint8_t crc = d_crc_impl.compute(buffer, sizeof(buffer));
 
     // Form 2 12-bit items into 1 2-byte item
     uint32_t concat = 0;
@@ -99,25 +102,23 @@ size_t header_format_crc::header_nbits() const { return 32; }
 
 bool header_format_crc::header_ok()
 {
-    uint32_t pkt = d_hdr_reg.extract_field32(0, 24, true);
-    uint16_t pktlen = static_cast<uint16_t>((pkt >> 8) & 0x0fff);
-    uint16_t pktnum = static_cast<uint16_t>((pkt >> 20) & 0x0fff);
-    uint8_t crc_rcvd = d_hdr_reg.extract_field8(24);
-
+    uint16_t pktlen = d_hdr_reg.extract_field16(0, 12, false, true);
+    uint16_t pktnum = d_hdr_reg.extract_field16(12, 12, false, true);
+    uint8_t crc_rcvd = d_hdr_reg.extract_field8(24, 8, false, true);
     // Check CRC8
-    d_crc_impl.reset();
-    d_crc_impl.process_bytes((void const*)&pktlen, 2);
-    d_crc_impl.process_bytes((void const*)&pktnum, 2);
-    uint8_t crc_clcd = d_crc_impl();
+    unsigned char buffer[] = { (unsigned char)(pktlen & 0xFF),
+                               (unsigned char)(pktlen >> 8),
+                               (unsigned char)(pktnum & 0xFF),
+                               (unsigned char)(pktnum >> 8) };
+    uint8_t crc_clcd = d_crc_impl.compute(buffer, sizeof(buffer));
 
     return (crc_rcvd == crc_clcd);
 }
 
 int header_format_crc::header_payload()
 {
-    uint32_t pkt = d_hdr_reg.extract_field32(0, 24, true);
-    uint16_t pktlen = static_cast<uint16_t>((pkt >> 8) & 0x0fff);
-    uint16_t pktnum = static_cast<uint16_t>((pkt >> 20) & 0x0fff);
+    uint16_t pktlen = d_hdr_reg.extract_field16(0, 12, false, true);
+    uint16_t pktnum = d_hdr_reg.extract_field16(12, 12, false, true);
 
     d_info = pmt::make_dict();
     d_info = pmt::dict_add(d_info, d_len_key_name, pmt::from_long(8 * pktlen));

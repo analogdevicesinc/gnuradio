@@ -11,6 +11,7 @@ import sys
 import os
 import configparser
 
+from .. import paths
 from ..core.Config import Config as CoreConfig
 from . import Constants
 
@@ -27,12 +28,10 @@ class Config(CoreConfig):
 
     name = 'GNU Radio Companion'
 
-    gui_prefs_file = os.environ.get(
-        'GRC_PREFS_PATH', os.path.expanduser('~/.gnuradio/grc.conf'))
+    gui_prefs_file = os.environ.get('GRC_PREFS_PATH', paths.get_config_file_path())
 
-    def __init__(self, install_prefix, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         CoreConfig.__init__(self, *args, **kwargs)
-        self.install_prefix = install_prefix
         Constants.update_font_size(self.font_size)
 
         self.parser = configparser.ConfigParser()
@@ -76,7 +75,7 @@ class Config(CoreConfig):
 
     @editor.setter
     def editor(self, value):
-        self._gr_prefs.get_string('grc', 'editor', value)
+        self._gr_prefs.set_string('grc', 'editor', value)
         self._gr_prefs.save()
 
     @property

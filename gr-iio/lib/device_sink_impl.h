@@ -34,6 +34,7 @@ protected:
     unsigned int buffer_size;
     bool destroy_ctx;
     pmt::pmt_t d_len_tag_key;
+    uint16_t override_tagged_input_channels = 0;
 
 public:
     device_sink_impl(iio_context* ctx,
@@ -55,9 +56,9 @@ public:
     // Where all the action really happens
     int work(int noutput_items,
              gr_vector_const_void_star& input_items,
-             gr_vector_void_star& output_items);
+             gr_vector_void_star& output_items) override;
 
-    void forecast(int noutput_items, gr_vector_int& ninput_items_required);
+    void forecast(int noutput_items, gr_vector_int& ninput_items_required) override;
 };
 
 } // namespace iio

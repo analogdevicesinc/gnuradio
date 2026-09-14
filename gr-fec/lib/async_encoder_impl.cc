@@ -16,8 +16,7 @@
 #include <gnuradio/io_signature.h>
 #include <gnuradio/logger.h>
 #include <volk/volk.h>
-
-#include <boost/format.hpp>
+#include <cmath>
 
 namespace gr {
 namespace fec {
@@ -57,7 +56,7 @@ async_encoder_impl::async_encoder_impl(generic_encoder::sptr my_encoder,
     if (d_packed) {
         set_msg_handler(d_in_port, [this](pmt::pmt_t msg) { this->encode_packed(msg); });
 
-        int max_bits_out = d_encoder->rate() * d_mtu * 8;
+        int max_bits_out = std::lround(d_encoder->rate() * d_mtu * 8);
         d_bits_out.resize(max_bits_out);
     } else {
         set_msg_handler(d_in_port,
@@ -96,10 +95,10 @@ void async_encoder_impl::encode_unpacked(pmt::pmt_t msg)
     } else {
         nblocks = nbits_in / d_encoder->get_input_size();
         if (nblocks * d_encoder->get_input_size() != nbits_in) {
-            GR_LOG_ERROR(
-                d_logger,
-                boost::format("nblocks: %u, in_block_size: %d, got_input_size: %d") %
-                    nblocks % d_encoder->get_input_size() % nbits_in);
+            d_logger->error("nblocks: {:d}, in_block_size: {:d}, got_input_size: {:d}",
+                            nblocks,
+                            d_encoder->get_input_size(),
+                            nbits_in);
             throw std::runtime_error("input does not divide into code block size!");
         }
         nbits_out = nblocks * d_encoder->get_output_size();
@@ -115,8 +114,9 @@ void async_encoder_impl::encode_unpacked(pmt::pmt_t msg)
         d_encoder->generic_work((void*)d_bits_in.data(), (void*)bits_out);
     } else {
         for (int i = 0; i < nblocks; i++) {
-            d_encoder->generic_work((void*)&bits_in[i * d_encoder->get_input_size()],
-                                    (void*)&bits_out[i * d_encoder->get_output_size()]);
+            d_encoder->generic_work(
+                (const void*)&bits_in[i * d_encoder->get_input_size()],
+                (void*)&bits_out[i * d_encoder->get_output_size()]);
         }
     }
 

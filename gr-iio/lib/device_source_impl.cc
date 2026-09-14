@@ -31,15 +31,15 @@ device_source::sptr device_source::make(const std::string& uri,
                                         unsigned int buffer_size,
                                         unsigned int decimation)
 {
-    return gnuradio::get_initial_sptr(
-        new device_source_impl(device_source_impl::get_context(uri),
-                               true,
-                               device,
-                               channels,
-                               device_phy,
-                               params,
-                               buffer_size,
-                               decimation));
+    return gnuradio::make_block_sptr<device_source_impl>(
+        device_source_impl::get_context(uri),
+        true,
+        device,
+        channels,
+        device_phy,
+        params,
+        buffer_size,
+        decimation);
 }
 
 device_source::sptr device_source::make_from(iio_context* ctx,
@@ -173,7 +173,8 @@ device_source_impl::device_source_impl(iio_context* ctx,
       buf(NULL),
       buffer_size(buffer_size),
       decimation(decimation),
-      destroy_ctx(destroy_ctx)
+      destroy_ctx(destroy_ctx),
+      thread_stopped(false)
 {
     unsigned int nb_channels, i;
 
@@ -291,7 +292,13 @@ int device_source_impl::work(int noutput_items,
 
         // Tag start of new packet
         if (d_len_tag_key != pmt::PMT_NIL) {
-            for (size_t i = 0; i < output_items.size(); i += 2) {
+            size_t toutputs;
+            if (override_tagged_output_channels > 0)
+                toutputs = override_tagged_output_channels;
+            else
+                toutputs = output_items.size();
+
+            for (size_t i = 0; i < toutputs; i += 1) {
                 this->add_item_tag(i,
                                    this->nitems_written(0),
                                    this->d_len_tag_key,

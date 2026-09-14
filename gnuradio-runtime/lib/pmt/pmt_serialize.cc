@@ -13,9 +13,8 @@
 #endif
 
 #include "pmt/pmt_serial_tags.h"
-#include "pmt_int.h"
 #include <pmt/pmt.h>
-#include <boost/endian/conversion.hpp>
+#include <cstdint>
 #include <limits>
 #include <vector>
 
@@ -27,23 +26,51 @@ static pmt_t parse_pair(std::streambuf& sb, uint8_t type);
 // output primitives
 // ----------------------------------------------------------------
 
+static inline void native_to_big_u16(uint16_t i, uint8_t* buf)
+{
+    buf[0] = i >> 8;
+    buf[1] = i & 0xff;
+}
+
+static inline void native_to_big_u32(uint32_t i, uint8_t* buf)
+{
+    buf[0] = i >> 24;
+    buf[1] = (i >> 16) & 0xff;
+    buf[2] = (i >> 8) & 0xff;
+    buf[3] = i & 0xff;
+}
+
+static inline void native_to_big_u64(uint64_t i, uint8_t* buf)
+{
+    buf[0] = i >> 56;
+    buf[1] = (i >> 48) & 0xff;
+    buf[2] = (i >> 40) & 0xff;
+    buf[3] = (i >> 32) & 0xff;
+    buf[4] = (i >> 24) & 0xff;
+    buf[5] = (i >> 16) & 0xff;
+    buf[6] = (i >> 8) & 0xff;
+    buf[7] = i & 0xff;
+}
+
 static bool serialize_untagged_u8(uint8_t i, std::streambuf& sb)
 {
-    return sb.sputc((i >> 0) & 0xff) != std::streambuf::traits_type::eof();
+    return sb.sputc(i) != std::streambuf::traits_type::eof();
 }
 
 // always writes big-endian
 static bool serialize_untagged_u16(uint16_t i, std::streambuf& sb)
 {
-    boost::endian::native_to_big_inplace(i);
-    return sb.sputn((char*)&i, sizeof(i)) != std::streambuf::traits_type::eof();
+    uint8_t buf[sizeof(uint16_t)];
+    native_to_big_u16(i, buf);
+    return sb.sputn((char*)buf, sizeof(buf)) != std::streambuf::traits_type::eof();
 }
 
 // always writes big-endian
 static bool serialize_untagged_u32(uint32_t i, std::streambuf& sb)
 {
-    boost::endian::native_to_big_inplace(i);
-    return sb.sputn((char*)&i, sizeof(i)) != std::streambuf::traits_type::eof();
+    uint8_t buf[sizeof(uint32_t)];
+    native_to_big_u32(i, buf);
+    return sb.sputn((char*)buf, sizeof(buf)) != std::streambuf::traits_type::eof();
 }
 
 static bool serialize_untagged_f64(double i, std::streambuf& sb)
@@ -54,60 +81,77 @@ static bool serialize_untagged_f64(double i, std::streambuf& sb)
     } iu_t;
     iu_t iu;
     iu.id = i;
-    boost::endian::native_to_big_inplace(iu.ii);
-    return sb.sputn((char*)&iu.ii, sizeof(iu.ii)) != std::streambuf::traits_type::eof();
+    uint8_t buf[sizeof(uint64_t)];
+    native_to_big_u64(iu.ii, buf);
+    return sb.sputn((char*)buf, sizeof(buf)) != std::streambuf::traits_type::eof();
 }
 
 // always writes big-endian
 static bool serialize_untagged_u64(uint64_t i, std::streambuf& sb)
 {
-    boost::endian::native_to_big_inplace(i);
-    return sb.sputn((char*)&i, sizeof(i)) != std::streambuf::traits_type::eof();
+    uint8_t buf[sizeof(uint64_t)];
+    native_to_big_u64(i, buf);
+    return sb.sputn((char*)buf, sizeof(buf)) != std::streambuf::traits_type::eof();
 }
 
 // always writes big-endian
 static bool
 serialize_untagged_u8_array(const uint8_t* data, size_t length, std::streambuf& sb)
 {
-    return sb.sputn((char*)data, length) != std::streambuf::traits_type::eof();
+    return sb.sputn((const char*)data, length) != std::streambuf::traits_type::eof();
 }
 
 static bool
 serialize_untagged_u16_array(const uint16_t* data, size_t length, std::streambuf& sb)
 {
-    std::vector<uint16_t> bedata(length);
+    std::vector<uint8_t> bedata(length * sizeof(uint16_t));
     for (size_t i = 0; i < length; i++) {
-        bedata[i] = boost::endian::native_to_big(data[i]);
+        native_to_big_u16(data[i], &bedata[sizeof(uint16_t) * i]);
     }
-    return sb.sputn((char*)&bedata[0], length * sizeof(uint16_t)) !=
+    return sb.sputn((const char*)&bedata[0], length * sizeof(uint16_t)) !=
            std::streambuf::traits_type::eof();
 }
 
 static bool
 serialize_untagged_u32_array(const uint32_t* data, size_t length, std::streambuf& sb)
 {
-    std::vector<uint32_t> bedata(length);
+    std::vector<uint8_t> bedata(length * sizeof(uint32_t));
     for (size_t i = 0; i < length; i++) {
-        bedata[i] = boost::endian::native_to_big(data[i]);
+        native_to_big_u32(data[i], &bedata[sizeof(uint32_t) * i]);
     }
-    return sb.sputn((char*)&bedata[0], length * sizeof(uint32_t)) !=
+    return sb.sputn((const char*)&bedata[0], length * sizeof(uint32_t)) !=
            std::streambuf::traits_type::eof();
 }
 
 static bool
 serialize_untagged_u64_array(const uint64_t* data, size_t length, std::streambuf& sb)
 {
-    std::vector<uint64_t> bedata(length);
+    std::vector<uint8_t> bedata(length * sizeof(uint64_t));
     for (size_t i = 0; i < length; i++) {
-        bedata[i] = boost::endian::native_to_big(data[i]);
+        native_to_big_u64(data[i], &bedata[sizeof(uint64_t) * i]);
     }
-    return sb.sputn((char*)&bedata[0], length * sizeof(uint64_t)) !=
+    return sb.sputn((const char*)&bedata[0], length * sizeof(uint64_t)) !=
            std::streambuf::traits_type::eof();
 }
 
 // ----------------------------------------------------------------
 // input primitives
 // ----------------------------------------------------------------
+
+static inline uint32_t big_to_native_u16(uint8_t* buf) { return (buf[0] << 8) | buf[1]; }
+
+static inline uint32_t big_to_native_u32(uint8_t* buf)
+{
+    return (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
+}
+
+static inline uint64_t big_to_native_u64(uint8_t* buf)
+{
+    return ((uint64_t)buf[0] << 56) | ((uint64_t)buf[1] << 48) |
+           ((uint64_t)buf[2] << 40) | ((uint64_t)buf[3] << 32) |
+           ((uint64_t)buf[4] << 24) | ((uint64_t)buf[5] << 16) | ((uint64_t)buf[6] << 8) |
+           (uint64_t)buf[7];
+}
 
 // always reads big-endian
 static bool deserialize_untagged_u8(uint8_t* ip, std::streambuf& sb)
@@ -125,10 +169,10 @@ static bool deserialize_untagged_u8(uint8_t* ip, std::streambuf& sb)
 // always reads big-endian
 static bool deserialize_untagged_u16(uint16_t* ip, std::streambuf& sb)
 {
+    uint8_t buf[sizeof(uint16_t)];
     std::streambuf::traits_type::int_type t;
-    t = sb.sgetn((char*)ip, sizeof(uint16_t));
-    sb.pubseekoff(sizeof(uint16_t), std::ios_base::cur);
-    boost::endian::big_to_native_inplace(*ip);
+    t = sb.sgetn((char*)buf, sizeof(buf));
+    *ip = big_to_native_u16(buf);
 
     return t != std::streambuf::traits_type::eof();
 }
@@ -136,10 +180,10 @@ static bool deserialize_untagged_u16(uint16_t* ip, std::streambuf& sb)
 // always reads big-endian
 static bool deserialize_untagged_u32(uint32_t* ip, std::streambuf& sb)
 {
+    uint8_t buf[sizeof(uint32_t)];
     std::streambuf::traits_type::int_type t;
-    t = sb.sgetn((char*)ip, sizeof(uint32_t));
-    sb.pubseekoff(sizeof(uint32_t), std::ios_base::cur);
-    boost::endian::big_to_native_inplace(*ip);
+    t = sb.sgetn((char*)buf, sizeof(buf));
+    *ip = big_to_native_u32(buf);
 
     return t != std::streambuf::traits_type::eof();
 }
@@ -147,16 +191,17 @@ static bool deserialize_untagged_u32(uint32_t* ip, std::streambuf& sb)
 // always reads big-endian
 static bool deserialize_untagged_u64(uint64_t* ip, std::streambuf& sb)
 {
+    uint8_t buf[sizeof(uint64_t)];
     std::streambuf::traits_type::int_type t;
-    t = sb.sgetn((char*)ip, sizeof(uint64_t));
-    sb.pubseekoff(sizeof(uint64_t), std::ios_base::cur);
-    boost::endian::big_to_native_inplace(*ip);
+    t = sb.sgetn((char*)buf, sizeof(buf));
+    *ip = big_to_native_u64(buf);
 
     return t != std::streambuf::traits_type::eof();
 }
 
 static bool deserialize_untagged_f64(double* ip, std::streambuf& sb)
 {
+    uint8_t buf[sizeof(uint64_t)];
     std::streambuf::traits_type::int_type t;
 
     typedef union {
@@ -165,9 +210,8 @@ static bool deserialize_untagged_f64(double* ip, std::streambuf& sb)
     } iu_t;
 
     iu_t iu;
-    t = sb.sgetn((char*)&iu, sizeof(uint64_t));
-    sb.pubseekoff(sizeof(uint64_t), std::ios_base::cur);
-    boost::endian::big_to_native_inplace(iu.ii);
+    t = sb.sgetn((char*)buf, sizeof(buf));
+    iu.ii = big_to_native_u64(buf);
     *ip = iu.id;
 
     return t != std::streambuf::traits_type::eof();
@@ -198,7 +242,6 @@ static bool deserialize_untagged_u8_vector(std::vector<uint8_t>& data,
     std::streambuf::traits_type::int_type t;
     data.resize(nitems);
     t = sb.sgetn((char*)&data[0], nitems);
-    sb.pubseekoff(nitems, std::ios_base::cur);
 
     return t != std::streambuf::traits_type::eof();
 }
@@ -209,10 +252,10 @@ static bool deserialize_untagged_u16_vector(std::vector<uint16_t>& data,
 {
     std::streambuf::traits_type::int_type t;
     data.resize(nitems);
-    t = sb.sgetn((char*)&data[0], nitems * sizeof(uint16_t));
-    sb.pubseekoff(sizeof(uint16_t) * nitems, std::ios_base::cur);
+    std::vector<uint8_t> buf(nitems * sizeof(uint16_t));
+    t = sb.sgetn((char*)&buf[0], nitems * sizeof(uint16_t));
     for (size_t i = 0; i < nitems; i++) {
-        boost::endian::big_to_native_inplace(data[i]);
+        data[i] = big_to_native_u16(&buf[sizeof(uint16_t) * i]);
     }
 
     return t != std::streambuf::traits_type::eof();
@@ -224,10 +267,10 @@ static bool deserialize_untagged_u32_vector(std::vector<uint32_t>& data,
 {
     std::streambuf::traits_type::int_type t;
     data.resize(nitems);
-    t = sb.sgetn((char*)&data[0], nitems * sizeof(uint32_t));
-    sb.pubseekoff(sizeof(uint32_t) * nitems, std::ios_base::cur);
+    std::vector<uint8_t> buf(nitems * sizeof(uint32_t));
+    t = sb.sgetn((char*)&buf[0], nitems * sizeof(uint32_t));
     for (size_t i = 0; i < nitems; i++) {
-        boost::endian::big_to_native_inplace(data[i]);
+        data[i] = big_to_native_u32(&buf[sizeof(uint32_t) * i]);
     }
 
     return t != std::streambuf::traits_type::eof();
@@ -239,10 +282,10 @@ static bool deserialize_untagged_u64_vector(std::vector<uint64_t>& data,
 {
     std::streambuf::traits_type::int_type t;
     data.resize(nitems);
-    t = sb.sgetn((char*)&data[0], nitems * sizeof(uint64_t));
-    sb.pubseekoff(sizeof(uint64_t) * nitems, std::ios_base::cur);
+    std::vector<uint8_t> buf(nitems * sizeof(uint64_t));
+    t = sb.sgetn((char*)&buf[0], nitems * sizeof(uint64_t));
     for (size_t i = 0; i < nitems; i++) {
-        boost::endian::big_to_native_inplace(data[i]);
+        data[i] = big_to_native_u64(&buf[sizeof(uint64_t) * i]);
     }
 
     return t != std::streambuf::traits_type::eof();
@@ -363,7 +406,7 @@ tail_recursion:
                 ok &= serialize_untagged_u8(0, sb);
             }
             ok &= serialize_untagged_u8_array(
-                (uint8_t*)&s8vector_elements(obj)[0], vec_len, sb);
+                (const uint8_t*)&s8vector_elements(obj)[0], vec_len, sb);
 
             return ok;
         }
@@ -389,7 +432,7 @@ tail_recursion:
                 ok &= serialize_untagged_u8(0, sb);
             }
             ok &= serialize_untagged_u16_array(
-                (uint16_t*)&s16vector_elements(obj)[0], vec_len, sb);
+                (const uint16_t*)&s16vector_elements(obj)[0], vec_len, sb);
             return ok;
         }
 
@@ -414,7 +457,7 @@ tail_recursion:
                 ok &= serialize_untagged_u8(0, sb);
             }
             ok &= serialize_untagged_u32_array(
-                (uint32_t*)&s32vector_elements(obj)[0], vec_len, sb);
+                (const uint32_t*)&s32vector_elements(obj)[0], vec_len, sb);
             return ok;
         }
 
@@ -439,7 +482,7 @@ tail_recursion:
                 ok &= serialize_untagged_u8(0, sb);
             }
             ok &= serialize_untagged_u64_array(
-                (uint64_t*)&s64vector_elements(obj)[0], vec_len, sb);
+                (const uint64_t*)&s64vector_elements(obj)[0], vec_len, sb);
             return ok;
         }
 
@@ -452,7 +495,7 @@ tail_recursion:
                 ok &= serialize_untagged_u8(0, sb);
             }
             ok &= serialize_untagged_u32_array(
-                (uint32_t*)&f32vector_elements(obj)[0], vec_len, sb);
+                (const uint32_t*)&f32vector_elements(obj)[0], vec_len, sb);
             return ok;
         }
 
@@ -465,7 +508,7 @@ tail_recursion:
                 ok &= serialize_untagged_u8(0, sb);
             }
             ok &= serialize_untagged_u64_array(
-                (uint64_t*)&f64vector_elements(obj)[0], vec_len, sb);
+                (const uint64_t*)&f64vector_elements(obj)[0], vec_len, sb);
             return ok;
         }
 
@@ -477,10 +520,8 @@ tail_recursion:
             for (size_t i = 0; i < npad; i++) {
                 ok &= serialize_untagged_u8(0, sb);
             }
-            // Note that if endianness causes byte swap that real/imag will also be
-            // swapped
-            ok &= serialize_untagged_u64_array(
-                (uint64_t*)&c32vector_elements(obj)[0], vec_len, sb);
+            ok &= serialize_untagged_u32_array(
+                (const uint32_t*)&c32vector_elements(obj)[0], vec_len * 2, sb);
             return ok;
         }
 
@@ -494,7 +535,7 @@ tail_recursion:
             }
             // No known portable 128 bit swap function, so double the length
             ok &= serialize_untagged_u64_array(
-                (uint64_t*)&c64vector_elements(obj)[0], vec_len * 2, sb);
+                (const uint64_t*)&c64vector_elements(obj)[0], vec_len * 2, sb);
             return ok;
         }
     }
@@ -678,9 +719,8 @@ pmt_t deserialize(std::streambuf& sb)
             return vec;
         }
         case (UVI_C32): {
-            // Data was serialized as uint64, so do the same here
-            deserialize_untagged_u64_vector(u64v, nitems, sb);
-            pmt_t vec = init_c32vector(nitems, (std::complex<float>*)&u64v[0]);
+            deserialize_untagged_u32_vector(u32v, 2 * nitems, sb);
+            pmt_t vec = init_c32vector(nitems, (std::complex<float>*)&u32v[0]);
             return vec;
         }
 

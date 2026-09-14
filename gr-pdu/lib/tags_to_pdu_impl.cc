@@ -15,6 +15,7 @@
 #include "tags_to_pdu_impl.h"
 #include <gnuradio/io_signature.h>
 #include <gnuradio/pdu.h>
+#include <chrono>
 
 namespace gr {
 namespace pdu {
@@ -72,11 +73,10 @@ tags_to_pdu_impl<T>::tags_to_pdu_impl(pmt::pmt_t start_tag,
     // parameter
     set_start_time(start_time);
     set_eob_parameters(1, 0);
-    GR_LOG_NOTICE(this->d_logger,
-                  boost::format("starting at time {%d %f}") % d_known_time_int_sec %
-                      d_known_time_frac_sec);
+    this->d_logger->notice(
+        "starting at time {{{:d} {:f}}}", d_known_time_int_sec, d_known_time_frac_sec);
 
-    GR_LOG_NOTICE(this->d_logger, boost::format("rate %0.12f") % d_samp_rate);
+    this->d_logger->notice("rate {:.12f}", d_samp_rate);
 
     this->message_port_register_in(msgport_names::conf());
     this->set_msg_handler(msgport_names::conf(),
@@ -105,10 +105,8 @@ void tags_to_pdu_impl<T>::handle_ctrl_msg(pmt::pmt_t ctrl_msg)
         uint32_t new_eob_offset = pmt::to_uint64(
             pmt::dict_ref(ctrl_msg, eob_offset(), pmt::from_uint64(d_eob_offset)));
         set_eob_parameters(d_eob_alignment, new_eob_offset);
-        GR_LOG_NOTICE(
-            this->d_logger,
-            boost::format("command received - set EOB tag offset to %d symbols") %
-                d_eob_offset);
+        this->d_logger->notice("command received - set EOB tag offset to {:d} symbols",
+                               d_eob_offset);
     }
 
     // check dict for EOB alignment command
@@ -117,15 +115,13 @@ void tags_to_pdu_impl<T>::handle_ctrl_msg(pmt::pmt_t ctrl_msg)
             pmt::dict_ref(ctrl_msg, eob_alignment(), pmt::from_uint64(d_eob_alignment)));
         if (new_eob_alignment > 0) {
             set_eob_parameters(new_eob_alignment, d_eob_offset);
-            GR_LOG_NOTICE(
-                this->d_logger,
-                boost::format("command received - set EOB tag alignment to %d symbols") %
-                    d_eob_alignment);
+            this->d_logger->notice(
+                "command received - set EOB tag alignment to {:d} symbols",
+                d_eob_alignment);
         } else {
-            GR_LOG_ERROR(this->d_logger,
-                         boost::format("command received - illegal value %d for EOB "
-                                       "alignment, not setting") %
-                             new_eob_alignment);
+            this->d_logger->error("command received - illegal value {:d} for EOB "
+                                  "alignment, not setting",
+                                  new_eob_alignment);
         }
     }
 
@@ -161,8 +157,9 @@ void tags_to_pdu_impl<T>::publish_message()
     d_meta_dict = pmt::dict_add(
         d_meta_dict, metadata_keys::pdu_num(), pmt::from_uint64(d_burst_counter));
     if (d_wall_clock_time) {
-        double t_now((boost::get_system_time() - d_epoch).total_microseconds() /
-                     1000000.0);
+        double t_now(std::chrono::duration<double>(
+                         std::chrono::system_clock::now().time_since_epoch())
+                         .count());
         d_meta_dict = pmt::dict_add(
             d_meta_dict, metadata_keys::sys_time(), pmt::from_double(t_now));
     }
@@ -243,10 +240,11 @@ int tags_to_pdu_impl<T>::work(int noutput_items,
 
                 // if we have received a second SOB tag, reset and dump previous data
             } else if (d_tag_type == SOB) {
-                GR_LOG_ERROR(this->d_logger,
-                             boost::format("SOB tag received during burst %d at offset "
-                                           "%d, previous burst dropped (%d tags total)") %
-                                 d_burst_counter % d_tag.offset % d_tags.size());
+                this->d_logger->error("SOB tag received during burst {:d} at offset "
+                                      "{:d}, previous burst dropped ({:d} tags total)",
+                                      d_burst_counter,
+                                      d_tag.offset,
+                                      d_tags.size());
 
                 // prepare for next burst
                 d_burst_counter++;
@@ -290,9 +288,7 @@ int tags_to_pdu_impl<T>::work(int noutput_items,
         } else if (d_tag_type == EOB) {
             // receiving an EOB sequence while not triggered is just random chance. No
             // warning necessary... log at INFO level
-            GR_LOG_INFO(this->d_logger,
-                        boost::format("received unexpected EOB at offset %d") %
-                            d_tag.offset);
+            this->d_logger->info("received unexpected EOB at offset {:d}", d_tag.offset);
 
         } else {
             // do nothing
@@ -401,8 +397,6 @@ template <class T>
 void tags_to_pdu_impl<T>::enable_time_debug(bool enable)
 {
     if (enable) {
-        boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
-        d_epoch = epoch;
         d_wall_clock_time = true;
     } else {
         d_wall_clock_time = false;

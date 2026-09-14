@@ -14,7 +14,6 @@
 #include <gnuradio/blocks/ctrlport_probe2_c.h>
 #include <gnuradio/rpcbufferedget.h>
 #include <gnuradio/rpcregisterhelpers.h>
-#include <boost/format.hpp>
 
 namespace gr {
 namespace blocks {
@@ -36,7 +35,7 @@ public:
                            const std::string& desc,
                            int len,
                            unsigned int disp_mask);
-    ~ctrlport_probe2_c_impl();
+    ~ctrlport_probe2_c_impl() override;
 
     void setup_rpc() override;
 

@@ -22,11 +22,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <boost/format.hpp>
 #include <cctype>
 #include <sstream>
 #include <stdexcept>
 
+#define MAX_QUEUE_SIZE 100
 
 namespace gr {
 namespace audio {
@@ -92,11 +92,10 @@ windows_source::windows_source(int sampling_freq, const std::string device_name)
 
     gr::logger_ptr logger, debug_logger;
     if (open_wavein_device() < 0) {
-        GR_LOG_ERROR(logger,
-                     boost::format("open_wavein_device() failed %s") % strerror(errno));
+        logger->error("open_wavein_device() failed {:s}", strerror(errno));
         throw std::runtime_error("audio_windows_source:open_wavein_device() failed");
     } else {
-        GR_LOG_INFO(d_debug_logger, "Opened windows wavein device");
+        d_debug_logger->info("Opened windows wavein device");
     }
     lp_buffers = new LPWAVEHDR[nPeriods];
     for (int i = 0; i < nPeriods; i++) {
@@ -108,20 +107,18 @@ windows_source::windows_source(int sampling_freq, const std::string device_name)
         lp_buffer->lpData = new CHAR[d_buffer_size];
         MMRESULT w_result = waveInPrepareHeader(d_h_wavein, lp_buffer, sizeof(WAVEHDR));
         if (w_result != 0) {
-            GR_LOG_ERROR(logger,
-                         boost::format("Failed to waveInPrepareHeader %s") %
-                             strerror(errno));
+            logger->error("Failed to waveInPrepareHeader {:s}", strerror(errno));
             throw std::runtime_error("open_wavein_device() failed");
         }
         waveInAddBuffer(d_h_wavein, lp_buffer, sizeof(WAVEHDR));
     }
     waveInStart(d_h_wavein);
     if (verbose) {
-        GR_LOG_INFO(
-            d_debug_logger,
-            boost::format(
-                "Initialized %1% %2% ms audio buffers, total memory used: %3$0.2f kiB") %
-                (nPeriods) % (CHUNK_TIME * 1000) % ((d_buffer_size * nPeriods) / 1024.0));
+        d_debug_logger->info(
+            "Initialized {:d} {:g} ms audio buffers, total memory used: {:0.2f} kiB",
+            nPeriods,
+            CHUNK_TIME * 1000,
+            (d_buffer_size * nPeriods) / 1024.0);
     }
 }
 
@@ -148,6 +145,7 @@ int windows_source::work(int noutput_items,
 {
     float *f0, *f1;
     DWORD dw_items = 0;
+    std::unique_lock<std::mutex> lock(buffer_queue_mutex);
 
     while (!buffer_queue.empty()) {
         // Pull the next incoming buffer off the queue
@@ -169,7 +167,7 @@ int windows_source::work(int noutput_items,
             case 1: // mono output
                 f0 = (float*)output_items[0];
 
-                for (int j = 0; j < buffer_length; j++) {
+                for (DWORD j = 0; j < buffer_length; j++) {
                     f0[dw_items + j] = (float)(lp_buffer[j]) / 32767.0;
                 }
                 dw_items += buffer_length;
@@ -178,18 +176,21 @@ int windows_source::work(int noutput_items,
                 f0 = (float*)output_items[0];
                 f1 = (float*)output_items[1];
 
-                for (int j = 0; j < buffer_length / 2; j++) {
+                for (DWORD j = 0; j < buffer_length / 2; j++) {
                     f0[dw_items + j] = (float)(lp_buffer[2 * j + 0]) / 32767.0;
                     f1[dw_items + j] = (float)(lp_buffer[2 * j + 1]) / 32767.0;
                 }
                 dw_items += buffer_length / 2;
             }
             buffer_queue.pop();
+            lock.unlock();
 
             // Recycle the buffer
             next_header->dwFlags = 0;
             waveInPrepareHeader(d_h_wavein, next_header, sizeof(WAVEHDR));
             waveInAddBuffer(d_h_wavein, next_header, sizeof(WAVEHDR));
+
+            lock.lock();
         }
     }
     return dw_items;
@@ -207,8 +208,8 @@ MMRESULT windows_source::is_format_supported(LPWAVEFORMATEX pwfx, UINT uDeviceID
     return (waveInOpen(NULL,                // ptr can be NULL for query
                        uDeviceID,           // the device identifier
                        pwfx,                // defines requested format
-                       NULL,                // no callback
-                       NULL,                // no instance data
+                       0,                   // no callback
+                       0,                   // no instance data
                        WAVE_FORMAT_QUERY)); // query only, do not open device
 }
 
@@ -234,10 +235,9 @@ UINT windows_source::find_device(std::string szDeviceName)
             if (num < num_devices) {
                 result = num;
             } else {
-                GR_LOG_WARN(logger,
-                            boost::format("waveIn deviceID %d was not found, "
-                                          "defaulting to WAVE_MAPPER") %
-                                num);
+                logger->warn("waveIn deviceID {:d} was not found, "
+                             "defaulting to WAVE_MAPPER",
+                             num);
                 result = WAVE_MAPPER;
             }
 
@@ -246,31 +246,26 @@ UINT windows_source::find_device(std::string szDeviceName)
             for (UINT i = 0; i < num_devices; i++) {
                 WAVEINCAPS woc;
                 if (waveInGetDevCaps(i, &woc, sizeof(woc)) != MMSYSERR_NOERROR) {
-                    GR_LOG_ERROR(logger,
-                                 boost::format("Could not retrieve wave out device "
-                                               "capabilities for device %s") %
-                                     strerror(errno));
+                    logger->error("Could not retrieve wave out device "
+                                  "capabilities for device {:s}",
+                                  strerror(errno));
                     return -1;
                 }
                 if (woc.szPname == szDeviceName) {
                     result = i;
                 }
                 if (verbose)
-                    GR_LOG_INFO(d_debug_logger,
-                                boost::format("WaveIn Device %d: %s") % i % woc.szPname);
+                    d_debug_logger->info("WaveIn Device {:d}: {:s}", i, woc.szPname);
             }
-            if (result == -1) {
-                GR_LOG_INFO(d_debug_logger,
-                            boost::format("Warning: waveIn device '%s' was not found, "
-                                          "defaulting to WAVE_MAPPER") %
-                                szDeviceName);
+            if (result == (UINT)-1) {
+                d_debug_logger->info("Warning: waveIn device '{:s}' was not found, "
+                                     "defaulting to WAVE_MAPPER",
+                                     szDeviceName);
                 result = WAVE_MAPPER;
             }
         }
     } else {
-        GR_LOG_ERROR(logger,
-                     boost::format("No WaveIn devices present or accessible: %s") %
-                         strerror(errno));
+        logger->error("No WaveIn devices present or accessible: {:s}", strerror(errno));
     }
     return result;
 }
@@ -298,19 +293,16 @@ int windows_source::open_wavein_device(void)
         // and stick with WAVE_MAPPER
         u_device_id = find_device(d_device_name);
     if (verbose)
-        GR_LOG_INFO(d_debug_logger,
-                    boost::format("waveIn Device ID: %1%") % (u_device_id));
+        d_debug_logger->info("waveIn Device ID: {:d}", u_device_id);
 
     // Check if the sampling rate/bits/channels are good to go with the device.
     MMRESULT supported = is_format_supported(&wave_format, u_device_id);
     if (supported != MMSYSERR_NOERROR) {
         char err_msg[50];
         waveInGetErrorText(supported, err_msg, 50);
-        GR_LOG_INFO(d_debug_logger, boost::format("format error: %s") % err_msg);
-        GR_LOG_ERROR(logger,
-                     boost::format(
-                         "Requested audio format is not supported by device driver: %s") %
-                         strerror(errno));
+        d_debug_logger->info("format error: {:s}", err_msg);
+        logger->error("Requested audio format is not supported by device driver: {:s}",
+                      strerror(errno));
         return -1;
     }
 
@@ -319,36 +311,40 @@ int windows_source::open_wavein_device(void)
                         u_device_id,
                         &wave_format,
                         (DWORD_PTR)&read_wavein,
-                        (DWORD_PTR)&buffer_queue,
+                        (DWORD_PTR)this,
                         CALLBACK_FUNCTION | WAVE_ALLOWSYNC);
 
     if (result) {
-        GR_LOG_ERROR(logger,
-                     boost::format("Failed to open waveform output device: %s") %
-                         strerror(errno));
+        logger->error("Failed to open waveform output device: {:s}", strerror(errno));
         return -1;
     }
     return 0;
 }
 
-static void CALLBACK read_wavein(
+void CALLBACK windows_source::read_wavein(
     HWAVEIN hwi, UINT uMsg, DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
 {
-    // Ignore WIM_OPEN and WIM_CLOSE messages
     if (uMsg == WIM_DATA) {
-        if (!dwInstance) {
+        windows_source* source = reinterpret_cast<windows_source*>(dwInstance);
+        if (!source) {
             gr::logger_ptr logger;
-            GR_LOG_ERROR(logger,
-                         boost::format("callback function missing buffer queue: %s") %
-                             strerror(errno));
+            logger->error("callback function missing buffer queue: {:s}",
+                          strerror(errno));
+            return;
         }
-        LPWAVEHDR lp_wave_hdr = (LPWAVEHDR)dwParam1; // The new audio data
-        boost::lockfree::spsc_queue<LPWAVEHDR>* q =
-            (boost::lockfree::spsc_queue<LPWAVEHDR>*)
-                dwInstance;   // The buffer queue we assigned to the device to track the
-                              // buffers that need to be sent
-        q->push(lp_wave_hdr); // Add the buffer to that queue
+
+        LPWAVEHDR lp_wave_hdr =
+            reinterpret_cast<LPWAVEHDR>(dwParam1); // The new audio data
+
+        {
+            std::lock_guard<std::mutex> lock(source->get_buffer_queue_mutex());
+            auto& buffer_queue = source->get_buffer_queue();
+            if (buffer_queue.size() < MAX_QUEUE_SIZE) {
+                buffer_queue.push(lp_wave_hdr); // Add the buffer to the queue
+            }
+        }
     }
 }
+
 } /* namespace audio */
 } /* namespace gr */

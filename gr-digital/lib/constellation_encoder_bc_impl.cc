@@ -21,7 +21,7 @@ namespace digital {
 constellation_encoder_bc::sptr
 constellation_encoder_bc::make(constellation_sptr constellation)
 {
-    return gnuradio::get_initial_sptr(new constellation_encoder_bc_impl(constellation));
+    return gnuradio::make_block_sptr<constellation_encoder_bc_impl>(constellation);
 }
 
 constellation_encoder_bc_impl::constellation_encoder_bc_impl(
@@ -36,12 +36,30 @@ constellation_encoder_bc_impl::constellation_encoder_bc_impl(
 
 constellation_encoder_bc_impl::~constellation_encoder_bc_impl() {}
 
+void constellation_encoder_bc_impl::set_constellation(
+    constellation_sptr new_constellation)
+{
+    if (new_constellation->dimensionality() != d_constellation->dimensionality()) {
+        d_logger->warn("Attempting to change to a new dimensionality constellation (from "
+                       "{} to {}). This may cause buffering issues",
+                       d_constellation->dimensionality(),
+                       new_constellation->dimensionality());
+    }
+
+    gr::thread::scoped_lock l(d_mutex);
+
+    d_constellation = new_constellation;
+    set_interpolation((uint64_t)d_constellation->dimensionality());
+}
+
 int constellation_encoder_bc_impl::work(int noutput_items,
                                         gr_vector_const_void_star& input_items,
                                         gr_vector_void_star& output_items)
 {
     unsigned char const* in = (const unsigned char*)input_items[0];
     gr_complex* out = (gr_complex*)output_items[0];
+
+    gr::thread::scoped_lock l(d_mutex);
 
     int ninput_items = noutput_items / d_constellation->dimensionality();
 

@@ -13,8 +13,6 @@
 #include "dvbt_bit_inner_interleaver_impl.h"
 #include <gnuradio/io_signature.h>
 
-#include <boost/format.hpp>
-
 #define MAX_MODULATION_ORDER 6
 #define INTERLEAVER_BLOCK_SIZE 126
 
@@ -66,11 +64,10 @@ dvbt_bit_inner_interleaver_impl::dvbt_bit_inner_interleaver_impl(
     }
 
     if (d_nsize % d_bsize) {
-        GR_LOG_ERROR(
-            d_logger,
-            boost::format(
-                "Input size must be multiple of block size: nsize: %1% bsize: %2%") %
-                d_nsize % d_bsize);
+        this->d_logger->error(
+            "Input size must be multiple of block size: nsize: {:d} bsize: {:d}",
+            d_nsize,
+            d_bsize);
     }
 }
 
@@ -93,8 +90,12 @@ int dvbt_bit_inner_interleaver_impl::general_work(int noutput_items,
                                                   gr_vector_void_star& output_items)
 {
     const unsigned char* inh = (const unsigned char*)input_items[0];
-    const unsigned char* inl = (const unsigned char*)input_items[1];
+    const unsigned char* inl = nullptr;
     unsigned char* out = (unsigned char*)output_items[0];
+
+    if (d_hierarchy != NH) {
+        inl = (const unsigned char*)input_items[1];
+    }
 
     int bmax = noutput_items * d_nsize / d_bsize;
 

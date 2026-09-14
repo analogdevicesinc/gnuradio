@@ -14,7 +14,6 @@
 
 #include "ccsds_encoder_impl.h"
 #include <gnuradio/fec/generic_encoder.h>
-#include <boost/format.hpp>
 #include <cstdio>
 
 #include <gnuradio/fec/viterbi.h>
@@ -56,9 +55,9 @@ bool ccsds_encoder_impl::set_frame_size(unsigned int frame_size)
 {
     bool ret = true;
     if (frame_size > d_max_frame_size) {
-        GR_LOG_INFO(d_logger,
-                    boost::format("tried to set frame to %1%; max possible is %2%") %
-                        frame_size % d_max_frame_size);
+        d_logger->info("tried to set frame to {:d}; max possible is {:d}",
+                       frame_size,
+                       d_max_frame_size);
         frame_size = d_max_frame_size;
         ret = false;
     }
@@ -76,9 +75,9 @@ bool ccsds_encoder_impl::set_frame_size(unsigned int frame_size)
 
 double ccsds_encoder_impl::rate() { return 0.5; }
 
-void ccsds_encoder_impl::generic_work(void* in_buffer, void* out_buffer)
+void ccsds_encoder_impl::generic_work(const void* in_buffer, void* out_buffer)
 {
-    unsigned char* in = (unsigned char*)in_buffer;
+    const unsigned char* in = (const unsigned char*)in_buffer;
     unsigned char* out = (unsigned char*)out_buffer;
 
     unsigned char my_state = d_start_state;

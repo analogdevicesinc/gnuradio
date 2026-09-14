@@ -11,8 +11,6 @@
 #include "gr_uhd_common.h"
 #include "usrp_source_impl.h"
 #include <gnuradio/prefs.h>
-#include <boost/format.hpp>
-#include <boost/make_shared.hpp>
 #include <boost/thread/thread.hpp>
 #include <chrono>
 #include <mutex>
@@ -42,6 +40,7 @@ usrp_source_impl::usrp_source_impl(const ::uhd::device_addr_t& device_addr,
       _issue_stream_cmd_on_start(issue_stream_cmd_on_start),
       _last_log(std::chrono::steady_clock::now()),
       _overflow_count(0),
+      _num_overflow_retries(10),
       _overflow_log_interval(
           gr::prefs::singleton()->get_long("uhd", "logging_interval_ms", 750))
 {
@@ -51,6 +50,7 @@ usrp_source_impl::usrp_source_impl(const ::uhd::device_addr_t& device_addr,
 
     _samp_rate = this->get_samp_rate();
     _samps_per_packet = 1;
+    message_port_register_out(ASYNC_MSGS_PORT_KEY);
     register_msg_cmd_handler(cmd_tag_key(),
                              [this](const pmt::pmt_t& tag, const int, const pmt::pmt_t&) {
                                  this->_cmd_handler_tag(tag);
@@ -84,10 +84,9 @@ void usrp_source_impl::set_samp_rate(double rate)
     _tag_now = true;
     auto is_should_ratio = _samp_rate / rate;
     if (is_should_ratio < 0.99 || is_should_ratio > 1.01) {
-        GR_LOG_WARN(
-            d_logger,
-            boost::format("Requested sample rate %g Hz not set; instead, %g Hz used.") %
-                rate % _samp_rate);
+        d_logger->warn("Requested sample rate {:g} Hz not set; instead, {:g} Hz used.",
+                       rate,
+                       _samp_rate);
     }
 }
 
@@ -115,11 +114,11 @@ usrp_source_impl::_set_center_freq_from_internals(size_t chan, pmt::pmt_t direct
 {
     if (pmt::eqv(direction, direction_tx())) {
         // TODO: what happens if the TX device is not instantiated? Catch error?
-        _tx_chans_to_tune.reset(chan);
+        _tx_chans_to_tune[chan] = false;
         return _dev->set_tx_freq(_curr_tx_tune_req[chan], _stream_args.channels[chan]);
     } else {
-        _rx_chans_to_tune.reset(chan);
-        return _dev->set_rx_freq(_curr_rx_tune_req[chan], _stream_args.channels[chan]);
+        _rx_chans_to_tune[chan] = false;
+        return set_center_freq(_curr_rx_tune_req[chan], chan);
     }
 }
 
@@ -206,7 +205,7 @@ bool usrp_source_impl::has_power_reference(size_t chan)
     const size_t dev_chan = _stream_args.channels[chan];
     return _dev->has_rx_power_reference(dev_chan);
 #else
-    GR_LOG_WARN(d_logger, "UHD version 4.0 or greater required for power reference API.");
+    d_logger->warn("UHD version 4.0 or greater required for power reference API.");
     return false;
 #endif
 }
@@ -220,8 +219,7 @@ void usrp_source_impl::set_power_reference(double power_dbm, size_t chan)
     const size_t dev_chan = _stream_args.channels[chan];
     _dev->set_rx_power_reference(power_dbm, dev_chan);
 #else
-    GR_LOG_ERROR(d_logger,
-                 "UHD version 4.0 or greater required for power reference API.");
+    d_logger->error("UHD version 4.0 or greater required for power reference API.");
     throw std::runtime_error("not implemented in this version");
 #endif
 }
@@ -235,8 +233,7 @@ double usrp_source_impl::get_power_reference(size_t chan)
     const size_t dev_chan = _stream_args.channels[chan];
     return _dev->get_rx_power_reference(dev_chan);
 #else
-    GR_LOG_ERROR(d_logger,
-                 "UHD version 4.0 or greater required for power reference API.");
+    d_logger->error("UHD version 4.0 or greater required for power reference API.");
     throw std::runtime_error("not implemented in this version");
 #endif
 }
@@ -250,8 +247,7 @@ double usrp_source_impl::get_power_reference(size_t chan)
     const size_t dev_chan = _stream_args.channels[chan];
     return _dev->get_rx_power_range(dev_chan);
 #else
-    GR_LOG_ERROR(d_logger,
-                 "UHD version 4.0 or greater required for power reference API.");
+    d_logger->error("UHD version 4.0 or greater required for power reference API.");
     throw std::runtime_error("not implemented in this version");
 #endif
 }
@@ -500,7 +496,7 @@ void usrp_source_impl::set_recv_timeout(const double timeout, const bool one_pac
 
 bool usrp_source_impl::start(void)
 {
-    std::lock_guard<std::recursive_mutex> lock(d_mutex);
+    std::lock_guard<std::mutex> lock(d_mutex);
     if (not _rx_stream) {
         _rx_stream = _dev->get_rx_stream(_stream_args);
         _samps_per_packet = _rx_stream->get_max_num_samps();
@@ -546,7 +542,7 @@ void usrp_source_impl::flush(void)
 
 bool usrp_source_impl::stop(void)
 {
-    std::lock_guard<std::recursive_mutex> lock(d_mutex);
+    std::lock_guard<std::mutex> lock(d_mutex);
     this->issue_stream_cmd(::uhd::stream_cmd_t::STREAM_MODE_STOP_CONTINUOUS);
     this->flush();
 
@@ -606,7 +602,19 @@ int usrp_source_impl::work(int noutput_items,
                            gr_vector_const_void_star& input_items,
                            gr_vector_void_star& output_items)
 {
-    std::lock_guard<std::recursive_mutex> lock(d_mutex);
+    std::lock_guard<std::mutex> lock(d_mutex);
+    for (unsigned int i = 0; i < _num_overflow_retries; i++) {
+        int count = try_work(noutput_items, input_items, output_items);
+        if (count != -1)
+            return count;
+    }
+    return 0;
+}
+
+int usrp_source_impl::try_work(int noutput_items,
+                               gr_vector_const_void_star& input_items,
+                               gr_vector_void_star& output_items)
+{
     boost::this_thread::disable_interruption disable_interrupt;
     // In order to allow for low-latency:
     // We receive all available packets without timeout.
@@ -643,8 +651,6 @@ int usrp_source_impl::work(int noutput_items,
         return 0;
 
     case ::uhd::rx_metadata_t::ERROR_CODE_OVERFLOW: {
-        static auto oflow_msg =
-            boost::format("In the last %d ms, %d overflows occurred.");
         _tag_now = true;
         ++_overflow_count;
         auto now = std::chrono::steady_clock::now();
@@ -653,16 +659,22 @@ int usrp_source_impl::work(int noutput_items,
             _last_log = now;
             auto ms =
                 std::chrono::duration_cast<std::chrono::milliseconds>(delta).count();
-            GR_LOG_ERROR(d_logger, oflow_msg % ms % _overflow_count);
+            d_logger->error(
+                "In the last {:d} ms, {:d} overflows occurred.", ms, _overflow_count);
+
+            pmt::pmt_t value = pmt::dict_add(
+                pmt::make_dict(), EVENT_CODE_OVERFLOW, pmt::from_uint64(_overflow_count));
+            pmt::pmt_t msg = pmt::cons(ASYNC_MSG_KEY, value);
+            message_port_pub(ASYNC_MSGS_PORT_KEY, msg);
+
             _overflow_count = 0;
         }
         // ignore overflows and try work again
-        return work(noutput_items, input_items, output_items);
+        return -1;
     }
 
     default:
-        GR_LOG_WARN(d_logger,
-                    "USRP Source Block caught rx error: " + _metadata.strerror());
+        d_logger->warn("USRP Source Block caught rx error: {:s}", _metadata.strerror());
         return num_samps;
     }
 

@@ -20,13 +20,7 @@
 #include <cstdio>
 #include <vector>
 
-#if QWT_VERSION < 0x060000
-#include <gnuradio/qtgui/plot_waterfall.h>
-#else
 #include <qwt_interval.h>
-
-typedef QwtInterval QwtDoubleInterval;
-#endif
 
 /*!
  * \brief QWidget for time raster (time vs. time) plots.
@@ -67,7 +61,8 @@ public:
                            const double units,
                            const std::string& strunits);
 
-    void plotNewData(const std::vector<double*> dataPoints, const uint64_t numDataPoints);
+    void plotNewData(const std::vector<const double*> dataPoints,
+                     const uint64_t numDataPoints);
 
     void plotNewData(const double* dataPoints, const uint64_t numDataPoints);
 

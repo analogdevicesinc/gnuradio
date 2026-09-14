@@ -8,9 +8,7 @@
 ########################################################################
 # Setup the QT file generations stuff
 ########################################################################
-
-
-add_library(gnuradio-qtgui
+set(QTGUI_SOURCES
     DisplayPlot.cc
     FrequencyDisplayPlot.cc
     EyeDisplayPlot.cc
@@ -60,47 +58,56 @@ add_library(gnuradio-qtgui
     vectordisplayform.cc
     vector_sink_f_impl.cc
     edit_box_msg_impl.cc
+    matrix_display.cc
+    matrix_sink_impl.cc
 )
-target_compile_definitions(gnuradio-qtgui PRIVATE -DQWT_DLL) #setup QWT library linkage
-target_include_directories(gnuradio-qtgui
-  PUBLIC
-  $<INSTALL_INTERFACE:include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-  PRIVATE
-  ${CMAKE_CURRENT_BINARY_DIR}
-  )
-target_link_libraries(gnuradio-qtgui PUBLIC
+
+set(QTGUI_LIBS
     gnuradio-runtime
     gnuradio-fft
     gnuradio-filter
     Volk::volk
     qwt::qwt
-    Qt5::Widgets
+    Qt6::Widgets
 )
-if (WIN32)
-  target_link_libraries(gnuradio-qtgui PUBLIC
-    dwrite
-  )
-endif(WIN32)
 
-if(ENABLE_COMMON_PCH)
-  target_link_libraries(gnuradio-qtgui PRIVATE common-precompiled-headers)
+if(ENABLE_GR_QTGUI_OPENGL)
+    qt6_add_resources(RFNOC_F15_RC_SRCS rfnoc_f15.qrc)
+    list(APPEND QTGUI_SOURCES
+        axis.c
+        rfnoc_f15_display_impl.cc
+        QRfnocF15ColorMapper.cc
+        QRfnocF15Surface.cc
+        ${RFNOC_F15_RC_SRCS}
+    )
+    gr_find_package(OpenGL)
+    list(APPEND PRIVATE_LIBS
+        Qt6::OpenGL
+        Qt6::OpenGLWidgets
+        OpenGL::GL
+    )
 endif()
 
-include(GrPython)
-if(ENABLE_PYTHON)
-  target_compile_definitions(gnuradio-qtgui PUBLIC -DENABLE_PYTHON)
-  # INTERFACE/PRIVATE split so users of the library can choose how to link to Python
-  # (importantly, extension modules can avoid linking against Python and resolve
-  #  their own Python symbols at runtime through the Python interpreter's linking)
-  target_link_libraries(gnuradio-qtgui
-    INTERFACE Python::Module
-    PRIVATE Python::Python
-  )
-endif(ENABLE_PYTHON)
+add_library(
+    gnuradio-qtgui
+    ${QTGUI_SOURCES}
+)
+
+# Set up QWT library linkage:
+target_compile_definitions(gnuradio-qtgui PRIVATE -DQWT_DLL)
+target_include_directories(
+    gnuradio-qtgui
+    PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+    PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(gnuradio-qtgui
+    PUBLIC ${QTGUI_LIBS}
+    PRIVATE ${PRIVATE_LIBS}
+)
 
 set(qtgui_mod_includedir ${CMAKE_CURRENT_SOURCE_DIR}/../include/gnuradio/qtgui)
-QT5_WRAP_CPP(qtgui_moc_sources
+qt6_wrap_cpp(
+    qtgui_moc_sources
     ${qtgui_mod_includedir}/spectrumdisplayform.h
     ${qtgui_mod_includedir}/displayform.h
     ${qtgui_mod_includedir}/eyedisplaysform.h
@@ -127,15 +134,19 @@ QT5_WRAP_CPP(qtgui_moc_sources
     ${qtgui_mod_includedir}/HistogramDisplayPlot.h
     ${qtgui_mod_includedir}/VectorDisplayPlot.h
     edit_box_msg_impl.h
+    matrix_display.h
+    matrix_display_signal.h
     )
-  target_sources(gnuradio-qtgui PRIVATE
-    ${qtgui_moc_sources}
-    )
-  QT5_WRAP_UI(qtgui_ui_hdrs spectrumdisplayform.ui)
-  target_sources(gnuradio-qtgui PRIVATE
-    ${qtgui_ui_hdrs}
-    )
-
+if(ENABLE_GR_QTGUI_OPENGL)
+    qt6_wrap_cpp(
+        qtgui_moc_sources
+        QRfnocF15Surface.h
+        QRfnocF15ColorMapper.h
+        )
+endif()
+target_sources(gnuradio-qtgui PRIVATE ${qtgui_moc_sources})
+qt6_wrap_ui(qtgui_ui_hdrs spectrumdisplayform.ui)
+target_sources(gnuradio-qtgui PRIVATE ${qtgui_ui_hdrs})
 
 #FIXME the sources expect <foo>.ui.h, but the macros generate ui_foo.h
 #avoid changing the sources by generating the header with the include
@@ -146,19 +157,14 @@ endif()
 
 #Add Windows DLL resource file if using MSVC
 if(MSVC)
-    include(${CMAKE_SOURCE_DIR}/cmake/Modules/GrVersion.cmake)
+    include(${PROJECT_SOURCE_DIR}/cmake/Modules/GrVersion.cmake)
 
-    configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/gnuradio-qtgui.rc.in
-        ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-qtgui.rc
-    @ONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gnuradio-qtgui.rc.in
+                   ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-qtgui.rc @ONLY)
 
-    target_sources(gnuradio-qtgui PRIVATE
-        ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-qtgui.rc
-    )
+    target_sources(gnuradio-qtgui PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-qtgui.rc)
 endif(MSVC)
 
-
 if(BUILD_SHARED_LIBS)
-  GR_LIBRARY_FOO(gnuradio-qtgui Qwt Qt5Widgets FFTW3f)
+    gr_library_foo(gnuradio-qtgui qwt::qwt Qwt Qt6::Widgets)
 endif()

@@ -19,7 +19,7 @@ namespace gr {
 namespace blocks {
 
 /*!
- * \brief Write stream to a Microsoft PCM (.wav) file.
+ * \brief Write samples to an audio file (uncompressed or compressed)
  * \ingroup audio_blk
  *
  * \details
@@ -36,7 +36,7 @@ public:
      * \param filename The .wav file to be opened
      * \param n_channels Number of channels (2 = stereo or I/Q output)
      * \param sample_rate Sample rate [S/s]
-     * \param format Output format (WAV, FLAC, Ogg Vorbis, RF64)
+     * \param format Output format (WAV, FLAC, Ogg, RF64)
      * \param subformat Bits per sample
      * \param append Append to existing file
      */
@@ -66,10 +66,8 @@ public:
     virtual void set_sample_rate(unsigned int sample_rate) = 0;
 
     /*!
-     * \brief Set bits per sample. This will not affect the WAV file
-     * currently opened (see set_sample_rate()). If the value is
-     * neither 8 nor 16, the call is ignored and the current value
-     * is kept.
+     * \brief Currently, this function does nothing. Bits per sample
+     * are controlled by the subformat.
      */
     virtual void set_bits_per_sample(int bits_per_sample) = 0;
 

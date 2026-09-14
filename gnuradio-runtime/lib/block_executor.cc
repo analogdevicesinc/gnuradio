@@ -128,14 +128,17 @@ static bool propagate_tags(block::tag_propagation_policy_t policy,
     switch (policy) {
     case block::TPP_DONT:
     case block::TPP_CUSTOM:
+    case block::TPP_TSB:
+        /* Don't copy anything.
+         TPP_TSB: tagged stream blocks: tag copying handled by gr::tagged_stream_block
+         superclass */
         return true;
     case block::TPP_ALL_TO_ALL: {
         // every tag on every input propagates to everyone downstream
         std::vector<buffer_sptr> out_buf;
 
         for (int i = 0; i < d->ninputs(); i++) {
-            d->get_tags_in_range(
-                rtags, i, start_nitems_read[i], d->nitems_read(i), block_id);
+            d->get_tags_in_range(rtags, i, start_nitems_read[i], d->nitems_read(i));
 
             if (rtags.empty()) {
                 continue;
@@ -187,8 +190,7 @@ static bool propagate_tags(block::tag_propagation_policy_t policy,
             buffer_sptr out_buf;
 
             for (int i = 0; i < d->ninputs(); i++) {
-                d->get_tags_in_range(
-                    rtags, i, start_nitems_read[i], d->nitems_read(i), block_id);
+                d->get_tags_in_range(rtags, i, start_nitems_read[i], d->nitems_read(i));
 
                 if (rtags.empty()) {
                     continue;
@@ -273,7 +275,7 @@ block_executor::state block_executor::run_one_iteration()
     max_noutput_items = round_down(d_max_noutput_items, m->output_multiple());
 
     if (d->done()) {
-        GR_LOG_ERROR(d_logger, "unexpected done() in run_one_iteration");
+        d_logger->error("unexpected done() in run_one_iteration");
         return DONE;
     }
 
@@ -710,7 +712,7 @@ block_executor::state block_executor::run_one_iteration()
         // Have the caller try again...
         return READY_NO_OUTPUT;
     }
-    GR_LOG_ERROR(d_logger, "invalid state while going through iteration state machine");
+    d_logger->error("invalid state while going through iteration state machine");
 
 were_done:
     LOG(std::ostringstream msg; msg << m << " -- we're done";

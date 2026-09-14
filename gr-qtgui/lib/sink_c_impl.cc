@@ -108,10 +108,6 @@ void sink_c_impl::initialize()
     if (qApp != NULL) {
         d_qApplication = qApp;
     } else {
-#if QT_VERSION >= 0x040500 && QT_VERSION < 0x050000
-        std::string style = prefs::singleton()->get_string("qtgui", "style", "raster");
-        QApplication::setGraphicsSystem(QString(style.c_str()));
-#endif
         d_qApplication = new QApplication(d_argc, &d_argv);
     }
 
@@ -136,7 +132,7 @@ void sink_c_impl::initialize()
     d_update_active = false;
 }
 
-void sink_c_impl::exec_() { d_qApplication->exec(); }
+void sink_c_impl::exec() { d_qApplication->exec(); }
 
 QWidget* sink_c_impl::qwidget() { return d_main_gui.qwidget(); }
 
@@ -146,12 +142,10 @@ void sink_c_impl::set_fft_size(const int fftsize)
         d_fftsize = fftsize;
         d_main_gui.setFFTSize(fftsize);
     } else {
-        GR_LOG_INFO(
-            d_logger,
-            fmt::format("FFT size must be >= {} and <= {}.\nSo falling back to {}.",
-                        d_main_gui.MIN_FFT_SIZE,
-                        d_main_gui.MAX_FFT_SIZE,
-                        d_main_gui.DEFAULT_FFT_SIZE));
+        d_logger->info("FFT size must be >= {} and <= {}.\nSo falling back to {}.",
+                       d_main_gui.MIN_FFT_SIZE,
+                       d_main_gui.MAX_FFT_SIZE,
+                       d_main_gui.DEFAULT_FFT_SIZE);
         d_main_gui.setFFTSize(d_main_gui.DEFAULT_FFT_SIZE);
     }
 }

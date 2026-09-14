@@ -15,6 +15,7 @@ import warnings
 from optparse import OptionParser
 
 from gnuradio import filter, fft
+from .CustomViewBox import CustomViewBox
 
 try:
     import numpy as np
@@ -40,10 +41,12 @@ except ImportError:
         'Please install SciPy to run this script (https://www.scipy.org)')
 
 try:
-    from PyQt5 import Qt, QtCore, QtWidgets
+    from PyQt6.QtCore import QSize, Qt
+    from PyQt6.QtGui import QBrush, QColor, QDoubleValidator, QIntValidator, QPen, qRgb
+    from PyQt6.QtWidgets import QApplication, QFileDialog, QGraphicsProxyWidget, QGraphicsScene, QLineEdit, QMainWindow, QMessageBox, QWidget
 except ImportError:
     raise SystemExit(
-        'Please install PyQt5 to run this script (https://www.riverbankcomputing.com/software/pyqt/download5)')
+        'Please install PyQt to run this script (https://www.riverbankcomputing.com/software/pyqt/download)')
 
 try:
     import pyqtgraph as pg
@@ -88,17 +91,15 @@ except ImportError:
     raise SystemExit(
         'Could not import from fir_design. Please check whether fir_design.py is in the library path')
 
-try:
-    _fromUtf8 = QtCore.QString.fromUtf8
-except AttributeError:
-    def _fromUtf8(s): return s
+
+def _fromUtf8(s): return s
 
 # Gnuradio Filter design tool main window
 
 
-class gr_plot_filter(QtWidgets.QMainWindow):
+class gr_plot_filter(QMainWindow):
     def __init__(self, options, callback=None, restype=""):
-        QtWidgets.QWidget.__init__(self, None)
+        QWidget.__init__(self, None)
         self.gui = Ui_MainWindow()
         self.callback = callback
 
@@ -126,15 +127,15 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         self.gui.action_save.setEnabled(False)
         self.gui.action_open.triggered.connect(self.action_open_dialog)
 
-        self.gui.filterTypeComboBox.currentIndexChanged['const QString&'].connect(
+        self.gui.filterTypeComboBox.currentTextChanged.connect(
             self.changed_filter_type)
-        self.gui.iirfilterBandComboBox.currentIndexChanged['const QString&'].connect(
+        self.gui.iirfilterBandComboBox.currentTextChanged.connect(
             self.changed_iirfilter_band)
-        self.gui.filterDesignTypeComboBox.currentIndexChanged['const QString&'].connect(
+        self.gui.filterDesignTypeComboBox.currentTextChanged.connect(
             self.changed_filter_design_type)
-        self.gui.fselectComboBox.currentIndexChanged['const QString&'].connect(
+        self.gui.fselectComboBox.currentTextChanged.connect(
             self.changed_fselect)
-        self.gui.iirfilterTypeComboBox.currentIndexChanged['const QString&'].connect(
+        self.gui.iirfilterTypeComboBox.currentTextChanged.connect(
             self.set_order)
 
         self.gui.designButton.released.connect(self.design)
@@ -250,7 +251,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         self.mtstep = False
         self.mtimpulse = False
 
-        self.gui.designButton.setShortcut(QtCore.Qt.Key_Return)
+        self.gui.designButton.setShortcut(Qt.Key.Key_Return)
 
         self.taps = []
         self.a = []
@@ -445,10 +446,10 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         self.bnfitems[0].attenChanged.connect(self.set_fatten)
 
         # Populate the Band-diagram scene.
-        self.scene = QtWidgets.QGraphicsScene()
+        self.scene = QGraphicsScene()
         self.scene.setSceneRect(0, 0, 250, 250)
-        lightback = QtGui.qRgb(0xf8, 0xf8, 0xff)
-        backbrush = Qt.QBrush(Qt.QColor(lightback))
+        lightback = qRgb(0xf8, 0xf8, 0xff)
+        backbrush = QBrush(QColor(lightback))
         self.scene.setBackgroundBrush(backbrush)
         self.gui.bandView.setScene(self.scene)
         self.gui.mbandView.setScene(self.scene)
@@ -463,17 +464,17 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         self.cpicker2.mouseposChanged.connect(self.set_mstatusbar)
         # Edit boxes for band-diagrams (Not required todate so may be remove?).
         """
-        self.lpfpassEdit = QtWidgets.QLineEdit()
-        self.lpfpassEdit.setMaximumSize(QtCore.QSize(75,20))
+        self.lpfpassEdit = QLineEdit()
+        self.lpfpassEdit.setMaximumSize(QSize(75,20))
         self.lpfpassEdit.setText('Not set')
-        self.lpfstartproxy = QtWidgets.QGraphicsProxyWidget()
+        self.lpfstartproxy = QGraphicsProxyWidget()
         self.lpfstartproxy.setWidget(self.lpfpassEdit)
         self.lpfstartproxy.setPos(400,30)
 
-        self.lpfstopEdit = QtWidgets.QLineEdit()
-        self.lpfstopEdit.setMaximumSize(QtCore.QSize(75,20))
+        self.lpfstopEdit = QLineEdit()
+        self.lpfstopEdit.setMaximumSize(QSize(75,20))
         self.lpfstopEdit.setText('Not set')
-        self.lpfstopproxy = QtWidgets.QGraphicsProxyWidget()
+        self.lpfstopproxy = QGraphicsProxyWidget()
         self.lpfstopproxy.setWidget(self.lpfstopEdit)
         self.lpfstopproxy.setPos(400,50)
         self.lpfitems.append(self.lpfstartproxy)
@@ -482,8 +483,8 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         self.populate_bandview(self.lpfitems)
 
         # Set up validators for edit boxes.
-        self.intVal = Qt.QIntValidator(None)
-        self.dblVal = Qt.QDoubleValidator(None)
+        self.intVal = QIntValidator(None)
+        self.dblVal = QDoubleValidator(None)
         self.gui.nfftEdit.setValidator(self.intVal)
         self.gui.sampleRateEdit.setValidator(self.dblVal)
         self.gui.filterGainEdit.setValidator(self.dblVal)
@@ -558,23 +559,23 @@ class gr_plot_filter(QtWidgets.QMainWindow):
 
     # Set up curve pens, lines, and symbols.
     def set_defaultpen(self):
-        blue = QtGui.qRgb(0x00, 0x00, 0xFF)
-        blueBrush = Qt.QBrush(Qt.QColor(blue))
-        red = QtGui.qRgb(0xFF, 0x00, 0x00)
-        redBrush = Qt.QBrush(Qt.QColor(red))
+        blue = qRgb(0x00, 0x00, 0xFF)
+        blueBrush = QBrush(QColor(blue))
+        red = qRgb(0xFF, 0x00, 0x00)
+        redBrush = QBrush(QColor(red))
 
         self.freqcurve.setPen(pg.mkPen('b', width=1.5))
 
         self.rcurve.setPen(None)
         self.rcurve.setSymbol('o')
         self.rcurve.setSymbolPen('b')
-        self.rcurve.setSymbolBrush(Qt.QBrush(Qt.Qt.gray))
+        self.rcurve.setSymbolBrush(QBrush(Qt.GlobalColor.gray))
         self.rcurve.setSymbolSize(8)
 
         self.icurve.setPen(None)
         self.icurve.setSymbol('o')
         self.icurve.setSymbolPen('r')
-        self.icurve.setSymbolBrush(Qt.QBrush(Qt.Qt.gray))
+        self.icurve.setSymbolBrush(QBrush(Qt.GlobalColor.gray))
         self.icurve.setSymbolSize(8)
 
         self.imprescurve_stems.setPen(pg.mkPen('b', width=1.5))
@@ -582,7 +583,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         self.imprescurve.setPen(None)
         self.imprescurve.setSymbol('o')
         self.imprescurve.setSymbolPen('b')
-        self.imprescurve.setSymbolBrush(Qt.QBrush(Qt.Qt.gray))
+        self.imprescurve.setSymbolBrush(QBrush(Qt.GlobalColor.gray))
         self.imprescurve.setSymbolSize(8)
 
         self.imprescurve_i_stems.setPen(pg.mkPen('b', width=1.5))
@@ -590,7 +591,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         self.imprescurve_i.setPen(None)
         self.imprescurve_i.setSymbol('o')
         self.imprescurve_i.setSymbolPen('r')
-        self.imprescurve_i.setSymbolBrush(Qt.QBrush(Qt.Qt.gray))
+        self.imprescurve_i.setSymbolBrush(QBrush(Qt.GlobalColor.gray))
         self.imprescurve_i.setSymbolSize(8)
 
         self.steprescurve_stems.setPen(pg.mkPen('b', width=1.5))
@@ -598,7 +599,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         self.steprescurve.setPen(None)
         self.steprescurve.setSymbol('o')
         self.steprescurve.setSymbolPen('b')
-        self.steprescurve.setSymbolBrush(Qt.QBrush(Qt.Qt.gray))
+        self.steprescurve.setSymbolBrush(QBrush(Qt.GlobalColor.gray))
         self.steprescurve.setSymbolSize(8)
 
         self.steprescurve_i_stems.setPen(pg.mkPen('b', width=1.5))
@@ -606,7 +607,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         self.steprescurve_i.setPen(None)
         self.steprescurve_i.setSymbol('o')
         self.steprescurve_i.setSymbolPen('r')
-        self.steprescurve_i.setSymbolBrush(Qt.QBrush(Qt.Qt.gray))
+        self.steprescurve_i.setSymbolBrush(QBrush(Qt.GlobalColor.gray))
         self.steprescurve_i.setSymbolSize(8)
 
         self.phasecurve.setPen(pg.mkPen('b', width=1.5))
@@ -620,7 +621,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         self.mtimecurve.setPen(None)
         self.mtimecurve.setSymbol('o')
         self.mtimecurve.setSymbolPen('b')
-        self.mtimecurve.setSymbolBrush(Qt.QBrush(Qt.Qt.gray))
+        self.mtimecurve.setSymbolBrush(QBrush(Qt.GlobalColor.gray))
         self.mtimecurve.setSymbolSize(8)
 
         self.mtimecurve_stems.setPen(pg.mkPen('b', width=1.5))
@@ -629,7 +630,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         self.mtimecurve_i.setPen(None)
         self.mtimecurve_i.setSymbol('o')
         self.mtimecurve_i.setSymbolPen('r')
-        self.mtimecurve_i.setSymbolBrush(Qt.QBrush(Qt.Qt.gray))
+        self.mtimecurve_i.setSymbolBrush(QBrush(Qt.GlobalColor.gray))
         self.mtimecurve_i.setSymbolSize(8)
 
     def changed_fselect(self, ftype):
@@ -836,9 +837,9 @@ class gr_plot_filter(QtWidgets.QMainWindow):
                 warnings.simplefilter("always")
                 self.design_iir()
                 if len(w):
-                    reply = QtWidgets.QMessageBox.information(self, "BadCoefficients",
-                                                              str(w[-1].message),
-                                                              QtWidgets.QMessageBox.Ok)
+                    reply = QMessageBox.information(self, "BadCoefficients",
+                                                    str(w[-1].message),
+                                                    QMessageBox.StandardButton.Ok)
 
     # Do FIR design.
     def design_fir(self, ftype, fs, gain, winstr):
@@ -967,8 +968,8 @@ class gr_plot_filter(QtWidgets.QMainWindow):
                 (self.b, self.a) = signal.iirfilter(order, besselparams, btype=iirbtype.replace(' ', '').lower(),
                                                     analog=sanalog[atype], ftype=iirft[iirftype], output='ba')
             except Exception as e:
-                reply = QtWidgets.QMessageBox.information(self, "IIR design error", e.args[0],
-                                                          QtWidgets.QMessageBox.Ok)
+                reply = QMessageBox.information(self, "IIR design error", e.args[0],
+                                                QMessageBox.StandardButton.Ok)
 
             (self.z, self.p, self.k) = signal.tf2zpk(self.b, self.a)
 
@@ -979,8 +980,8 @@ class gr_plot_filter(QtWidgets.QMainWindow):
                 (self.b, self.a) = signal.iirdesign(params[0], params[1], params[2], params[3],
                                                     analog=sanalog[atype], ftype=iirft[iirftype], output='ba')
             except Exception as e:
-                reply = QtWidgets.QMessageBox.information(self, "IIR design error", e.args[0],
-                                                          QtWidgets.QMessageBox.Ok)
+                reply = QMessageBox.information(self, "IIR design error", e.args[0],
+                                                QMessageBox.StandardButton.Ok)
 
             (self.z, self.p, self.k) = signal.tf2zpk(self.b, self.a)
             # Create parameters.
@@ -1060,7 +1061,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
             return
 
         # Set Data.
-        if(type(self.taps[0]) == scipy.complex128):
+        if(type(self.taps[0]) == np.cdouble):
             self.rcurve.setData(np.arange(ntaps), self.taps.real)
             self.icurve.setData(np.arange(ntaps), self.taps.imag)
         else:
@@ -1068,7 +1069,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
             self.icurve.setData([], [])
 
         if self.mttaps:
-            if(type(self.taps[0]) == scipy.complex128):
+            if(type(self.taps[0]) == np.cdouble):
                 self.mtimecurve_stems.setData(np.repeat(np.arange(ntaps), 2),
                                               np.dstack((np.zeros(self.taps.real.shape[0], dtype=int),
                                                          self.taps.real)).flatten())
@@ -1114,7 +1115,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         else:
             stepres = self.step_response(self.taps)
 
-        if(type(stepres[0]) == np.complex128):
+        if(type(stepres[0]) == np.cdouble):
             self.steprescurve_stems.setData(np.repeat(np.arange(ntaps), 2),
                                             np.dstack((np.zeros(stepres.real.shape[0], dtype=int),
                                                        stepres.real)).flatten())
@@ -1136,7 +1137,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
             self.steprescurve_i.setData([], [])
 
         if self.mtstep:
-            if(type(stepres[0]) == np.complex128):
+            if(type(stepres[0]) == np.cdouble):
                 self.mtimecurve_stems.setData(np.repeat(np.arange(ntaps), 2),
                                               np.dstack((np.zeros(stepres.real.shape[0], dtype=int),
                                                          stepres.real)).flatten())
@@ -1181,7 +1182,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         else:
             impres = self.impulse_response(self.taps)
 
-        if(type(impres[0]) == np.complex128):
+        if(type(impres[0]) == np.cdouble):
             self.imprescurve_stems.setData(np.repeat(np.arange(ntaps), 2),
                                            np.dstack((np.zeros(impres.real.shape[0], dtype=int),
                                                       impres.real)).flatten())
@@ -1199,7 +1200,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
                                                       impres)).flatten())
 
         if self.mtimpulse:
-            if(type(impres[0]) == np.complex128):
+            if(type(impres[0]) == np.cdouble):
                 self.mtimecurve_stems.setData(np.repeat(np.arange(ntaps), 2),
                                               np.dstack((np.zeros(impres.real.shape[0], dtype=int),
                                                          impres.real)).flatten())
@@ -1504,7 +1505,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
     #             for item in page.children():
     #                 if isinstance(item, Qwt.QwtPlot):
     #                     # Change colours as both plots overlay.
-    #                     colours = [QtCore.Qt.darkYellow,QtCore.Qt.black]
+    #                     colours = [Qt.darkYellow,Qt.GlobalColor.black]
     #                     for c in item.itemList():
     #                         if isinstance(c, Qwt.QwtPlotCurve):
     #                             dup = Qwt.QwtPlotCurve()
@@ -1696,7 +1697,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
     #     else:
     #         items[1].setYAxis(Qwt.QwtPlot.yRight)
     #         if plot is self.mplots['mFREQ']:
-    #             items[1].setPen(QtGui.QPen(QtCore.Qt.red, 1, QtCore.Qt.SolidLine))
+    #             items[1].setPen(QPen(Qt.GlobalColor.red, 1, Qt.PenStyle.SolidLine))
     #             self.set_actgrid()
 
     def update_fft(self, taps, params):
@@ -2065,16 +2066,16 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         self.gui.mfilterCoeff.setText(fcoeff)
 
     def action_save_dialog(self):
-        file_dialog_output = QtWidgets.QFileDialog.getSaveFileName(
+        file_dialog_output = QFileDialog.getSaveFileName(
             self, "Save CSV Filter File", ".", "")
         filename = file_dialog_output[0]
         try:
             handle = open(filename, "w")
         except IOError:
-            reply = QtWidgets.QMessageBox.information(self, 'File Name',
-                                                      ("Could not save to file: %s" %
-                                                       filename),
-                                                      QtWidgets.QMessageBox.Ok)
+            reply = QMessageBox.information(self, 'File Name',
+                                            ("Could not save to file: %s" %
+                                             filename),
+                                            QMessageBox.StandardButton.Ok)
             return
 
         csvhandle = csv.writer(handle, delimiter=",")
@@ -2104,7 +2105,7 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         self.replot_all()
 
     def action_open_dialog(self):
-        file_dialog_output = QtWidgets.QFileDialog.getOpenFileName(
+        file_dialog_output = QFileDialog.getOpenFileName(
             self, "Open CSV Filter File", ".", "")
         if(len(file_dialog_output) == 0):
             return
@@ -2113,10 +2114,10 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         try:
             handle = open(filename, "r")
         except IOError:
-            reply = QtWidgets.QMessageBox.information(self, 'File Name',
-                                                      ("Could not open file: %s" %
-                                                       filename),
-                                                      QtWidgets.QMessageBox.Ok)
+            reply = QMessageBox.information(self, 'File Name',
+                                            ("Could not open file: %s" %
+                                             filename),
+                                            QMessageBox.StandardButton.Ok)
             return
 
         csvhandle = csv.reader(handle, delimiter=",")
@@ -2336,23 +2337,6 @@ class gr_plot_filter(QtWidgets.QMainWindow):
         self.gui.nTapsEdit.setText(str(self.taps.size))
 
 
-class CustomViewBox(pg.ViewBox):
-    def __init__(self, *args, **kwds):
-        pg.ViewBox.__init__(self, *args, **kwds)
-        self.setMouseMode(self.RectMode)
-
-    # Reimplement right-click to zoom out.
-    def mouseClickEvent(self, ev):
-        if ev.button() == QtCore.Qt.RightButton:
-            self.autoRange()
-
-    def mouseDragEvent(self, ev):
-        if ev.button() == QtCore.Qt.RightButton:
-            ev.ignore()
-        else:
-            pg.ViewBox.mouseDragEvent(self, ev)
-
-
 def setup_options():
     usage = "%prog: [options] (input_filename)"
     description = ""
@@ -2367,9 +2351,9 @@ def launch(args, callback=None, restype=""):
     (options, args) = parser.parse_args()
 
     if callback is None:
-        app = Qt.QApplication(args)
+        app = QApplication(args)
         gplt = gr_plot_filter(options, callback, restype)
-        app.exec_()
+        app.exec()
         if gplt.iir:
             retobj = ApiObject()
             retobj.update_all("iir", gplt.params, (gplt.b, gplt.a), 1)
@@ -2387,9 +2371,9 @@ def main(args):
     parser = setup_options()
     (options, args) = parser.parse_args()
 
-    app = Qt.QApplication(args)
+    app = QApplication(args)
     gplt = gr_plot_filter(options)
-    app.exec_()
+    app.exec()
     app.deleteLater()
     sys.exit()
 

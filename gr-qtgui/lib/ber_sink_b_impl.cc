@@ -14,7 +14,6 @@
 #include <gnuradio/io_signature.h>
 #include <gnuradio/math.h>
 #include <volk/volk.h>
-#include <boost/format.hpp>
 #include <cmath>
 
 #ifdef HAVE_CONFIG_H
@@ -79,7 +78,7 @@ ber_sink_b_impl::ber_sink_b_impl(std::vector<float> esnos,
     for (size_t i = 0; i < esnos.size(); i++) {
         double e = pow(10.0, esnos[i] / 10.0);
         d_esno_buffers[curves][i] = esnos[i];
-        d_ber_buffers[curves][i] = std::log10(0.5 * std::erf(std::sqrt(e)));
+        d_ber_buffers[curves][i] = std::log10(0.5 * std::erfc(std::sqrt(e)));
     }
 
 
@@ -106,12 +105,7 @@ ber_sink_b_impl::ber_sink_b_impl(std::vector<float> esnos,
     set_line_alpha(d_curves, 0.25); // high transparency
 }
 
-ber_sink_b_impl::~ber_sink_b_impl()
-{
-    if (!d_main_gui->isClosed()) {
-        d_main_gui->close();
-    }
-}
+ber_sink_b_impl::~ber_sink_b_impl() { QMetaObject::invokeMethod(d_main_gui, "close"); }
 
 bool ber_sink_b_impl::check_topology(int ninputs, int noutputs)
 {
@@ -137,7 +131,7 @@ void ber_sink_b_impl::initialize()
     set_update_time(0.1);
 }
 
-void ber_sink_b_impl::exec_() { d_qApplication->exec(); }
+void ber_sink_b_impl::exec() { d_qApplication->exec(); }
 
 QWidget* ber_sink_b_impl::qwidget() { return d_main_gui; }
 
@@ -282,8 +276,8 @@ int ber_sink_b_impl::general_work(int noutput_items,
             int items = ninput_items[i] <= ninput_items[i + 1] ? ninput_items[i]
                                                                : ninput_items[i + 1];
 
-            unsigned char* inbuffer0 = (unsigned char*)input_items[i];
-            unsigned char* inbuffer1 = (unsigned char*)input_items[i + 1];
+            const unsigned char* inbuffer0 = (const unsigned char*)input_items[i];
+            const unsigned char* inbuffer1 = (const unsigned char*)input_items[i + 1];
 
             if (items > 0) {
                 uint32_t ret;
@@ -304,12 +298,13 @@ int ber_sink_b_impl::general_work(int noutput_items,
             consume(i + 1, items);
 
             if (d_total_errors[i >> 1] >= d_ber_min_errors) {
-                GR_LOG_INFO(d_logger,
-                            boost::format("    %1% over %2%  -->  %3%") %
-                                d_total_errors[i >> 1] % (d_total[i >> 1] * 8) % ber);
+                d_logger->info("    {:d} over {:d}  -->  {:g}",
+                               d_total_errors[i >> 1],
+                               d_total[i >> 1] * 8,
+                               ber);
             } else if (std::log10(((double)d_ber_min_errors) / (d_total[i >> 1] * 8.0)) <
                        d_ber_limit) {
-                GR_LOG_INFO(d_logger, "BER Limit Reached");
+                d_logger->info("BER Limit Reached");
                 d_ber_buffers[i / (d_nconnections * 2)][(i % (d_nconnections * 2)) >> 1] =
                     d_ber_limit;
                 d_total_errors[i >> 1] = d_ber_min_errors + 1;

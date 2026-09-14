@@ -12,6 +12,7 @@
 #define INCLUDED_GR_RUNTIME_BUFFER_H
 
 #include <gnuradio/api.h>
+#include <gnuradio/buffer_type.h>
 #include <gnuradio/custom_lock.h>
 #include <gnuradio/logger.h>
 #include <gnuradio/runtime_types.h>
@@ -75,6 +76,11 @@ public:
      * \brief return the buffer's mapping type
      */
     buffer_mapping_type get_mapping_type() { return d_buf_map_type; }
+
+    /*!
+     * \brief return the buffer's buffer_type
+     */
+    virtual buffer_type get_buffer_type() const = 0;
 
     /*!
      * \brief return number of items worth of space available for writing
@@ -150,20 +156,6 @@ public:
      * \param tag        the new tag
      */
     void add_item_tag(const tag_t& tag);
-
-    /*!
-     * \brief  Removes an existing tag from the buffer.
-     *
-     * If no such tag is found, does nothing.
-     * Note: Doesn't actually physically delete the tag, but
-     * marks it as deleted. For the user, this has the same effect:
-     * Any subsequent calls to get_tags_in_range() will not return
-     * the tag.
-     *
-     * \param tag        the tag that needs to be removed
-     * \param id         the unique ID of the block calling this function
-     */
-    void remove_item_tag(const tag_t& tag, long id);
 
     /*!
      * \brief  Removes all tags before \p max_time from buffer
@@ -273,9 +265,33 @@ public:
     // -------------------------------------------------------------------------
 
     /*!
+     * \brief Create a buffer_reader for this buffer.
+     *
+     * Derived buffer classes can override this to return a custom
+     * reader type (e.g. one that adds post-consumption signalling).
+     * The default implementation returns buffer_reader for double-mapped
+     * buffers and buffer_reader_sm for single-mapped buffers.
+     */
+    virtual buffer_reader_sptr
+    create_reader(buffer_sptr buf, int nzero_preload, block_sptr link, int delay);
+
+    /*!
      * \brief Assign buffer's transfer_type
      */
     void set_transfer_type(const transfer_type& type);
+
+protected:
+    /*!
+     * \brief Called after the transfer type has been successfully assigned.
+     *
+     * Derived buffer classes can override this to perform deferred
+     * allocation or configuration that depends on the transfer type.
+     * For example, a GPU buffer may skip host-side memory allocation
+     * for DEVICE_TO_DEVICE edges.
+     *
+     * The default implementation is a no-op.
+     */
+    virtual void on_transfer_type_set(const transfer_type& /* type */) {}
 
 private:
     friend class buffer_reader;

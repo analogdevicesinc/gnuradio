@@ -19,19 +19,29 @@
 namespace gr {
 namespace zeromq {
 
-req_source::sptr req_source::make(
-    size_t itemsize, size_t vlen, char* address, int timeout, bool pass_tags, int hwm)
+req_source::sptr req_source::make(size_t itemsize,
+                                  size_t vlen,
+                                  char* address,
+                                  int timeout,
+                                  bool pass_tags,
+                                  int hwm,
+                                  bool bind)
 {
     return gnuradio::make_block_sptr<req_source_impl>(
-        itemsize, vlen, address, timeout, pass_tags, hwm);
+        itemsize, vlen, address, timeout, pass_tags, hwm, bind);
 }
 
-req_source_impl::req_source_impl(
-    size_t itemsize, size_t vlen, char* address, int timeout, bool pass_tags, int hwm)
+req_source_impl::req_source_impl(size_t itemsize,
+                                 size_t vlen,
+                                 char* address,
+                                 int timeout,
+                                 bool pass_tags,
+                                 int hwm,
+                                 bool bind)
     : gr::sync_block("req_source",
                      gr::io_signature::make(0, 0, 0),
                      gr::io_signature::make(1, 1, itemsize * vlen)),
-      base_source_impl(ZMQ_REQ, itemsize, vlen, address, timeout, pass_tags, hwm),
+      base_source_impl(ZMQ_REQ, itemsize, vlen, address, timeout, pass_tags, hwm, bind),
       d_req_pending(false)
 {
     /* All is delegated */
@@ -57,6 +67,9 @@ int req_source_impl::work(int noutput_items,
             /* No more space ? */
             if (done == noutput_items)
                 break;
+
+            /* Have some output to return: do not wait for more messages */
+            first = false;
         } else {
             /* Send request if needed */
             if (!d_req_pending) {
@@ -81,7 +94,7 @@ int req_source_impl::work(int noutput_items,
             /* Got response */
             d_req_pending = false;
 
-            /* Not the first anymore */
+            /* Not the first anymore: do not wait for more messages */
             first = false;
         }
     }

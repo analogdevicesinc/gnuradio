@@ -26,6 +26,7 @@ crc16_async_bb::sptr crc16_async_bb::make(bool check)
 
 crc16_async_bb_impl::crc16_async_bb_impl(bool check)
     : block("crc16_async_bb", io_signature::make(0, 0, 0), io_signature::make(0, 0, 0)),
+      d_crc_ccitt_impl(16, 0x1021, 0xFFFF, 0, false, false),
       d_npass(0),
       d_nfail(0)
 {
@@ -54,28 +55,16 @@ void crc16_async_bb_impl::calc(pmt::pmt_t msg)
     const uint8_t* bytes_in = pmt::u8vector_elements(bytes, pkt_len);
     std::vector<uint8_t> bytes_out(2 + pkt_len);
 
-    crc = process_crc(bytes_in, pkt_len);
-
+    crc = d_crc_ccitt_impl.compute(bytes_in, pkt_len);
     memcpy((void*)bytes_out.data(), (const void*)bytes_in, pkt_len);
-    memcpy((void*)(bytes_out.data() + pkt_len), &crc, 2);
+    bytes_out.data()[pkt_len] = (crc >> 8) & 0xff;
+    bytes_out.data()[pkt_len + 1] = crc & 0xff;
 
     pmt::pmt_t output = pmt::init_u8vector(
         pkt_len + 2,
         bytes_out.data()); // this copies the values from bytes_out into the u8vector
     pmt::pmt_t msg_pair = pmt::cons(meta, output);
     message_port_pub(d_out_port, msg_pair);
-}
-
-unsigned int crc16_async_bb_impl::process_crc(const uint8_t* bytes_in,
-                                              size_t n_bytes_prcss)
-{
-
-    unsigned int result;
-
-    d_crc_ccitt_impl.reset();
-    d_crc_ccitt_impl.process_bytes(bytes_in, n_bytes_prcss);
-    result = d_crc_ccitt_impl();
-    return result;
 }
 
 void crc16_async_bb_impl::check(pmt::pmt_t msg)
@@ -85,12 +74,13 @@ void crc16_async_bb_impl::check(pmt::pmt_t msg)
     pmt::pmt_t bytes(pmt::cdr(msg));
 
     unsigned int crc;
+    unsigned int crc1;
     size_t pkt_len(0);
     const uint8_t* bytes_in = pmt::u8vector_elements(bytes, pkt_len);
 
-    crc = process_crc(bytes_in, pkt_len - 2);
-
-    if (crc != *(unsigned int*)(bytes_in + pkt_len - 2)) { // Drop package
+    crc = d_crc_ccitt_impl.compute(bytes_in, pkt_len - 2);
+    crc1 = (bytes_in[pkt_len - 2] << 8) | bytes_in[pkt_len - 1];
+    if (crc != crc1) { // Drop packet
         d_nfail++;
         return;
     }

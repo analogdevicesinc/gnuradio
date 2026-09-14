@@ -21,6 +21,9 @@
 static const pmt::pmt_t TIME_KEY = pmt::string_to_symbol("rx_time");
 static const pmt::pmt_t RATE_KEY = pmt::string_to_symbol("rx_rate");
 static const pmt::pmt_t FREQ_KEY = pmt::string_to_symbol("rx_freq");
+static const pmt::pmt_t ASYNC_MSGS_PORT_KEY = pmt::string_to_symbol("async_msgs");
+static const pmt::pmt_t ASYNC_MSG_KEY = pmt::string_to_symbol("uhd_async_msg");
+static const pmt::pmt_t EVENT_CODE_OVERFLOW = pmt::string_to_symbol("overflows");
 
 namespace gr {
 namespace uhd {
@@ -122,6 +125,13 @@ public:
     void setup_rpc() override;
 
 private:
+    //! Tries to receive data from the device
+    // returns the number of produced samples or -1 to request a retrial
+    int try_work(int noutput_items,
+                 gr_vector_const_void_star& input_items,
+                 gr_vector_void_star& output_items);
+
+private:
     //! Like set_center_freq(), but uses _curr_freq and _curr_lo_offset
     ::uhd::tune_result_t _set_center_freq_from_internals(size_t chan,
                                                          pmt::pmt_t direction) override;
@@ -140,12 +150,13 @@ private:
     bool _issue_stream_cmd_on_start;
     std::chrono::time_point<std::chrono::steady_clock> _last_log;
     unsigned int _overflow_count;
+    unsigned int _num_overflow_retries;
     std::chrono::milliseconds _overflow_log_interval;
 
     // tag shadows
     double _samp_rate;
 
-    std::recursive_mutex d_mutex;
+    std::mutex d_mutex;
 
     const pmt::pmt_t _direction() const override { return direction_rx(); };
 };

@@ -47,7 +47,7 @@ private:
     int d_argc = 1;
     char* d_argv = &d_zero;
     QWidget* d_parent;
-    VectorDisplayForm* d_main_gui = nullptr;
+    QPointer<VectorDisplayForm> d_main_gui;
 
     gr::high_res_timer_type d_update_time;
     gr::high_res_timer_type d_last_time;
@@ -79,7 +79,7 @@ public:
 
     bool check_topology(int ninputs, int noutputs) override;
 
-    void exec_() override;
+    void exec() override;
     QWidget* qwidget() override;
 
     unsigned int vlen() const override;
@@ -118,6 +118,7 @@ public:
 
     void enable_menu(bool en) override;
     void enable_grid(bool en) override;
+    void disable_legend() override;
     void enable_autoscale(bool en) override;
     void clear_max_hold() override;
     void clear_min_hold() override;

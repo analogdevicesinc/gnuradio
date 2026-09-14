@@ -57,7 +57,7 @@ void bind_vector_sink_f(py::module& m)
              D(vector_sink_f, make))
 
 
-        .def("exec_", &vector_sink_f::exec_, D(vector_sink_f, exec_))
+        .def("exec", &vector_sink_f::exec, D(vector_sink_f, exec))
 
 
         .def(
@@ -234,6 +234,11 @@ void bind_vector_sink_f(py::module& m)
              &vector_sink_f::enable_grid,
              py::arg("en") = true,
              D(vector_sink_f, enable_grid))
+
+
+        .def("disable_legend",
+             &vector_sink_f::disable_legend,
+             D(vector_sink_f, disable_legend))
 
 
         .def("enable_autoscale",

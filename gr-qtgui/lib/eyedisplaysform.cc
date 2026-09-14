@@ -15,7 +15,6 @@
 EyeDisplaysForm::EyeDisplaysForm(int nplots, QWidget* parent)
     : QWidget(parent), d_nplots(nplots), d_system_specified_flag(false)
 {
-    d_isclosed = false;
     d_axislabels = true;
 
     // Set the initial plot size
@@ -139,8 +138,6 @@ EyeDisplaysForm::EyeDisplaysForm(int nplots, QWidget* parent)
 
 EyeDisplaysForm::~EyeDisplaysForm()
 {
-    d_isclosed = true;
-
     // Qt deletes children when parent is deleted
     // Don't worry about deleting Display Plots - they are deleted when parents are
     // deleted
@@ -164,7 +161,7 @@ void EyeDisplaysForm::mousePressEvent(QMouseEvent* e)
         for (unsigned int i = 0; i < d_nplots; ++i) {
             d_lines_menu[i]->setTitle(d_displays_plot[i]->title().text());
         }
-        d_menu->exec(e->globalPos());
+        d_menu->exec(e->globalPosition().toPoint());
     }
 }
 
@@ -177,13 +174,10 @@ void EyeDisplaysForm::onPlotPointSelected(const QPointF p)
 
 void EyeDisplaysForm::Reset() {}
 
-bool EyeDisplaysForm::isClosed() const { return d_isclosed; }
-
 void EyeDisplaysForm::enableMenu(bool en) { d_menu_on = en; }
 
 void EyeDisplaysForm::closeEvent(QCloseEvent* e)
 {
-    d_isclosed = true;
     qApp->processEvents();
     QWidget::closeEvent(e);
 }
@@ -339,6 +333,8 @@ void EyeDisplaysForm::saveFigure()
     QString filename, filetype;
     QFileDialog* filebox = new QFileDialog(0, "Save Image", "./", types);
     filebox->setViewMode(QFileDialog::Detail);
+    filebox->setAcceptMode(QFileDialog::AcceptSave);
+    filebox->setFileMode(QFileDialog::AnyFile);
     if (filebox->exec()) {
         filename = filebox->selectedFiles()[0];
         filetype = filebox->selectedNameFilter();
@@ -347,15 +343,15 @@ void EyeDisplaysForm::saveFigure()
     }
 
     if (filetype.contains(".jpg")) {
-        qpix.save(filename, "JPEG");
+        qpix.save(filename + ".jpg", "JPEG");
     } else if (filetype.contains(".png")) {
-        qpix.save(filename, "PNG");
+        qpix.save(filename + ".png", "PNG");
     } else if (filetype.contains(".bmp")) {
-        qpix.save(filename, "BMP");
+        qpix.save(filename + ".bmp", "BMP");
     } else if (filetype.contains(".tiff")) {
-        qpix.save(filename, "TIFF");
+        qpix.save(filename + ".tiff", "TIFF");
     } else {
-        qpix.save(filename, "JPEG");
+        qpix.save(filename + ".jpg", "JPEG");
     }
 
     delete filebox;

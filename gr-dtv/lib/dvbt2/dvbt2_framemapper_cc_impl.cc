@@ -252,7 +252,7 @@ dvbt2_framemapper_cc_impl::dvbt2_framemapper_cc_impl(
     } else {
         l1postinit->reserved_3 = 0;
     }
-    l1postinit->plp_id = 0;
+    l1postinit->plp_id_dynamic = 0;
     l1postinit->plp_start = 0;
     l1postinit->plp_num_blocks = fecblocks;
     if (reservedbiasbits == RESERVED_ON && version == VERSION_131) {
@@ -881,28 +881,28 @@ dvbt2_framemapper_cc_impl::dvbt2_framemapper_cc_impl(
         set_output_multiple((N_P2 * C_P2) + (numdatasyms * C_DATA));
         mapped_items = (N_P2 * C_P2) + (numdatasyms * C_DATA);
         if (mapped_items < (stream_items + 1840 + (N_post / eta_mod) + (N_FC - C_FC))) {
-            GR_LOG_WARN(d_logger, "Frame Mapper, too many FEC blocks in T2 frame.");
+            this->d_logger->warn("Frame Mapper, too many FEC blocks in T2 frame.");
             mapped_items = stream_items + 1840 + (N_post / eta_mod) +
                            (N_FC - C_FC); /* avoid segfault */
         }
         zigzag_interleave = (gr_complex*)malloc(sizeof(gr_complex) * mapped_items);
         if (zigzag_interleave == NULL) {
-            GR_LOG_FATAL(d_logger,
-                         "Frame Mapper, cannot allocate memory for zigzag_interleave.");
+            this->d_logger->fatal(
+                "Frame Mapper, cannot allocate memory for zigzag_interleave.");
             throw std::bad_alloc();
         }
     } else {
         set_output_multiple((N_P2 * C_P2) + ((numdatasyms - 1) * C_DATA) + N_FC);
         mapped_items = (N_P2 * C_P2) + ((numdatasyms - 1) * C_DATA) + N_FC;
         if (mapped_items < (stream_items + 1840 + (N_post / eta_mod) + (N_FC - C_FC))) {
-            GR_LOG_WARN(d_logger, "Frame Mapper, too many FEC blocks in T2 frame.");
+            this->d_logger->warn("Frame Mapper, too many FEC blocks in T2 frame.");
             mapped_items = stream_items + 1840 + (N_post / eta_mod) +
                            (N_FC - C_FC); /* avoid segfault */
         }
         zigzag_interleave = (gr_complex*)malloc(sizeof(gr_complex) * mapped_items);
         if (zigzag_interleave == NULL) {
-            GR_LOG_FATAL(d_logger,
-                         "Frame Mapper, cannot allocate memory for zigzag_interleave.");
+            this->d_logger->fatal(
+                "Frame Mapper, cannot allocate memory for zigzag_interleave.");
             throw std::bad_alloc();
         }
     }
@@ -911,8 +911,8 @@ dvbt2_framemapper_cc_impl::dvbt2_framemapper_cc_impl(
                             (N_post / eta_mod) - (N_FC - C_FC));
     if (dummy_randomize == NULL) {
         free(zigzag_interleave);
-        GR_LOG_FATAL(d_logger,
-                     "Frame Mapper, cannot allocate memory for dummy_randomize.");
+        this->d_logger->fatal(
+            "Frame Mapper, cannot allocate memory for dummy_randomize.");
         throw std::bad_alloc();
     }
     init_dummy_randomizer();
@@ -938,7 +938,7 @@ void dvbt2_framemapper_cc_impl::forecast(int noutput_items,
 
 int dvbt2_framemapper_cc_impl::add_crc32_bits(unsigned char* in, int length)
 {
-    int crc = 0xffffffff;
+    unsigned int crc = 0xffffffff;
     int b;
     int i = 0;
 
@@ -1016,7 +1016,7 @@ void dvbt2_framemapper_cc_impl::bch_poly_build_tables(void)
     const int polys12[] = { 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 1, 1 };
 
     int len;
-    int polyout[2][200];
+    int polyout[2][200] = {};
 
     len = poly_mult(polys01, 15, polys02, 15, polyout[0]);
     len = poly_mult(polys03, 15, polyout[0], len, polyout[1]);

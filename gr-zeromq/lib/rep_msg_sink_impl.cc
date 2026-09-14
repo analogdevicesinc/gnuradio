@@ -16,6 +16,7 @@
 #include "tag_headers.h"
 #include <gnuradio/io_signature.h>
 #include <memory>
+#include <thread>
 
 namespace gr {
 namespace zeromq {
@@ -42,7 +43,11 @@ rep_msg_sink_impl::rep_msg_sink_impl(char* address, int timeout, bool bind)
     }
 
     int time = 0;
+#if USE_NEW_CPPZMQ_SET_GET
+    d_socket.set(zmq::sockopt::linger, time);
+#else
     d_socket.setsockopt(ZMQ_LINGER, &time, sizeof(time));
+#endif
 
     if (bind) {
         d_socket.bind(address);
@@ -53,12 +58,17 @@ rep_msg_sink_impl::rep_msg_sink_impl(char* address, int timeout, bool bind)
     message_port_register_in(d_port);
 }
 
-rep_msg_sink_impl::~rep_msg_sink_impl() {}
+rep_msg_sink_impl::~rep_msg_sink_impl()
+{
+    d_context.shutdown();
+    d_socket.close();
+    d_context.close();
+}
 
 bool rep_msg_sink_impl::start()
 {
     d_finished = false;
-    d_thread = std::make_unique<boost::thread>([this] { readloop(); });
+    d_thread = std::make_unique<std::thread>([this] { readloop(); });
     return true;
 }
 
@@ -74,13 +84,13 @@ void rep_msg_sink_impl::readloop()
     while (!d_finished) {
 
         // while we have data, wait for query...
-        while (!empty_p(d_port)) {
+        while (!empty_p(d_port) && !d_finished) {
 
             // wait for query...
             zmq::pollitem_t items[] = {
                 { static_cast<void*>(d_socket), 0, ZMQ_POLLIN, 0 }
             };
-            zmq::poll(&items[0], 1, d_timeout);
+            zmq::poll(&items[0], 1, std::chrono::milliseconds{ d_timeout });
 
             //  If we got a reply, process
             if (items[0].revents & ZMQ_POLLIN) {
@@ -94,7 +104,7 @@ void rep_msg_sink_impl::readloop()
 #endif
                 if (!ok) {
                     // Should not happen, we've checked POLLIN.
-                    GR_LOG_ERROR(d_logger, "Failed to receive message.");
+                    d_logger->error("Failed to receive message.");
                     break; // Fall back to re-check d_finished
                 }
 

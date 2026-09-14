@@ -10,21 +10,17 @@
 #ifndef INCLUDED_QTGUI_EYE_SINK_C_H
 #define INCLUDED_QTGUI_EYE_SINK_C_H
 
-#ifdef ENABLE_PYTHON
-#include <Python.h>
-#endif
-
 #include <gnuradio/qtgui/api.h>
 #include <gnuradio/qtgui/trigger_mode.h>
 #include <gnuradio/sync_block.h>
-#include <qapplication.h>
+#include <QApplication>
 
 namespace gr {
 namespace qtgui {
 
 /*!
  * \brief A graphical sink to display signals eye patterns.
- * \ingroup qtgui
+ * \ingroup qtgui_blk
  *
  * \details
  * This is a QT-based graphical sink which takes a set of a complex
@@ -69,7 +65,7 @@ public:
                      unsigned int nconnections = 1,
                      QWidget* parent = NULL);
 
-    virtual void exec_() = 0;
+    virtual void exec() = 0;
     virtual QWidget* qwidget() = 0;
 
     virtual void set_y_axis(double min, double max) = 0;

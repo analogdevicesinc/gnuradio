@@ -18,12 +18,10 @@
 #include <qwt_scale_draw.h>
 #include <QColor>
 
-#if QWT_VERSION < 0x060100
-#include <qwt_legend_item.h>
-#else /* QWT_VERSION < 0x060100 */
 #include <qwt_legend_data.h>
 #include <qwt_legend_label.h>
-#endif /* QWT_VERSION < 0x060100 */
+
+#include <cmath>
 
 /***********************************************************************
  * Widget to provide mouse pointer coordinate text
@@ -31,11 +29,7 @@
 class VectorDisplayZoomer : public QwtPlotZoomer
 {
 public:
-#if QWT_VERSION < 0x060100
-    VectorDisplayZoomer(QwtPlotCanvas* canvas)
-#else  /* QWT_VERSION < 0x060100 */
     VectorDisplayZoomer(QWidget* canvas)
-#endif /* QWT_VERSION < 0x060100 */
         : QwtPlotZoomer(canvas), d_x_units(" "), d_y_units(" ")
     {
         setTrackerMode(QwtPicker::AlwaysOn);
@@ -51,7 +45,7 @@ protected:
     using QwtPlotZoomer::trackerText;
     QwtText trackerText(QPoint const& p) const override
     {
-        QwtDoublePoint dp = QwtPlotZoomer::invTransform(p);
+        QPointF dp = QwtPlotZoomer::invTransform(p);
         QwtText t(QString("%1 %2, %3 %4")
                       .arg(dp.x(), 0, 'f', 2)
                       .arg(d_x_units)
@@ -109,13 +103,8 @@ VectorDisplayPlot::VectorDisplayPlot(int nplots, QWidget* parent)
                                           QPen(default_colors[i]),
                                           QSize(7, 7));
 
-#if QWT_VERSION < 0x060000
-        d_plot_curve[i]->setRawData(d_xdata.data(), d_ydata[i].data(), d_numPoints);
-        d_plot_curve[i]->setSymbol(*symbol);
-#else
         d_plot_curve[i]->setRawSamples(d_xdata.data(), d_ydata[i].data(), d_numPoints);
         d_plot_curve[i]->setSymbol(symbol);
-#endif
         setLineColor(i, default_colors[i]);
     }
 
@@ -124,12 +113,8 @@ VectorDisplayPlot::VectorDisplayPlot(int nplots, QWidget* parent)
     d_min_vec_plot_curve->attach(this);
     const QColor default_min_fft_color = Qt::magenta;
     setMinVecColor(default_min_fft_color);
-#if QWT_VERSION < 0x060000
-    d_min_vec_plot_curve->setRawData(d_xdata.data(), d_min_vec_data.data(), d_numPoints);
-#else
     d_min_vec_plot_curve->setRawSamples(
         d_xdata.data(), d_min_vec_data.data(), d_numPoints);
-#endif
     d_min_vec_plot_curve->setVisible(false);
     d_min_vec_plot_curve->setZ(0);
 
@@ -137,12 +122,8 @@ VectorDisplayPlot::VectorDisplayPlot(int nplots, QWidget* parent)
     d_max_vec_plot_curve->attach(this);
     QColor default_max_fft_color = Qt::darkYellow;
     setMaxVecColor(default_max_fft_color);
-#if QWT_VERSION < 0x060000
-    d_max_vec_plot_curve->setRawData(d_xdata.data(), d_max_vec_data.data(), d_numPoints);
-#else
     d_max_vec_plot_curve->setRawSamples(
         d_xdata.data(), d_max_vec_data.data(), d_numPoints);
-#endif
     d_max_vec_plot_curve->setVisible(false);
     d_max_vec_plot_curve->setZ(0);
 
@@ -175,10 +156,6 @@ VectorDisplayPlot::VectorDisplayPlot(int nplots, QWidget* parent)
 
     d_zoomer = new VectorDisplayZoomer(canvas());
 
-#if QWT_VERSION < 0x060000
-    d_zoomer->setSelectionFlags(QwtPicker::RectSelection | QwtPicker::DragSelection);
-#endif
-
     d_zoomer->setMousePattern(
         QwtEventPattern::MouseSelect2, Qt::RightButton, Qt::ControlModifier);
     d_zoomer->setMousePattern(QwtEventPattern::MouseSelect3, Qt::RightButton);
@@ -191,20 +168,11 @@ VectorDisplayPlot::VectorDisplayPlot(int nplots, QWidget* parent)
     _resetXAxisPoints();
 
     // Turn off min/max hold plots in legend
-#if QWT_VERSION < 0x060100
-    QWidget* w;
-    QwtLegend* legendDisplay = legend();
-    w = legendDisplay->find(d_min_vec_plot_curve);
-    ((QwtLegendItem*)w)->setChecked(true);
-    w = legendDisplay->find(d_max_vec_plot_curve);
-    ((QwtLegendItem*)w)->setChecked(true);
-#else  /* QWT_VERSION < 0x060100 */
     QWidget* w;
     w = ((QwtLegend*)legend())->legendWidget(itemToInfo(d_min_vec_plot_curve));
     ((QwtLegendLabel*)w)->setChecked(true);
     w = ((QwtLegend*)legend())->legendWidget(itemToInfo(d_max_vec_plot_curve));
     ((QwtLegendLabel*)w)->setChecked(true);
-#endif /* QWT_VERSION < 0x060100 */
 
     replot();
 }
@@ -277,7 +245,7 @@ void VectorDisplayPlot::replot()
     QwtPlot::replot();
 }
 
-void VectorDisplayPlot::plotNewData(const std::vector<double*> dataPoints,
+void VectorDisplayPlot::plotNewData(const std::vector<const double*> dataPoints,
                                     const int64_t numDataPoints,
                                     const double refLevel,
                                     const double timeInterval)
@@ -294,25 +262,13 @@ void VectorDisplayPlot::plotNewData(const std::vector<double*> dataPoints,
                 for (unsigned int i = 0; i < d_nplots; ++i) {
                     d_ydata[i].resize(d_numPoints);
 
-#if QWT_VERSION < 0x060000
-                    d_plot_curve[i]->setRawData(
-                        d_xdata.data(), d_ydata[i].data(), d_numPoints);
-#else
                     d_plot_curve[i]->setRawSamples(
                         d_xdata.data(), d_ydata[i].data(), d_numPoints);
-#endif
                 }
-#if QWT_VERSION < 0x060000
-                d_min_vec_plot_curve->setRawData(
-                    d_xdata.data(), d_min_vec_data.data(), d_numPoints);
-                d_max_vec_plot_curve->setRawData(
-                    d_xdata.data(), d_max_vec_data.data(), d_numPoints);
-#else
                 d_min_vec_plot_curve->setRawSamples(
                     d_xdata.data(), d_min_vec_data.data(), d_numPoints);
                 d_max_vec_plot_curve->setRawSamples(
                     d_xdata.data(), d_max_vec_data.data(), d_numPoints);
-#endif
                 _resetXAxisPoints();
                 clearMaxData();
                 clearMinData();
@@ -383,7 +339,7 @@ void VectorDisplayPlot::setMaxVecVisible(const bool visibleFlag)
     d_max_vec_plot_curve->setVisible(visibleFlag);
 }
 
-const bool VectorDisplayPlot::getMaxVecVisible() const { return d_max_vec_visible; }
+bool VectorDisplayPlot::getMaxVecVisible() const { return d_max_vec_visible; }
 
 void VectorDisplayPlot::setMinVecVisible(const bool visibleFlag)
 {
@@ -391,7 +347,7 @@ void VectorDisplayPlot::setMinVecVisible(const bool visibleFlag)
     d_min_vec_plot_curve->setVisible(visibleFlag);
 }
 
-const bool VectorDisplayPlot::getMinVecVisible() const { return d_min_vec_visible; }
+bool VectorDisplayPlot::getMinVecVisible() const { return d_min_vec_visible; }
 
 void VectorDisplayPlot::_resetXAxisPoints()
 {
@@ -405,7 +361,7 @@ void VectorDisplayPlot::_resetXAxisPoints()
 
     // Set up zoomer base for maximum unzoom x-axis
     // and reset to maximum unzoom level
-    QwtDoubleRect zbase = d_zoomer->zoomBase();
+    QRectF zbase = d_zoomer->zoomBase();
     d_zoomer->zoom(zbase);
     d_zoomer->setZoomBase(zbase);
     d_zoomer->setZoomBase(true);
@@ -431,14 +387,7 @@ void VectorDisplayPlot::setBGColour(QColor c)
     canvas()->setPalette(palette);
 }
 
-void VectorDisplayPlot::onPickerPointSelected(const QwtDoublePoint& p)
-{
-    QPointF point = p;
-    point.setX(point.x());
-    emit plotPointSelected(point);
-}
-
-void VectorDisplayPlot::onPickerPointSelected6(const QPointF& p)
+void VectorDisplayPlot::onPickerPointSelected(const QPointF& p)
 {
     QPointF point = p;
     point.setX(point.x());
@@ -479,7 +428,7 @@ void VectorDisplayPlot::setMarkerLowerIntensityVisible(bool visible)
     else
         d_lower_intensity_marker->setLineStyle(QwtPlotMarker::NoLine);
 }
-const bool VectorDisplayPlot::getMarkerLowerIntensityVisible() const
+bool VectorDisplayPlot::getMarkerLowerIntensityVisible() const
 {
     return d_marker_lower_intensity_visible;
 }
@@ -504,7 +453,7 @@ void VectorDisplayPlot::setMarkerUpperIntensityVisible(bool visible)
         d_upper_intensity_marker->setLineStyle(QwtPlotMarker::NoLine);
 }
 
-const bool VectorDisplayPlot::getMarkerUpperIntensityVisible() const
+bool VectorDisplayPlot::getMarkerUpperIntensityVisible() const
 {
     return d_marker_upper_intensity_visible;
 }
@@ -529,7 +478,7 @@ void VectorDisplayPlot::setMarkerRefLevelAmplitudeVisible(bool visible)
         d_marker_ref_level->setLineStyle(QwtPlotMarker::NoLine);
 }
 
-const bool VectorDisplayPlot::getMarkerRefLevelAmplitudeVisible() const
+bool VectorDisplayPlot::getMarkerRefLevelAmplitudeVisible() const
 {
     return d_marker_ref_level_visible;
 }

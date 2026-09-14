@@ -17,7 +17,7 @@ class test_fastnoise_source(gr_unittest.TestCase):
     def setUp(self):
 
         self.num = 2**22
-        self.num_items = 10**6
+        self.num_items = 2**22
         self.default_args = {"samples": self.num, "seed": 43, "ampl": 1}
 
     def tearDown(self):
@@ -49,6 +49,30 @@ class test_fastnoise_source(gr_unittest.TestCase):
         tb.run()
         return numpy.array(sink.data())
 
+    def test_000_real_negative_seed_instantiation(self):
+        _ = analog.fastnoise_source_f(analog.noise_type_t.GR_GAUSSIAN,
+                                      2.0,
+                                      -666,
+                                      128)
+
+    def test_000_complex_negative_seed_instantiation(self):
+        _ = analog.fastnoise_source_c(analog.noise_type_t.GR_GAUSSIAN,
+                                      2.0,
+                                      -666,
+                                      128)
+
+    def test_000_real_64bit_seed_instantiation(self):
+        _ = analog.fastnoise_source_f(analog.noise_type_t.GR_GAUSSIAN,
+                                      2.0,
+                                      0xFFFFFFFFFFFFFFFF,
+                                      128)
+
+    def test_000_complex_64bit_seed_instantiation(self):
+        _ = analog.fastnoise_source_f(analog.noise_type_t.GR_GAUSSIAN,
+                                      2.0,
+                                      0xFFFFFFFFFFFFFFFF,
+                                      128)
+
     def test_001_real_uniform_moments(self):
 
         data = self.run_test_real(analog.GR_UNIFORM)
@@ -72,7 +96,15 @@ class test_fastnoise_source(gr_unittest.TestCase):
 
         # mean, variance
         self.assertAlmostEqual(data.mean(), 0, places=2)
-        self.assertAlmostEqual(data.var(), 2, places=2)
+        # The Laplacian is heavy tailed, so the sample variance scatters much
+        # further than the Gaussian's. Drawing more items does not fix that:
+        # the items are sampled with replacement from the fixed pool of
+        # self.num, so the measured variance converges to the pool's, whose own
+        # error does not shrink with the number of items. For b = 1 that floor
+        # is sd(s^2) = sqrt((mu4 - sigma^4)/self.num), about 0.0019 here, which
+        # leaves places=2 a two sigma check. Use a tolerance the correct
+        # distribution passes reliably.
+        self.assertAlmostEqual(data.var(), 2, delta=0.05)
 
     def test_001_complex_uniform_moments(self):
         data = self.run_test_complex(analog.GR_UNIFORM)

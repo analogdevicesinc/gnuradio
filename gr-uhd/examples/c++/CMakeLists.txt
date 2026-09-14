@@ -9,9 +9,6 @@
 # Build executable
 ########################################################################
 add_executable(tags_demo tags_demo.cc)
-target_link_libraries(tags_demo gnuradio-uhd)
+target_link_libraries(tags_demo gnuradio-uhd Boost::program_options)
 
-INSTALL(TARGETS
-    tags_demo
-    DESTINATION ${GR_PKG_UHD_EXAMPLES_DIR}
-)
+install(TARGETS tags_demo DESTINATION ${GR_PKG_UHD_EXAMPLES_DIR})

@@ -11,8 +11,8 @@
 #ifndef INCLUDED_DIGITAL_CRC16_ASYNC_BB_IMPL_H
 #define INCLUDED_DIGITAL_CRC16_ASYNC_BB_IMPL_H
 
+#include <gnuradio/digital/crc.h>
 #include <gnuradio/digital/crc16_async_bb.h>
-#include <boost/crc.hpp>
 
 namespace gr {
 namespace digital {
@@ -20,12 +20,11 @@ namespace digital {
 class crc16_async_bb_impl : public crc16_async_bb
 {
 private:
-    boost::crc_ccitt_type d_crc_ccitt_impl;
+    crc d_crc_ccitt_impl;
 
     pmt::pmt_t d_in_port;
     pmt::pmt_t d_out_port;
 
-    unsigned int process_crc(const uint8_t* bytes_in, size_t n_bytes_prcss);
     void calc(pmt::pmt_t msg);
     void check(pmt::pmt_t msg);
 

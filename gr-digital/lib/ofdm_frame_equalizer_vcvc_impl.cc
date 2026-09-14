@@ -113,14 +113,14 @@ int ofdm_frame_equalizer_vcvc_impl::work(int noutput_items,
     if (carrier_offset < 0) {
         memset((void*)out, 0x00, sizeof(gr_complex) * (-carrier_offset));
         memcpy((void*)&out[-carrier_offset],
-               (void*)in,
+               (const void*)in,
                sizeof(gr_complex) * (d_fft_len * frame_len + carrier_offset));
     } else {
         memset((void*)(out + d_fft_len * frame_len - carrier_offset),
                0x00,
                sizeof(gr_complex) * carrier_offset);
         memcpy((void*)out,
-               (void*)(in + carrier_offset),
+               (const void*)(in + carrier_offset),
                sizeof(gr_complex) * (d_fft_len * frame_len - carrier_offset));
     }
 
@@ -136,7 +136,7 @@ int ofdm_frame_equalizer_vcvc_impl::work(int noutput_items,
 
     // Do the equalizing
     d_eq->reset();
-    d_eq->equalize(out, frame_len, d_channel_state);
+    d_eq->equalize(out, frame_len, d_channel_state, tags);
     d_eq->get_channel_state(d_channel_state);
 
     // Update the channel state regarding the frequency offset

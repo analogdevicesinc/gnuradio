@@ -57,8 +57,7 @@ void phase_shift_impl::handle_msg_in(pmt::pmt_t msg)
             if (pmt::is_number(data)) {
                 set_shift(pmt::to_float(data));
             } else
-                GR_LOG_WARN(
-                    d_logger,
+                d_logger->warn(
                     "Phase message must be a number or a number pair.  Ignoring value.");
         }
     }
@@ -85,7 +84,11 @@ int phase_shift_impl::work(int noutput_items,
     gr::thread::scoped_lock guard(d_setlock);
 
     if (d_shift != 0.0f) {
+#if VOLK_VERSION >= 030100
+        volk_32fc_s32fc_multiply2_32fc(out, in, &d_shift_cc, noutput_items);
+#else
         volk_32fc_s32fc_multiply_32fc(out, in, d_shift_cc, noutput_items);
+#endif
     } else {
         memcpy(out, in, sizeof(gr_complex) * noutput_items);
     }

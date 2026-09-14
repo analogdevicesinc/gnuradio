@@ -11,15 +11,11 @@
 #ifndef INCLUDED_QTGUI_CONST_SINK_C_H
 #define INCLUDED_QTGUI_CONST_SINK_C_H
 
-#ifdef ENABLE_PYTHON
-#include <Python.h>
-#endif
-
 #include <gnuradio/filter/firdes.h>
 #include <gnuradio/qtgui/api.h>
 #include <gnuradio/qtgui/trigger_mode.h>
 #include <gnuradio/sync_block.h>
-#include <qapplication.h>
+#include <QApplication>
 
 namespace gr {
 namespace qtgui {
@@ -61,7 +57,7 @@ public:
     static sptr
     make(int size, const std::string& name, int nconnections = 1, QWidget* parent = NULL);
 
-    virtual void exec_() = 0;
+    virtual void exec() = 0;
     virtual QWidget* qwidget() = 0;
 
     virtual void set_y_axis(double min, double max) = 0;

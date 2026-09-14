@@ -43,7 +43,11 @@ sub_msg_source_impl::sub_msg_source_impl(char* address, int timeout, bool bind)
         d_timeout = timeout * 1000;
     }
 
+#if USE_NEW_CPPZMQ_SET_GET
+    d_socket.set(zmq::sockopt::subscribe, "");
+#else
     d_socket.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+#endif
 
     if (bind) {
         d_socket.bind(address);
@@ -54,12 +58,17 @@ sub_msg_source_impl::sub_msg_source_impl(char* address, int timeout, bool bind)
     message_port_register_out(d_port);
 }
 
-sub_msg_source_impl::~sub_msg_source_impl() {}
+sub_msg_source_impl::~sub_msg_source_impl()
+{
+    d_context.shutdown();
+    d_socket.close();
+    d_context.close();
+}
 
 bool sub_msg_source_impl::start()
 {
     d_finished = false;
-    d_thread = std::make_unique<boost::thread>([this] { readloop(); });
+    d_thread = std::make_unique<std::thread>([this] { readloop(); });
     return true;
 }
 
@@ -76,7 +85,7 @@ void sub_msg_source_impl::readloop()
     while (!d_finished) {
 
         zmq::pollitem_t items[] = { { static_cast<void*>(d_socket), 0, ZMQ_POLLIN, 0 } };
-        zmq::poll(&items[0], 1, d_timeout);
+        zmq::poll(&items[0], 1, std::chrono::milliseconds{ d_timeout });
 
         //  If we got a reply, process
         if (items[0].revents & ZMQ_POLLIN) {
@@ -90,7 +99,7 @@ void sub_msg_source_impl::readloop()
 #endif
             if (!ok) {
                 // Should not happen, we've checked POLLIN.
-                GR_LOG_ERROR(d_logger, "Failed to receive message.");
+                d_logger->error("Failed to receive message.");
                 std::this_thread::sleep_for(100us);
                 continue;
             }
@@ -101,7 +110,7 @@ void sub_msg_source_impl::readloop()
                 pmt::pmt_t m = pmt::deserialize(sb);
                 message_port_pub(d_port, m);
             } catch (pmt::exception& e) {
-                GR_LOG_ERROR(d_logger, std::string("Invalid PMT message: ") + e.what());
+                d_logger->error("Invalid PMT message: {:s}", e.what());
             }
         } else {
             std::this_thread::sleep_for(100us);

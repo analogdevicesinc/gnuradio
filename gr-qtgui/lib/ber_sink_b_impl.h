@@ -29,7 +29,7 @@ private:
     std::vector<volk::vector<double>> d_esno_buffers;
     std::vector<volk::vector<double>> d_ber_buffers;
 
-    ConstellationDisplayForm* d_main_gui = nullptr;
+    QPointer<ConstellationDisplayForm> d_main_gui;
     gr::high_res_timer_type d_update_time;
     std::vector<int> d_total_errors;
     int d_ber_min_errors;
@@ -59,7 +59,7 @@ public:
 
     bool check_topology(int ninputs, int noutputs) override;
 
-    void exec_() override;
+    void exec() override;
     QWidget* qwidget() override;
 
     void set_y_axis(double min, double max) override;

@@ -15,7 +15,6 @@
 #include "freedv_rx_ss_impl.h"
 
 #include <gnuradio/io_signature.h>
-#include <boost/format.hpp>
 #include <stdexcept>
 
 namespace gr {
@@ -68,9 +67,10 @@ freedv_rx_ss_impl::~freedv_rx_ss_impl()
     if (freedv_get_test_frames(d_freedv)) {
         total_bits = freedv_get_total_bits(d_freedv);
         total_bit_errors = freedv_get_total_bit_errors(d_freedv);
-        GR_LOG_ERROR(d_logger,
-                     boost::format("bits: %d errors: %d BER: %3.2f") % total_bits %
-                         total_bit_errors % ((1.0 * total_bit_errors) / total_bits));
+        d_logger->error("bits: {:8d} errors: {:8d} BER: {:3.2f}",
+                        total_bits,
+                        total_bit_errors,
+                        ((1.0 * total_bit_errors) / total_bits));
     }
     freedv_close(d_freedv);
 }
@@ -87,7 +87,7 @@ int freedv_rx_ss_impl::general_work(int noutput_items,
                                     gr_vector_const_void_star& input_items,
                                     gr_vector_void_star& output_items)
 {
-    short* in = (short*)input_items[0];
+    short* in = const_cast<short*>((const short*)input_items[0]);
     short* out = (short*)output_items[0];
 
     int in_offset = 0, out_offset = 0;

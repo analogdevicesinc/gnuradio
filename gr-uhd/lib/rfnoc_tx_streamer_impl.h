@@ -21,7 +21,7 @@ public:
                            const size_t num_chans,
                            const ::uhd::stream_args_t& stream_args,
                            const size_t vlen);
-    ~rfnoc_tx_streamer_impl();
+    ~rfnoc_tx_streamer_impl() override;
 
     /***** API ***************************************************************/
     std::string get_unique_id() const override { return d_unique_id; }
@@ -31,6 +31,9 @@ public:
     int work(int noutput_items,
              gr_vector_const_void_star& input_items,
              gr_vector_void_star& output_items) override;
+
+    /***** Message Handling **************************************************/
+    void handle_pdu(const pmt::pmt_t& msg);
 
 private:
     //! Bytes per item (e.g. 4 for sc16)

@@ -9,7 +9,13 @@
 # Setup compatibility checks and defines
 ########################################################################
 include(GrMiscUtils)
-GR_CHECK_HDR_N_DEF(io.h HAVE_IO_H)
+gr_check_hdr_n_def(io.h HAVE_IO_H)
+
+if(SNDFILE_FOUND)
+    if(NOT PC_SNDFILE_VERSION VERSION_LESS 1.0.29)
+        add_definitions(-DHAVE_SF_FORMAT_OPUS)
+    endif()
+endif()
 
 ########################################################################
 # Setup library
@@ -21,6 +27,9 @@ set(BLOCKS_SOURCES
     and_blk_impl.cc
     and_const_impl.cc
     argmax_impl.cc
+    blockinterleaver_xx_impl.cc
+    blockinterleaving.cc
+    burst_to_stream_impl.cc
     correctiq_auto_impl.cc
     correctiq_impl.cc
     correctiq_man_impl.cc
@@ -96,6 +105,7 @@ set(BLOCKS_SOURCES
     float_array_to_uchar.cc
     float_to_uchar_impl.cc
     head_impl.cc
+    host_buffer_copy_impl.cc
     int_to_float_impl.cc
     interleave_impl.cc
     interleaved_short_to_complex_impl.cc
@@ -155,104 +165,78 @@ set(BLOCKS_SOURCES
     vco_c_impl.cc
     vector_map_impl.cc
     vector_to_stream_impl.cc
-    vector_to_streams_impl.cc
-    )
+    vector_to_streams_impl.cc)
 
-if (SNDFILE_FOUND)
-    set(BLOCKS_SOURCES ${BLOCKS_SOURCES}
-        wavfile_sink_impl.cc
-        wavfile_source_impl.cc
-    )
+if(SNDFILE_FOUND)
+    set(BLOCKS_SOURCES ${BLOCKS_SOURCES} wavfile_sink_impl.cc wavfile_source_impl.cc)
 endif()
 
 add_library(gnuradio-blocks ${BLOCKS_SOURCES})
 
-set(BLOCKS_LIBS
-    gnuradio-runtime
-    Volk::volk
-    )
+target_link_libraries(gnuradio-blocks PUBLIC gnuradio-runtime Volk::volk)
 
-if (SNDFILE_FOUND)
-    set(BLOCKS_LIBS ${BLOCKS_LIBS}
-        sndfile::sndfile
-    )
+if(SNDFILE_FOUND)
+    if(TARGET sndfile::sndfile)
+        set(SND_TARGET sndfile::sndfile)
+    else()
+        set(SND_TARGET SndFile::sndfile)
+    endif()
+    target_link_libraries(gnuradio-blocks PRIVATE ${SND_TARGET})
 endif()
 
-if(ENABLE_COMMON_PCH)
-  set(PRIVATE_LIBS common-precompiled-headers)
-endif()
+target_include_directories(
+    gnuradio-blocks PUBLIC $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+                           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>)
 
-target_link_libraries(gnuradio-blocks
-  PUBLIC
-  ${BLOCKS_LIBS}
-  PRIVATE
-  ${PRIVATE_LIBS}
-  )
-
-target_include_directories(gnuradio-blocks
-  PUBLIC
-  $<INSTALL_INTERFACE:include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
-  )
-
-set_source_files_properties(file_source_impl.cc PROPERTIES COMPILE_FLAGS -D_FILE_OFFSET_BITS=64)
+set_source_files_properties(file_source_impl.cc PROPERTIES COMPILE_FLAGS
+                                                           -D_FILE_OFFSET_BITS=64)
 
 if(ENABLE_GR_CTRLPORT)
-target_sources(gnuradio-blocks PRIVATE
-  ctrlport_probe_c_impl.cc
-  ctrlport_probe2_c_impl.cc
-  ctrlport_probe2_f_impl.cc
-  ctrlport_probe2_s_impl.cc
-  ctrlport_probe2_i_impl.cc
-  ctrlport_probe2_b_impl.cc
-)
+    target_sources(
+        gnuradio-blocks
+        PRIVATE ctrlport_probe_c_impl.cc ctrlport_probe2_c_impl.cc
+                ctrlport_probe2_f_impl.cc ctrlport_probe2_s_impl.cc
+                ctrlport_probe2_i_impl.cc ctrlport_probe2_b_impl.cc)
 endif()
 
 #Add Windows DLL resource file if using MSVC
-IF(MSVC)
-    include(${CMAKE_SOURCE_DIR}/cmake/Modules/GrVersion.cmake)
+if(MSVC)
+    include(${PROJECT_SOURCE_DIR}/cmake/Modules/GrVersion.cmake)
 
-    configure_file(
-        ${CMAKE_CURRENT_SOURCE_DIR}/gnuradio-blocks.rc.in
-        ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-blocks.rc
-    @ONLY)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gnuradio-blocks.rc.in
+                   ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-blocks.rc @ONLY)
 
-    target_sources(gnuradio-blocks PRIVATE
-        ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-blocks.rc
-    )
-ENDIF(MSVC)
+    target_sources(gnuradio-blocks PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-blocks.rc)
+endif(MSVC)
 
 if(BUILD_SHARED_LIBS)
-    if (SNDFILE_FOUND)
-        GR_LIBRARY_FOO(gnuradio-blocks SNDFILE)
-    else()
-        GR_LIBRARY_FOO(gnuradio-blocks)
-    endif()
+    gr_library_foo(gnuradio-blocks)
 endif()
 
 ########################################################################
 # QA C++ Code for gr-blocks
 ########################################################################
 if(ENABLE_TESTING)
-  include(GrTest)
+    include(GrTest)
 
-  list(APPEND test_gr_blocks_sources
-    qa_block_tags.cc
-    qa_gr_block.cc
-    qa_gr_flowgraph.cc
-    qa_gr_hier_block2.cc
-    qa_gr_hier_block2_derived.cc
-    qa_gr_top_block.cc
-    qa_rotator.cc
-    qa_set_msg_handler.cc
-  )
-  list(APPEND GR_TEST_TARGET_DEPS gnuradio-blocks
-  )
+    list(
+        APPEND
+        test_gr_blocks_sources
+        qa_block_tags.cc
+        qa_gr_block.cc
+        qa_gr_flowgraph.cc
+        qa_gr_hier_block2.cc
+        qa_gr_hier_block2_derived.cc
+        qa_gr_top_block.cc
+        qa_rotator.cc
+        qa_set_msg_handler.cc)
+    list(APPEND GR_TEST_TARGET_DEPS gnuradio-blocks)
 
-  foreach(qa_file ${test_gr_blocks_sources})
-    GR_ADD_CPP_TEST("blocks_${qa_file}"
-      ${CMAKE_CURRENT_SOURCE_DIR}/${qa_file}
-    )
-  endforeach(qa_file)
+    foreach(qa_file ${test_gr_blocks_sources})
+        gr_add_cpp_test("blocks_${qa_file}" ${CMAKE_CURRENT_SOURCE_DIR}/${qa_file})
+        if(NOT CMAKE_CROSSCOMPILING)
+            set_tests_properties("blocks_${qa_file}" PROPERTIES TIMEOUT 30)
+        endif(NOT CMAKE_CROSSCOMPILING)
+    endforeach(qa_file)
 
 endif(ENABLE_TESTING)

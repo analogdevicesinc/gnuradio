@@ -13,6 +13,7 @@
 
 #include "zmq_common_impl.h"
 #include <gnuradio/zeromq/pull_msg_source.h>
+#include <thread>
 
 namespace gr {
 namespace zeromq {
@@ -23,7 +24,7 @@ private:
     int d_timeout; // microseconds, -1 is blocking
     zmq::context_t d_context;
     zmq::socket_t d_socket;
-    std::unique_ptr<boost::thread> d_thread;
+    std::unique_ptr<std::thread> d_thread;
     const pmt::pmt_t d_port;
 
     void readloop();
@@ -39,10 +40,14 @@ public:
 
     std::string last_endpoint() override
     {
+#if USE_NEW_CPPZMQ_SET_GET
+        return d_socket.get(zmq::sockopt::last_endpoint);
+#else
         char addr[256];
         size_t addr_len = sizeof(addr);
         d_socket.getsockopt(ZMQ_LAST_ENDPOINT, addr, &addr_len);
         return std::string(addr, addr_len - 1);
+#endif
     }
 };
 

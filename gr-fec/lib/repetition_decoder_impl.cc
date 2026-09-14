@@ -14,7 +14,6 @@
 
 #include "repetition_decoder_impl.h"
 #include <volk/volk.h>
-#include <boost/format.hpp>
 #include <cmath>
 #include <cstdio>
 #include <sstream>
@@ -68,9 +67,9 @@ bool repetition_decoder_impl::set_frame_size(unsigned int frame_size)
 {
     bool ret = true;
     if (frame_size > d_max_frame_size) {
-        GR_LOG_INFO(d_logger,
-                    boost::format("tried to set frame to %1%; max possible is %2%") %
-                        frame_size % d_max_frame_size);
+        d_logger->info("tried to set frame to {:d}; max possible is {:d}",
+                       frame_size,
+                       d_max_frame_size);
         frame_size = d_max_frame_size;
         ret = false;
     }
@@ -82,7 +81,7 @@ bool repetition_decoder_impl::set_frame_size(unsigned int frame_size)
 
 double repetition_decoder_impl::rate() { return 1.0 / static_cast<double>(d_rep); }
 
-void repetition_decoder_impl::generic_work(void* inbuffer, void* outbuffer)
+void repetition_decoder_impl::generic_work(const void* inbuffer, void* outbuffer)
 {
     const float* in = (const float*)inbuffer;
     unsigned char* out = (unsigned char*)outbuffer;

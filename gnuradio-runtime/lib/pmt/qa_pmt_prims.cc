@@ -10,7 +10,6 @@
 
 #include <gnuradio/messages/msg_passing.h>
 #include <pmt/api.h> //reason: suppress warnings
-#include <boost/format.hpp>
 #include <boost/test/unit_test.hpp>
 #include <cstring>
 #include <sstream>
@@ -39,7 +38,7 @@ BOOST_AUTO_TEST_CASE(test_symbols)
 
     // generate a bunch of symbols
     for (int i = 0; i < N; i++) {
-        std::string buf = str(boost::format("test-%d") % i);
+        std::string buf = "test-" + std::to_string(i);
         v1[i] = pmt::mp(buf.c_str());
     }
 
@@ -50,7 +49,7 @@ BOOST_AUTO_TEST_CASE(test_symbols)
 
     // generate the same symbols again
     for (int i = 0; i < N; i++) {
-        std::string buf = str(boost::format("test-%d") % i);
+        std::string buf = "test-" + std::to_string(i);
         v2[i] = pmt::mp(buf.c_str());
     }
 
@@ -455,9 +454,9 @@ std::ostream& operator<<(std::ostream& os, const foo obj)
 
 BOOST_AUTO_TEST_CASE(test_any)
 {
-    boost::any a0;
-    boost::any a1;
-    boost::any a2;
+    std::any a0;
+    std::any a1;
+    std::any a2;
 
     a0 = std::string("Hello!");
     a1 = 42;
@@ -468,11 +467,11 @@ BOOST_AUTO_TEST_CASE(test_any)
     pmt::pmt_t p2 = pmt::make_any(a2);
 
     BOOST_CHECK_EQUAL(std::string("Hello!"),
-                      boost::any_cast<std::string>(pmt::any_ref(p0)));
+                      std::any_cast<std::string>(pmt::any_ref(p0)));
 
-    BOOST_CHECK_EQUAL(42, boost::any_cast<int>(pmt::any_ref(p1)));
+    BOOST_CHECK_EQUAL(42, std::any_cast<int>(pmt::any_ref(p1)));
 
-    BOOST_CHECK_EQUAL(foo(3.250, 21), boost::any_cast<foo>(pmt::any_ref(p2)));
+    BOOST_CHECK_EQUAL(foo(3.250, 21), std::any_cast<foo>(pmt::any_ref(p2)));
 }
 
 // ------------------------------------------------------------------------
@@ -491,7 +490,7 @@ BOOST_AUTO_TEST_CASE(test_msg_accepter)
 {
     pmt::pmt_t sym = pmt::mp("my-symbol");
 
-    boost::any a0;
+    std::any a0;
     a0 = std::string("Hello!");
     pmt::pmt_t p0 = pmt::make_any(a0);
 

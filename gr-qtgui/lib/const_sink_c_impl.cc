@@ -65,8 +65,7 @@ const_sink_c_impl::const_sink_c_impl(int size,
 
 const_sink_c_impl::~const_sink_c_impl()
 {
-    if (!d_main_gui->isClosed())
-        d_main_gui->close();
+    QMetaObject::invokeMethod(d_main_gui, "close");
 }
 
 bool const_sink_c_impl::check_topology(int ninputs, int noutputs)
@@ -79,10 +78,6 @@ void const_sink_c_impl::initialize()
     if (qApp != NULL) {
         d_qApplication = qApp;
     } else {
-#if QT_VERSION >= 0x040500 && QT_VERSION < 0x050000
-        std::string style = prefs::singleton()->get_string("qtgui", "style", "raster");
-        QApplication::setGraphicsSystem(QString(style.c_str()));
-#endif
         d_qApplication = new QApplication(d_argc, &d_argv);
     }
 
@@ -100,7 +95,7 @@ void const_sink_c_impl::initialize()
     set_update_time(0.1);
 }
 
-void const_sink_c_impl::exec_() { d_qApplication->exec(); }
+void const_sink_c_impl::exec() { d_qApplication->exec(); }
 
 QWidget* const_sink_c_impl::qwidget() { return d_main_gui; }
 

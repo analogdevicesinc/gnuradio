@@ -12,50 +12,65 @@ include(GrPython)
 
 message(STATUS "")
 
-GR_PYTHON_CHECK_MODULE_RAW(
-    "PyYAML >= 3.11"
-    "import yaml; assert yaml.__version__ >= '3.11'"
-    PYYAML_FOUND
+
+GR_PYTHON_CHECK_MODULE(
+    DESC "PyYAML >= 3.11"
+    MODULE yaml
+    CHECK "yaml.__version__ >= '3.11'"
+    VAR PYYAML_FOUND
 )
 
 GR_PYTHON_CHECK_MODULE(
-    "mako >= ${GR_MAKO_MIN_VERSION}"
-    mako
-    "LooseVersion(mako.__version__) >= LooseVersion('${GR_MAKO_MIN_VERSION}')"
-    MAKO_FOUND
+    DESC "mako >= ${GR_MAKO_MIN_VERSION}"
+    MODULE mako
+    CHECK "LooseVersion(mako.__version__) >= LooseVersion('${GR_MAKO_MIN_VERSION}')"
+    VAR MAKO_FOUND
 )
+
+if(MAKO_FOUND)
+    REGISTER_EXTERNAL_PYTHON_COMPONENT(markupsafe)
+endif()
 
 GR_PYTHON_CHECK_MODULE_RAW(
     "pygobject >= 2.28.6"
-    "import gi; assert gi.version_info >= (2, 28, 6)"
+    "${CMAKE_IMPORT_GTK}import gi; assert gi.version_info >= (2, 28, 6)"
     PYGI_FOUND
 )
 
 GR_PYTHON_CHECK_MODULE_RAW(
     "Gtk (GI) >= 3.10.8"
-    "import gi; gi.require_version('Gtk', '3.0'); \
-     from gi.repository import Gtk; Gtk.check_version(3, 10, 8)"
+    "${CMAKE_IMPORT_GTK}import gi; gi.require_version('Gtk', '3.0');"
     GTK_GI_FOUND
 )
 
 GR_PYTHON_CHECK_MODULE_RAW(
     "Cairo (GI) >= 1.0"
-    "import gi; gi.require_foreign('cairo', 'Context')"  # Cairo 1.13.0
+    "${CMAKE_IMPORT_GTK}import gi; gi.require_foreign('cairo', 'Context')"  # Cairo 1.13.0
     CAIRO_GI_FOUND
 )
 
 GR_PYTHON_CHECK_MODULE_RAW(
     "PangoCairo (GI) >= 1.0"
-    "import gi; gi.require_version('PangoCairo', '1.0')"  # pangocairo 1.36.3
+    "${CMAKE_IMPORT_GTK}import gi; gi.require_version('PangoCairo', '1.0')"  # pangocairo 1.36.3
     PANGOCAIRO_GI_FOUND
 )
 
-GR_PYTHON_CHECK_MODULE_RAW(
-    "numpy"
-    "import numpy"
-    NUMPY_FOUND
+GR_PYTHON_CHECK_MODULE(
+    DESC "numpy"
+    MODULE numpy
+    VAR NUMPY_FOUND
 )
 
+GR_PYTHON_CHECK_MODULE(
+  DESC "jsonschema"
+  MODULE jsonschema
+  VAR JSONSCHEMA_FOUND
+)
+
+if(PYGI_FOUND)
+    REGISTER_EXTERNAL_PYTHON_COMPONENT(gi)
+    REGISTER_EXTERNAL_PYTHON_COMPONENT(cairo)
+endif()
 ########################################################################
 # Register component
 ########################################################################
@@ -68,35 +83,63 @@ if(NOT CMAKE_CROSSCOMPILING)
         GTK_GI_FOUND
         CAIRO_GI_FOUND
         PANGOCAIRO_GI_FOUND
-        NUMPY_FOUND
+        # NUMPY_FOUND
     )
 endif(NOT CMAKE_CROSSCOMPILING)
 
-GR_REGISTER_COMPONENT("gnuradio-companion" ENABLE_GRC
-    ENABLE_GNURADIO_RUNTIME
-    ENABLE_PYTHON
-    ${grc_python_deps}
+GR_REGISTER_COMPONENT(
+    NAME "gnuradio-companion"
+    VAR  ENABLE_GRC
+    REQUIRED_COMPONNETS
+        gnuradio-runtime
+    REQUIRED_TPLS
+        ENABLE_PYTHON
+        ${grc_python_deps}
 )
 
 if(ENABLE_GRC)
 
+gr_python_check_module(
+    DESC "PyQt6"
+    MODULE PyQt6
+    VAR PYQT_FOUND
+)
+
+# Create GRC Qt dependency library to ensure Qt6PrintSupport.dll gets bundled
+find_package(Qt6 COMPONENTS PrintSupport QUIET)
+if(TARGET Qt6::PrintSupport)
+    # Create the GRC Qt dependency helper library
+    add_library(gnuradio-grc-qt-deps SHARED grc_qt_deps.cpp)
+    target_link_libraries(gnuradio-grc-qt-deps Qt6::PrintSupport)
+
+    # Register with bundle system - this creates BundleInstall-gnuradio-grc-qt-deps.cmake
+    if(BUILD_SHARED_LIBS)
+        gr_library_foo(gnuradio-grc-qt-deps Qt6::PrintSupport)
+    endif()
+
+    message(STATUS "Created GRC Qt dependency library for Qt6PrintSupport.dll bundling")
+else()
+    message(STATUS "Qt6::PrintSupport not found, GRC Qt DLL bundling disabled")
+endif()
+
+GR_REGISTER_COMPONENT(
+    NAME "JSON/YAML config blocks"
+    VAR ENABLE_JSONYAML_BLOCKS
+    REQUIRED_COMPONENTS gnuradio-companion
+    REQUIRED_TPLS       JSONSCHEMA_FOUND
+)
+
 ########################################################################
 # Create and install the grc and grc-docs conf file
 ########################################################################
-file(TO_NATIVE_PATH ${CMAKE_INSTALL_PREFIX}/${GRC_BLOCKS_DIR} blocksdir)
-if(CMAKE_INSTALL_PREFIX STREQUAL "/usr")
-    # linux binary installs: append blocks dir with prefix /usr/local
-    set(blocksdir ${blocksdir}:/usr/local/${GRC_BLOCKS_DIR})
-endif(CMAKE_INSTALL_PREFIX STREQUAL "/usr")
-
 if(UNIX)
     find_program(GRC_XTERM_EXE
-        NAMES xterminal-emulator gnome-terminal konsole xterm
+        NAMES x-terminal-emulator gnome-terminal konsole xfce4-terminal urxvt xterm foot
         HINTS ENV PATH
         DOC "graphical terminal emulator used in GRC's no-gui-mode"
     )
     if(NOT GRC_XTERM_EXE)
-        set(GRC_XTERM_EXE "")
+        set(GRC_XTERM_EXE "x-terminal-emulator")
     endif()
 else()  # APPLE CYGWIN
     set(GRC_XTERM_EXE "xterm")
@@ -109,7 +152,7 @@ configure_file(
 
 install(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/grc.conf
-    DESTINATION ${GR_PREFSDIR}
+    DESTINATION ${GR_PREFSDIR_relative_to_prefix}
 )
 
 configure_file(
@@ -119,7 +162,7 @@ configure_file(
 
 install(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/00-grc-docs.conf
-    DESTINATION ${GR_PREFSDIR}
+    DESTINATION ${GR_PREFSDIR_relative_to_prefix}
 )
 
 ########################################################################
@@ -144,7 +187,19 @@ GR_PYTHON_INSTALL(
 )
 
 GR_PYTHON_INSTALL(
+    DIRECTORY gui_qt
+    DESTINATION "${GR_PYTHON_DIR}/gnuradio/grc"
+    FILES_MATCHING REGEX "\\.(py|yml|grc|mo|png|ui)$"
+)
+
+GR_PYTHON_INSTALL(
     DIRECTORY converter
+    DESTINATION "${GR_PYTHON_DIR}/gnuradio/grc"
+    FILES_MATCHING REGEX "\\.(py|dtd|grc|tmpl|png|mako)$"
+)
+
+GR_PYTHON_INSTALL(
+    DIRECTORY workflows
     DESTINATION "${GR_PYTHON_DIR}/gnuradio/grc"
     FILES_MATCHING REGEX "\\.(py|dtd|grc|tmpl|png|mako)$"
 )
@@ -169,6 +224,7 @@ endif(WIN32)
 # Add subdirectories
 ########################################################################
 add_subdirectory(blocks)
+add_subdirectory(workflows)
 add_subdirectory(scripts)
 add_subdirectory(tests)
 

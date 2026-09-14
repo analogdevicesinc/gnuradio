@@ -13,11 +13,10 @@
 #include <config.h>
 #endif
 
-#include <boost/format.hpp>
-
 #include "fastnoise_source_impl.h"
 #include <gnuradio/io_signature.h>
 #include <gnuradio/xoroshiro128p.h>
+#include <type_traits>
 #include <stdexcept>
 #include <vector>
 
@@ -43,10 +42,8 @@ void fastnoise_source_impl<gr_complex>::generate()
 {
     size_t noutput_items = d_samples.size();
     if (noutput_items >= 1 << 23) {
-        GR_LOG_INFO(
-            d_logger,
-            boost::format("Generating %d complex values. This might take a while.") %
-                noutput_items);
+        this->d_logger->info("Generating {:d} complex values. This might take a while.",
+                             noutput_items);
     }
 
     switch (d_type) {
@@ -79,13 +76,17 @@ fastnoise_source_impl<T>::fastnoise_source_impl(noise_type_t type,
       d_bitmask(is_pwr_of_two(samples) ? samples - 1 : 0)
 {
     if (!d_bitmask) {
-        GR_LOG_INFO(this->d_logger,
-                    boost::format("Using non-power-of-2 sample pool size %d. This has "
-                                  "negative effect on performance.") %
-                        samples);
+        this->d_logger->info(
+            "Using non-power-of-2 sample pool size {:d}. This has negative "
+            "effect on performance.",
+            samples);
     }
     d_samples.resize(samples);
     xoroshiro128p_seed(d_state, seed);
+    this->d_logger->debug("Initializing {:s} pool of size {:d} with seed {:x}",
+                          std::is_arithmetic_v<T> ? "arithmetic" : "unknown",
+                          samples,
+                          seed);
     generate();
 }
 
@@ -104,13 +105,15 @@ fastnoise_source_impl<gr_complex>::fastnoise_source_impl(noise_type_t type,
       d_bitmask(is_pwr_of_two(samples) ? samples - 1 : 0)
 {
     if (!d_bitmask) {
-        GR_LOG_INFO(d_logger,
-                    boost::format("Using non-power-of-2 sample pool size %d. This has "
-                                  "negative effect on performance.") %
-                        samples);
+        this->d_logger->info(
+            "Using non-power-of-2 sample pool size {:d}. This has negative "
+            "effect on performance.",
+            samples);
     }
     d_samples.resize(samples);
-    xoroshiro128p_seed(d_state, (uint64_t)seed);
+    xoroshiro128p_seed(d_state, seed);
+    this->d_logger->debug(
+        "Initializing {:s} pool of size {:d} with seed {:x}", "complex", samples, seed);
     generate();
 }
 
@@ -149,9 +152,8 @@ void fastnoise_source_impl<T>::generate()
 {
     size_t noutput_items = d_samples.size();
     if (noutput_items >= 1 << 23) {
-        GR_LOG_INFO(this->d_logger,
-                    boost::format("Generating %d values. This might take a while.") %
-                        noutput_items);
+        this->d_logger->info("Generating {:d} values. This might take a while.",
+                             noutput_items);
     }
     switch (d_type) {
     case GR_UNIFORM:

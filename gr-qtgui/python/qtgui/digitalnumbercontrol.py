@@ -9,28 +9,38 @@
 #
 #
 
-from PyQt5.QtWidgets import QFrame, QVBoxLayout, QLabel
-from PyQt5.QtGui import QPainter, QPixmap, QFont, QFontMetrics, QBrush, QColor
-from PyQt5.QtCore import Qt, QSize
-from PyQt5 import QtCore
-from PyQt5.QtCore import Qt as Qtc
-from PyQt5.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, QSize, QRect, Qt
+from PyQt6.QtWidgets import QFrame, QVBoxLayout, QLabel
+from PyQt6.QtGui import QPainter, QPixmap, QFont, QFontMetrics, QBrush, QColor
 
 from gnuradio import gr
 import pmt
 
 # -------------- Support Classes ---------------------------------
-#
-#
 
 
 class LabeledDigitalNumberControl(QFrame):
-    def __init__(self, lbl='', min_freq_hz=0, max_freq_hz=6000000000, parent=None,
-                 thousands_separator=',', background_color='black', fontColor='white',
-                 click_callback=None):
+    def __init__(
+        self,
+        lbl="",
+        min_freq_hz=0,
+        max_freq_hz=6000000000,
+        parent=None,
+        thousands_separator=",",
+        background_color="black",
+        fontColor="white",
+        click_callback=None,
+    ):
         QFrame.__init__(self, parent)
-        self.numberControl = DigitalNumberControl(min_freq_hz, max_freq_hz, self,
-                                                  thousands_separator, background_color, fontColor, click_callback)
+        self.numberControl = DigitalNumberControl(
+            min_freq_hz,
+            max_freq_hz,
+            self,
+            thousands_separator,
+            background_color,
+            fontColor,
+            click_callback,
+        )
 
         layout = QVBoxLayout()
 
@@ -42,7 +52,7 @@ class LabeledDigitalNumberControl(QFrame):
             self.hasLabel = False
 
         layout.addWidget(self.numberControl)
-        layout.setAlignment(Qtc.AlignCenter | Qtc.AlignVCenter)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
         self.setLayout(layout)
         self.show()
 
@@ -67,8 +77,16 @@ class DigitalNumberControl(QFrame):
     updateInt = pyqtSignal(int)
     updateFloat = pyqtSignal(float)
 
-    def __init__(self, min_freq_hz=0, max_freq_hz=6000000000, parent=None, thousands_separator=',',
-                 background_color='black', fontColor='white', click_callback=None):
+    def __init__(
+        self,
+        min_freq_hz=0,
+        max_freq_hz=6000000000,
+        parent=None,
+        thousands_separator=",",
+        background_color="black",
+        fontColor="white",
+        click_callback=None,
+    ):
         QFrame.__init__(self, parent)
 
         self.updateInt.connect(self.onUpdateInt)
@@ -84,11 +102,9 @@ class DigitalNumberControl(QFrame):
         self.read_only = False
 
         self.setColors(QColor(background_color), QColor(fontColor))
-        self.numberFont = QFont("Arial", 12, QFont.Normal)
+        self.numberFont = QFont("Arial", 12, QFont.Weight.Normal)
 
         self.cur_freq = min_freq_hz
-
-        self.debug_click = False
 
         # Determine what our width minimum is
         teststr = ""
@@ -97,7 +113,8 @@ class DigitalNumberControl(QFrame):
 
         fm = QFontMetrics(self.numberFont)
         if len(self.thousands_separator) > 0:
-            # The -1 makes sure we don't count an extra for 123,456,789.  Answer should be 2 not 3.
+            # The -1 makes sure we don't count an extra for 123,456,789.
+            # Answer should be 2 not 3.
             numgroups = int(float(self.numDigitsInFreq - 1) / 3.0)
             if numgroups > 0:
                 for i in range(0, numgroups):
@@ -107,7 +124,7 @@ class DigitalNumberControl(QFrame):
         else:
             textstr = teststr
 
-        width = fm.width(textstr)
+        width = fm.horizontalAdvance(textstr)
 
         self.minwidth = width
 
@@ -130,9 +147,7 @@ class DigitalNumberControl(QFrame):
         self.offset = event.pos()
 
         if self.read_only:
-            if self.debug_click:
-                gr.log.info(
-                    "click received but read-only.  Not changing frequency.")
+            gr.log.trace("click received but read-only.  Not changing frequency.")
             return
 
         fm = QFontMetrics(self.numberFont)
@@ -146,21 +161,21 @@ class DigitalNumberControl(QFrame):
         else:
             textstr = str(self.getFrequency())
 
-        width = fm.width(textstr)
+        width = fm.horizontalAdvance(textstr)
 
         # So we know:
         # - the width of the text
-        # - The mouse click position relative to 0 (pos relative to string start
-        #   will be size().width() - 2 - pos.x
+        # - The mouse click position relative to 0
+        #   (pos relative to string start will be size().width() - 2 - pos.x)
 
         clickpos = self.size().width() - 2 - self.offset.x()
 
         found_number = False
         clicked_thousands = False
         for i in range(1, len(textstr) + 1):
-            width = fm.width(textstr[-i:])
+            width = fm.horizontalAdvance(textstr[-i:])
             charstr = textstr[-i:]
-            widthchar = fm.width(charstr[0])
+            widthchar = fm.horizontalAdvance(charstr[0])
             if clickpos >= (width - widthchar) and clickpos <= width:
                 clicked_char = i - 1
 
@@ -172,25 +187,19 @@ class DigitalNumberControl(QFrame):
                     if charstr[0] != self.thousands_separator:
                         numSeps = charstr.count(self.thousands_separator)
                         clicked_num_index -= numSeps
-                        if self.debug_click:
-                            gr.log.info("clicked number: " +
-                                        str(clicked_num_index))
+                        gr.log.trace(f"clicked number: {clicked_num_index}")
                     else:
                         clicked_thousands = True
-                        if self.debug_click:
-                            gr.log.info("clicked thousands separator")
+                        gr.log.trace("clicked thousands separator")
                 else:
-                    if self.debug_click:
-                        gr.log.info("clicked number: " + str(clicked_char))
+                    gr.log.trace("clicked number: " + str(clicked_char))
 
                 # Remember y=0 is at the top so this is reversed
                 clicked_up = False
                 if self.offset.y() > self.size().height() / 2:
-                    if self.debug_click:
-                        gr.log.info('clicked down')
+                    gr.log.trace("clicked down")
                 else:
-                    if self.debug_click:
-                        gr.log.info('clicked up')
+                    gr.log.trace("clicked up")
                     clicked_up = True
 
                 if not clicked_thousands:
@@ -201,8 +210,8 @@ class DigitalNumberControl(QFrame):
                     else:
                         cur_freq -= increment
 
-                    # Cannot call setFrequency to emit.  Change must happen now for
-                    # paint event when clicked.
+                    # Cannot call setFrequency to emit.
+                    # Change must happen now for paint event when clicked.
                     self.setFrequencyNow(cur_freq)
 
                     if self.click_callback is not None:
@@ -213,11 +222,9 @@ class DigitalNumberControl(QFrame):
             # See if we clicked in the high area, if so, increment there.
             clicked_up = False
             if self.offset.y() > self.size().height() / 2:
-                if self.debug_click:
-                    gr.log.info('clicked down in the high area')
+                gr.log.trace("clicked down in the high area")
             else:
-                if self.debug_click:
-                    gr.log.info('clicked up in the high area')
+                gr.log.trace("clicked up in the high area")
                 clicked_up = True
 
             textstr = str(self.getFrequency())
@@ -234,14 +241,11 @@ class DigitalNumberControl(QFrame):
             self.setFrequencyNow(cur_freq)
 
             if self.click_callback is not None:
-                if self.debug_click:
-                    gr.log.info('Calling self.click_callback')
+                gr.log.trace("Calling self.click_callback")
 
                 self.click_callback(self.getFrequency())
             else:
-                if self.debug_click:
-                    gr.log.info(
-                        'self.click_callback is None.  Not calling callback.')
+                gr.log.trace("self.click_callback is None.  Not calling callback.")
 
     def setColors(self, background, fontColor):
         self.background_color = background
@@ -272,7 +276,7 @@ class DigitalNumberControl(QFrame):
             self.update()
 
     def setFrequency(self, new_freq):
-        if type(new_freq) == int:
+        if type(new_freq) is int:
             self.updateInt.emit(new_freq)
         else:
             self.updateFloat.emit(new_freq)
@@ -294,11 +298,11 @@ class DigitalNumberControl(QFrame):
         size = self.size()
         brush = QBrush()
         brush.setColor(self.background_color)
-        brush.setStyle(Qt.SolidPattern)
-        rect = QtCore.QRect(2, 2, size.width() - 4, size.height() - 4)
+        brush.setStyle(Qt.BrushStyle.SolidPattern)
+        rect = QRect(2, 2, size.width() - 4, size.height() - 4)
         painter.fillRect(rect, brush)
 
-        self.numberFont.setPixelSize(0.9 * size.height())
+        self.numberFont.setPixelSize(int(0.9 * size.height()))
         painter.setFont(self.numberFont)
         painter.setPen(self.fontColor)
         rect = event.rect()
@@ -312,23 +316,42 @@ class DigitalNumberControl(QFrame):
         else:
             textstr = str(self.getFrequency())
 
-        rect = QtCore.QRect(0, 0, size.width() - 4, size.height())
+        rect = QRect(0, 0, size.width() - 4, size.height())
 
-        painter.drawText(rect, Qt.AlignRight + Qt.AlignVCenter, textstr)
-
-# ################################################################################
-
-# GNU Radio Class
+        painter.drawText(rect, Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, textstr)
 
 
 class MsgDigitalNumberControl(gr.sync_block, LabeledDigitalNumberControl):
-    def __init__(self, lbl='', min_freq_hz=0, max_freq_hz=6000000000, parent=None,
-                 thousands_separator=',', background_color='black', fontColor='white',
-                 var_callback=None, outputmsgname='freq'):
-        gr.sync_block.__init__(self, name="MsgDigitalNumberControl",
-                               in_sig=None, out_sig=None)
-        LabeledDigitalNumberControl.__init__(self, lbl, min_freq_hz, max_freq_hz, parent,
-                                             thousands_separator, background_color, fontColor, self.click_callback)
+    """
+    GNU Radio Block Class
+    """
+
+    def __init__(
+        self,
+        lbl="",
+        min_freq_hz=0,
+        max_freq_hz=6000000000,
+        parent=None,
+        thousands_separator=",",
+        background_color="black",
+        fontColor="white",
+        var_callback=None,
+        outputmsgname="freq",
+    ):
+        gr.sync_block.__init__(
+            self, name="MsgDigitalNumberControl", in_sig=None, out_sig=None
+        )
+        LabeledDigitalNumberControl.__init__(
+            self,
+            lbl,
+            min_freq_hz,
+            max_freq_hz,
+            parent,
+            thousands_separator,
+            background_color,
+            fontColor,
+            self.click_callback,
+        )
 
         self.var_callback = var_callback
         self.outputmsgname = outputmsgname
@@ -341,19 +364,20 @@ class MsgDigitalNumberControl(gr.sync_block, LabeledDigitalNumberControl):
         try:
             new_val = pmt.to_python(pmt.cdr(msg))
 
-            if type(new_val) == float or type(new_val) == int:
+            if type(new_val) is float or type(new_val) is int:
                 self.call_var_callback(new_val)
 
                 self.setValue(new_val)
             else:
                 gr.log.error(
-                    "Value received was not an int or a float. %s" % str(type(new_val)))
+                    "Value received was not an int or a float. %s" % str(type(new_val))
+                )
 
         except Exception as e:
             gr.log.error("Error with message conversion: %s" % str(e))
 
     def call_var_callback(self, new_value):
-        if (self.var_callback is not None):
+        if self.var_callback is not None:
             if type(self.var_callback) is float:
                 self.var_callback = float(new_value)
             else:
@@ -362,14 +386,18 @@ class MsgDigitalNumberControl(gr.sync_block, LabeledDigitalNumberControl):
     def click_callback(self, new_value):
         self.call_var_callback(new_value)
 
-        self.message_port_pub(pmt.intern("valueout"), pmt.cons(
-            pmt.intern(self.outputmsgname), pmt.from_double(float(new_value))))
+        self.message_port_pub(
+            pmt.intern("valueout"),
+            pmt.cons(pmt.intern(self.outputmsgname), pmt.from_double(float(new_value))),
+        )
 
     def setValue(self, new_val):
         self.setFrequency(new_val)
 
-        self.message_port_pub(pmt.intern("valueout"), pmt.cons(pmt.intern(
-            self.outputmsgname), pmt.from_double(float(self.getFrequency()))))
+        self.message_port_pub(
+            pmt.intern("valueout"),
+            pmt.cons(pmt.intern(self.outputmsgname), pmt.from_double(float(new_val))),
+        )
 
     def getValue(self):
         self.getFrequency()

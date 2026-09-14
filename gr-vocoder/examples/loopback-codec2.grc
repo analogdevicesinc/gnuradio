@@ -21,7 +21,7 @@ options:
     run_options: prompt
     sizing_mode: fixed
     thread_safe_setters: ''
-    title: Codec2 Looback Test
+    title: Codec2 Loopback Test
     window_size: 1280, 1024
   states:
     coordinate: [0, -1]
@@ -56,7 +56,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: 2**13
+    value: 8192
   states:
     coordinate: [301, -1]
     rotation: 0

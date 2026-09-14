@@ -1,6 +1,6 @@
 id: variable_qtgui_push_button
 label: QT GUI Push Button
-flags: [ show_id, python ]
+flags: [show_id, python, deprecated]
 
 parameters:
 -   id: label
@@ -35,7 +35,6 @@ parameters:
 value: ${ value }
 
 templates:
-    imports: from PyQt5 import Qt
     var_make: self.${id} = ${id} = ${value}
     callbacks:
     - self.set_${id}(${value})
@@ -43,8 +42,8 @@ templates:
         <%
             win = '_%s_push_button'%id
         %>\
-        ${win} = Qt.QPushButton(${label})
-        ${win} = Qt.QPushButton(${(label if (len(label) - 2 > 0) else repr(id))})
+        ${win} = QtWidgets.QPushButton(${label})
+        ${win} = QtWidgets.QPushButton(${(label if (len(label) - 2 > 0) else repr(id))})
         self._${id}_choices = {'Pressed': ${pressed}, 'Released': ${released}}
         ${win}.pressed.connect(lambda: self.set_${id}(self._${id}_choices['Pressed']))
         ${win}.released.connect(lambda: self.set_${id}(self._${id}_choices['Released']))

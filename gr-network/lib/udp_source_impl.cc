@@ -85,25 +85,31 @@ udp_source_impl::udp_source_impl(size_t itemsize,
         break;
 
     default:
-        GR_LOG_ERROR(d_logger, "Unknown UDP header type.");
+        d_logger->error("Unknown UDP header type.");
         throw std::invalid_argument("Unknown UDP header type.");
         break;
     }
 
     if (d_payloadsize < 8) {
-        GR_LOG_ERROR(d_logger,
-                     "Payload size is too small.  Must be at "
-                     "least 8 bytes once header/trailer adjustments are made.");
+        d_logger->error("Payload size is too small.  Must be at "
+                        "least 8 bytes once header/trailer adjustments are made.");
 
         throw std::invalid_argument(
             "Payload size is too small.  Must be at "
             "least 8 bytes once header/trailer adjustments are made.");
     }
 
-    d_precomp_data_size = d_payloadsize - d_header_size;
-    d_precomp_data_over_item_size = d_precomp_data_size / d_itemsize;
+    if (d_payloadsize % d_block_size) {
+        d_logger->error("Payload size must be a multiple of item size * vector length.");
 
-    int out_multiple = (d_payloadsize - d_header_size) / d_block_size;
+        throw std::invalid_argument(
+            "Payload size must be a multiple of item size * vector length.");
+    }
+
+    d_precomp_data_size = d_payloadsize - d_header_size;
+    d_precomp_data_over_item_size = d_precomp_data_size / d_block_size;
+
+    int out_multiple = d_precomp_data_over_item_size;
 
     if (out_multiple == 1)
         out_multiple = 2; // Ensure we get pairs, for instance complex -> ichar pairs
@@ -113,7 +119,6 @@ udp_source_impl::udp_source_impl(size_t itemsize,
 
 bool udp_source_impl::start()
 {
-    d_local_buffer = new char[d_payloadsize];
     long max_circ_buffer;
 
     // Let's keep it from getting too big
@@ -126,24 +131,22 @@ bool udp_source_impl::start()
             max_circ_buffer = d_payloadsize * 1500;
     }
 
-    d_localqueue = new boost::circular_buffer<char>(max_circ_buffer);
+    d_localqueue_writer = gr::make_buffer(max_circ_buffer, sizeof(char), 1, 1);
+    d_localqueue_reader = gr::buffer_add_reader(d_localqueue_writer, 0);
 
     if (is_ipv6)
-        d_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v6(), d_port);
+        d_endpoint = asio::ip::udp::endpoint(asio::ip::udp::v6(), d_port);
     else
-        d_endpoint = boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), d_port);
+        d_endpoint = asio::ip::udp::endpoint(asio::ip::udp::v4(), d_port);
 
     try {
-        d_udpsocket = new boost::asio::ip::udp::socket(d_io_service, d_endpoint);
+        d_udpsocket = new asio::ip::udp::socket(d_io_context, d_endpoint);
     } catch (const std::exception& ex) {
         throw std::runtime_error(std::string("[UDP Source] Error occurred: ") +
                                  ex.what());
     }
 
-
-    std::stringstream msg_stream;
-    msg_stream << "Listening for data on UDP port " << d_port << ".";
-    GR_LOG_INFO(d_logger, msg_stream.str());
+    d_logger->info("Listening for data on UDP port {:d}.", d_port);
 
     return true;
 }
@@ -157,39 +160,32 @@ bool udp_source_impl::stop()
 {
     if (d_udpsocket) {
         d_udpsocket->close();
+        delete d_udpsocket;
+        d_udpsocket = nullptr;
 
-        d_udpsocket = NULL;
-
-        d_io_service.reset();
-        d_io_service.stop();
+        d_io_context.stop();
     }
 
-    if (d_local_buffer) {
-        delete[] d_local_buffer;
-        d_local_buffer = NULL;
-    }
+    d_localqueue_reader.reset();
+    d_localqueue_writer.reset();
 
-    if (d_localqueue) {
-        delete d_localqueue;
-        d_localqueue = NULL;
-    }
     return true;
 }
 
 size_t udp_source_impl::data_available()
 {
     // Get amount of data available
-    boost::asio::socket_base::bytes_readable command(true);
+    asio::socket_base::bytes_readable command(true);
     d_udpsocket->io_control(command);
     size_t bytes_readable = command.get();
 
-    return (bytes_readable + d_localqueue->size());
+    return (bytes_readable + d_localqueue_reader->items_available());
 }
 
 size_t udp_source_impl::netdata_available()
 {
     // Get amount of data available
-    boost::asio::socket_base::bytes_readable command(true);
+    asio::socket_base::bytes_readable command(true);
     d_udpsocket->io_control(command);
     size_t bytes_readable = command.get();
 
@@ -202,15 +198,23 @@ uint64_t udp_source_impl::get_header_seqnum()
 
     switch (d_header_type) {
     case HEADERTYPE_SEQNUM: {
-        retVal = ((header_seq_num*)d_local_buffer)->seqnum;
+        header_seq_num seq_header;
+        memcpy(&seq_header, d_localqueue_reader->read_pointer(), sizeof(header_seq_num));
+        retVal = seq_header.seqnum;
     } break;
 
     case HEADERTYPE_SEQPLUSSIZE: {
-        retVal = ((header_seq_plus_size*)d_local_buffer)->seqnum;
+        header_seq_plus_size seq_header;
+        memcpy(&seq_header,
+               d_localqueue_reader->read_pointer(),
+               sizeof(header_seq_plus_size));
+        retVal = seq_header.seqnum;
     } break;
 
     case HEADERTYPE_OLDATA: {
-        retVal = ((ata_header*)d_local_buffer)->seq;
+        ata_header seq_header;
+        memcpy(&seq_header, d_localqueue_reader->read_pointer(), sizeof(ata_header));
+        retVal = seq_header.seq;
     } break;
     }
 
@@ -231,7 +235,7 @@ int udp_source_impl::work(int noutput_items,
     unsigned int num_requested = noutput_items * d_block_size;
 
     // quick exit if nothing to do
-    if ((bytes_available == 0) && (d_localqueue->empty())) {
+    if ((bytes_available == 0) && (d_localqueue_reader->items_available() == 0)) {
         underrun_counter++;
         d_partial_frame_counter = 0;
         if (d_source_zeros) {
@@ -253,13 +257,13 @@ int udp_source_impl::work(int noutput_items,
         }
     }
 
-    int bytes_read;
+    size_t bytes_read;
 
     // we could get here even if no data was received but there's still data in
     // the queue. however read blocks so we want to make sure we have data before
     // we call it.
     if (bytes_available > 0) {
-        boost::asio::streambuf::mutable_buffers_type buf =
+        asio::streambuf::mutable_buffers_type buf =
             d_read_buffer.prepare(bytes_available);
         // http://stackoverflow.com/questions/28929699/boostasio-read-n-bytes-from-socket-to-streambuf
         bytes_read = d_udpsocket->receive_from(buf, d_endpoint);
@@ -270,33 +274,40 @@ int udp_source_impl::work(int noutput_items,
             // Get the data and add it to our local queue.  We have to maintain a
             // local queue in case we read more bytes than noutput_items is asking
             // for.  In that case we'll only return noutput_items bytes
-            const char* read_data =
-                boost::asio::buffer_cast<const char*>(d_read_buffer.data());
-            for (int i = 0; i < bytes_read; i++) {
-                d_localqueue->push_back(read_data[i]);
+            const char* read_data = static_cast<const char*>(d_read_buffer.data().data());
+
+            // Discard bytes if the input is longer than the buffer
+            if (bytes_read > d_localqueue_writer->bufsize()) {
+                size_t overrun = bytes_read - d_localqueue_writer->bufsize();
+                bytes_read -= overrun;
+                read_data += overrun;
             }
+
+            if ((size_t)d_localqueue_writer->space_available() < bytes_read)
+                d_localqueue_reader->update_read_pointer(
+                    bytes_read - d_localqueue_writer->space_available());
+            memcpy(d_localqueue_writer->write_pointer(), read_data, bytes_read);
+            d_localqueue_writer->update_write_pointer(bytes_read);
             d_read_buffer.consume(bytes_read);
         }
     }
 
-    if (d_localqueue->size() < d_payloadsize) {
+    if (d_localqueue_reader->items_available() < d_payloadsize) {
         // since we should be getting these in UDP packet blocks matched on the
         // sender/receiver, this should be a fringe case, or a case where another
         // app is sourcing the packets.
         d_partial_frame_counter++;
 
         if (d_partial_frame_counter >= 100) {
-            std::stringstream msg_stream;
-            msg_stream << "Insufficient block data.  Check your sending "
-                          "app is using "
-                       << d_payloadsize << " send blocks.";
-            GR_LOG_WARN(d_logger, msg_stream.str());
+            d_logger->warn("Insufficient block data.  Check your sending "
+                           "app is using {:d} send blocks.",
+                           d_payloadsize);
 
             // This is just a safety to clear in the case there's a hanging partial
             // packet. If we've lingered through a number of calls and we still don't
             // have any data, clear the stale data.
-            while (!d_localqueue->empty())
-                d_localqueue->pop_front();
+            d_localqueue_reader->update_read_pointer(
+                d_localqueue_reader->items_available());
 
             d_partial_frame_counter = 0;
         }
@@ -316,7 +327,7 @@ int udp_source_impl::work(int noutput_items,
     // sure this is an integer multiple)
     long blocks_requested = noutput_items / d_precomp_data_over_item_size;
     // Number of blocks available accounting for the header as well.
-    long blocks_available = d_localqueue->size() / (d_payloadsize);
+    long blocks_available = d_localqueue_reader->items_available() / (d_payloadsize);
     long blocks_retrieved;
     int itemsreturned;
 
@@ -332,18 +343,10 @@ int udp_source_impl::work(int noutput_items,
     // We're going to have to read the data out in blocks, account for the header,
     // then just move the data part into the out[] array.
 
-    char* data_ptr;
-    data_ptr = &d_local_buffer[d_header_size];
     int out_index = 0;
     int skipped_packets = 0;
 
     for (int cur_pkt = 0; cur_pkt < blocks_retrieved; cur_pkt++) {
-        // Move a packet to our local buffer
-        for (int cur_byte = 0; cur_byte < d_payloadsize; cur_byte++) {
-            d_local_buffer[cur_byte] = d_localqueue->at(0);
-            d_localqueue->pop_front();
-        }
-
         // Interpret the header if present
         if (d_header_type != HEADERTYPE_NONE) {
             uint64_t pkt_seq_num = get_header_seqnum();
@@ -362,17 +365,17 @@ int udp_source_impl::work(int noutput_items,
                 d_seq_num = pkt_seq_num;
             }
         }
+        d_localqueue_reader->update_read_pointer(d_header_size);
 
         // Move the data to the output buffer and increment the out index
-        memcpy(&out[out_index], data_ptr, d_precomp_data_size);
+        memcpy(&out[out_index], d_localqueue_reader->read_pointer(), d_precomp_data_size);
         out_index = out_index + d_precomp_data_size;
+        d_localqueue_reader->update_read_pointer(d_precomp_data_size);
     }
 
     if (skipped_packets > 0 && d_notify_missed) {
-        std::stringstream msg_stream;
-        msg_stream << "[UDP source:" << d_port
-                   << "] missed  packets: " << skipped_packets;
-        GR_LOG_WARN(d_logger, msg_stream.str());
+        d_logger->warn(
+            "[UDP source:{:d}] missed  packets: {:d}", d_port, skipped_packets);
     }
 
     // If we had less data than requested, it'll be reflected in the return value.

@@ -14,54 +14,54 @@ include(GrBoost)
 # Register component
 ########################################################################
 include(GrComponent)
-GR_REGISTER_COMPONENT("gr-digital" ENABLE_GR_DIGITAL
-    Boost_FOUND
-    ENABLE_GNURADIO_RUNTIME
-    ENABLE_GR_FFT
-    ENABLE_GR_FILTER
-    ENABLE_GR_BLOCKS
-    ENABLE_GR_ANALOG
+gr_register_component(
+    NAME "gr-digital"
+    VAR ENABLE_GR_DIGITAL
+    REQUIRED_COMPONENTS
+        gnuradio-runtime
+        gr-fft
+        gr-filter
+        gr-blocks
+        gr-analog
+    REQUIRED_TPLS
+        Boost_FOUND
 )
 
-SET(GR_PKG_DIGITAL_EXAMPLES_DIR ${GR_PKG_DATA_DIR}/examples/digital)
+set(GR_PKG_DIGITAL_EXAMPLES_DIR ${GR_PKG_DATA_DIR}/examples/digital)
 
 ########################################################################
 # Begin conditional configuration
 ########################################################################
 if(ENABLE_GR_DIGITAL)
 
-# Set HAVE_BUILTIN_PARITYL for use in scrambler if compiler is GNU
-if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-    add_definitions(-DHAVE_BUILTIN_PARITYL)
-endif()
+    # Set HAVE_BUILTIN_PARITYL for use in scrambler if compiler is GNU
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        add_definitions(-DHAVE_BUILTIN_PARITYL)
+    endif()
 
-########################################################################
-# Add subdirectories
-########################################################################
-add_subdirectory(include/gnuradio/digital)
-add_subdirectory(lib)
-add_subdirectory(docs)
-if(ENABLE_PYTHON)
-    add_subdirectory(python/digital)
-    if(ENABLE_EXAMPLES)
-        add_subdirectory(examples)
-    endif(ENABLE_EXAMPLES)
-endif(ENABLE_PYTHON)
-if(ENABLE_GRC)
-    add_subdirectory(grc)
-endif(ENABLE_GRC)
+    ########################################################################
+    # Add subdirectories
+    ########################################################################
+    add_subdirectory(include/gnuradio/digital)
+    add_subdirectory(lib)
+    add_subdirectory(docs)
+    if(ENABLE_PYTHON)
+        add_subdirectory(python/digital)
+        if(ENABLE_EXAMPLES)
+            add_subdirectory(examples)
+        endif(ENABLE_EXAMPLES)
+    endif(ENABLE_PYTHON)
+    if(ENABLE_GRC)
+        add_subdirectory(grc)
+    endif(ENABLE_GRC)
 
-########################################################################
-# Create Pkg Config File
-########################################################################
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/gnuradio-digital.pc.in
-    ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-digital.pc
-@ONLY)
+    ########################################################################
+    # Create Pkg Config File
+    ########################################################################
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gnuradio-digital.pc.in
+                   ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-digital.pc @ONLY)
 
-install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-digital.pc
-    DESTINATION ${GR_LIBRARY_DIR}/pkgconfig
-)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-digital.pc
+            DESTINATION ${GR_LIBRARY_DIR}/pkgconfig)
 
 endif(ENABLE_GR_DIGITAL)

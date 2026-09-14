@@ -28,16 +28,17 @@ filterbank_vcvcf_impl::filterbank_vcvcf_impl(const std::vector<std::vector<float
     : block("filterbank_vcvcf",
             io_signature::make(1, 1, sizeof(gr_complex) * taps.size()),
             io_signature::make(1, 1, sizeof(gr_complex) * taps.size())),
-      filterbank(taps)
+      filterbank(taps),
+      d_updated(false)
 {
-    set_history(d_ntaps + 1);
+    set_history(d_ntaps);
 }
 
 void filterbank_vcvcf_impl::set_taps(const std::vector<std::vector<float>>& taps)
 {
     gr::thread::scoped_lock guard(d_mutex);
     filterbank::set_taps(taps);
-    set_history(d_ntaps + 1);
+    set_history(d_ntaps);
     d_updated = true;
 }
 
@@ -55,7 +56,7 @@ int filterbank_vcvcf_impl::general_work(int noutput_items,
 {
     gr::thread::scoped_lock guard(d_mutex);
 
-    gr_complex* in = (gr_complex*)input_items[0];
+    const gr_complex* in = (const gr_complex*)input_items[0];
     gr_complex* out = (gr_complex*)output_items[0];
 
     if (d_updated) {
@@ -63,7 +64,7 @@ int filterbank_vcvcf_impl::general_work(int noutput_items,
         return 0; // history requirements may have changed.
     }
 
-    std::vector<gr_complex> working(noutput_items + d_ntaps);
+    volk::vector<gr_complex> working(noutput_items + d_ntaps - 1);
 
     for (unsigned int i = 0; i < d_nfilts; i++) {
         // Only call the filter method on active filters.

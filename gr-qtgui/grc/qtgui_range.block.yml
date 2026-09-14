@@ -35,14 +35,14 @@ parameters:
     label: Widget
     dtype: enum
     default: counter_slider
-    options: [counter_slider, counter, slider, dial]
-    option_labels: [Counter + Slider, Counter, Slider, Knob]
+    options: [counter_slider, counter, slider, dial, eng_slider, eng]
+    option_labels: [Counter + Slider, Counter, Slider, Knob, Entry + Slider, Entry]
     hide: part
 -   id: orient
     label: Orientation
     dtype: enum
-    default: QtCore.Qt.Horizontal
-    options: [QtCore.Qt.Horizontal, QtCore.Qt.Vertical]
+    default: QtCore.Qt.Orientation.Horizontal
+    options: [QtCore.Qt.Orientation.Horizontal, QtCore.Qt.Orientation.Vertical]
     option_labels: [Horizontal, Vertical]
     option_attributes:
         minfcn: [setMinimumWidth, setMinimumHeight]
@@ -64,9 +64,7 @@ asserts:
 - ${start <= stop}
 
 templates:
-    imports: |- 
-        from gnuradio.qtgui import Range, RangeWidget
-        from PyQt5 import QtCore
+    imports: from PyQt6 import QtCore
     var_make: self.${id} = ${id} = ${value}
     callbacks:
     - self.set_${id}(${value})
@@ -75,8 +73,8 @@ templates:
             win = 'self._%s_win'%id
             range = 'self._%s_range'%id
         %>\
-        ${range} = Range(${start}, ${stop}, ${step}, ${value}, ${min_len})
-        ${win} = RangeWidget(${range}, self.set_${id}, "${no_quotes(label,repr(id))}", "${widget}", ${rangeType}, ${orient})
+        ${range} = qtgui.Range(${start}, ${stop}, ${step}, ${value}, ${min_len})
+        ${win} = qtgui.RangeWidget(${range}, self.set_${id}, "${no_quotes(label,repr(id))}", "${widget}", ${rangeType}, ${orient})
         ${gui_hint() % win}
 
 documentation: |-

@@ -11,7 +11,6 @@
 #include <gnuradio/gr_complex.h>
 #include <gnuradio/logger.h>
 #include <gnuradio/rpcpmtconverters_thrift.h>
-#include <boost/assign/ptr_map_inserter.hpp>
 
 GNURadio::Knob rpcpmtconverter::from_pmt(const pmt::pmt_t& knob)
 {
@@ -112,9 +111,8 @@ GNURadio::Knob rpcpmtconverter::from_pmt(const pmt::pmt_t& knob)
         // FIXME: Don't get loggers every time we need to log something.
         gr::logger_ptr logger, debug_logger;
         gr::configure_default_loggers(logger, debug_logger, "rpcpmtconverter");
-        std::ostringstream msg;
-        msg << "ERROR Don't know how to handle Knob Type (from): " << knob;
-        GR_LOG_ERROR(logger, msg.str());
+        logger->error("ERROR Don't know how to handle Knob Type (from): {}",
+                      pmt::write_string(knob));
         assert(0);
     }
     return GNURadio::Knob();
@@ -249,7 +247,7 @@ template <typename TO_PMT_F>
 rpcpmtconverter::to_pmt_reg<TO_PMT_F>::to_pmt_reg(To_PMT& instance,
                                                   const GNURadio::BaseTypes::type type)
 {
-    boost::assign::ptr_map_insert<TO_PMT_F>(instance.to_pmt_map)(type);
+    instance.to_pmt_map.emplace(type, std::make_unique<TO_PMT_F>());
 }
 
 pmt::pmt_t rpcpmtconverter::to_pmt_f::operator()(const GNURadio::Knob& knob)
@@ -257,14 +255,13 @@ pmt::pmt_t rpcpmtconverter::to_pmt_f::operator()(const GNURadio::Knob& knob)
     // FIXME: Don't get loggers every time we need to log something.
     gr::logger_ptr logger, debug_logger;
     gr::configure_default_loggers(logger, debug_logger, "rpcpmtconverter");
-    std::ostringstream msg;
-    msg << "ERROR Don't know how to handle Knob Type (from): " << knob.type;
-    GR_LOG_ERROR(debug_logger, msg.str());
+    debug_logger->error("ERROR Don't know how to handle Knob Type (from): {}",
+                        to_string(knob.type));
     assert(0);
     return pmt::pmt_t();
 }
 
 pmt::pmt_t rpcpmtconverter::To_PMT::operator()(const GNURadio::Knob& knob)
 {
-    return to_pmt_map[knob.type](knob);
+    return (*to_pmt_map[knob.type])(knob);
 }

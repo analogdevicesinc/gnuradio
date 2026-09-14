@@ -1,12 +1,14 @@
 '[Core]':
 - Coding:
   - digital_additive_scrambler_bb
+  - digital_additive_scrambler_xx
   - digital_descrambler_bb
   - digital_scrambler_bb
 - Equalizers:
   - variable_adaptive_algorithm
   - digital_linear_equalizer
   - digital_decision_feedback_equalizer
+  - digital_meas_evm_cc
 - Measurement Tools:
   - digital_mpsk_snr_est_cc
   - digital_probe_density_b
@@ -26,6 +28,8 @@
 - Packet Operators:
   - digital_correlate_access_code_tag_xx
   - digital_correlate_access_code_xx_ts
+  - digital_crc_append
+  - digital_crc_check
   - digital_crc16_async_bb
   - digital_crc32_bb
   - digital_crc32_async_bb

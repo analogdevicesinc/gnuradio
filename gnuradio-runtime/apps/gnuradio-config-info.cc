@@ -1,6 +1,7 @@
 /* -*- c++ -*- */
 /*
  * Copyright 2009 Free Software Foundation, Inc.
+ * Copyright 2024 Marcus Müller
  *
  * This file is part of GNU Radio
  *
@@ -13,10 +14,8 @@
 #endif
 
 #include <gnuradio/constants.h>
-#include <gnuradio/logger.h>
 #include <gnuradio/prefs.h>
 #include <gnuradio/sys_paths.h>
-#include <boost/format.hpp>
 #include <boost/program_options.hpp>
 #include <iostream>
 
@@ -24,8 +23,8 @@ namespace po = boost::program_options;
 
 int main(int argc, char** argv)
 {
-    po::options_description desc(
-        (boost::format("Program options: %1% [options]") % argv[0]).str());
+    po::options_description desc("Program options: " + std::string(argv[0]) +
+                                 " [options]");
     po::variables_map vm;
 
     // clang-format off
@@ -35,6 +34,7 @@ int main(int argc, char** argv)
         "sysconfdir", "print GNU Radio system configuration directory")(
         "prefsdir", "print GNU Radio preferences directory")(
         "userprefsdir", "print GNU Radio user preferences directory")(
+        "persistentdir", "print GNU Radio persistent state directory")(
         "prefs", "print GNU Radio preferences")(
         "builddate", "print GNU Radio build date (RFC2822 format)")(
         "enabled-components", "print GNU Radio build time enabled components")(
@@ -48,9 +48,8 @@ int main(int argc, char** argv)
         po::store(po::parse_command_line(argc, argv, desc), vm);
         po::notify(vm);
     } catch (po::error& error) {
-        gr::logger_ptr logger, debug_logger;
-        gr::configure_default_loggers(logger, debug_logger, "gnuradio-config-info.cc");
-        GR_LOG_ERROR(logger, boost::format("ERROR %s %s") % error.what() % desc);
+        std::cerr << "Error: " << error.what() << std::endl << std::endl;
+        std::cerr << desc << std::endl;
         return 1;
     }
 
@@ -71,7 +70,10 @@ int main(int argc, char** argv)
         std::cout << gr::prefsdir() << std::endl;
 
     if (vm.count("userprefsdir") || print_all)
-        std::cout << gr::userconf_path() << std::endl;
+        std::cout << gr::paths::userconf().string() << std::endl;
+
+    if (vm.count("persistentdir") || print_all)
+        std::cout << gr::paths::persistent().string() << std::endl;
 
     // Not included in print all due to verbosity
     if (vm.count("prefs"))

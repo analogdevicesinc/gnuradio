@@ -71,9 +71,7 @@ vector_sink_f_impl::vector_sink_f_impl(unsigned int vlen,
 
 vector_sink_f_impl::~vector_sink_f_impl()
 {
-    if (!d_main_gui->isClosed()) {
-        d_main_gui->close();
-    }
+    QMetaObject::invokeMethod(d_main_gui, "close");
 }
 
 bool vector_sink_f_impl::check_topology(int ninputs, int noutputs)
@@ -90,10 +88,6 @@ void vector_sink_f_impl::initialize(const std::string& name,
     if (qApp != NULL) {
         d_qApplication = qApp;
     } else {
-#if QT_VERSION >= 0x040500 && QT_VERSION < 0x050000
-        std::string style = prefs::singleton()->get_string("qtgui", "style", "raster");
-        QApplication::setGraphicsSystem(QString(style.c_str()));
-#endif
         d_qApplication = new QApplication(d_argc, &d_argv);
     }
 
@@ -113,7 +107,7 @@ void vector_sink_f_impl::initialize(const std::string& name,
     set_update_time(0.1);
 }
 
-void vector_sink_f_impl::exec_() { d_qApplication->exec(); }
+void vector_sink_f_impl::exec() { d_qApplication->exec(); }
 
 QWidget* vector_sink_f_impl::qwidget() { return d_main_gui; }
 
@@ -122,9 +116,8 @@ unsigned int vector_sink_f_impl::vlen() const { return d_vlen; }
 void vector_sink_f_impl::set_vec_average(const float avg)
 {
     if (avg < 0 || avg > 1.0) {
-        GR_LOG_ALERT(d_logger,
-                     "Invalid average value received in set_vec_average(), must be "
-                     "within [0, 1].");
+        d_logger->alert("Invalid average value received in set_vec_average(), must be "
+                        "within [0, 1].");
         return;
     }
     d_main_gui->setVecAverage(avg);
@@ -253,6 +246,8 @@ void vector_sink_f_impl::enable_menu(bool en) { d_main_gui->enableMenu(en); }
 
 void vector_sink_f_impl::enable_grid(bool en) { d_main_gui->setGrid(en); }
 
+void vector_sink_f_impl::disable_legend() { d_main_gui->disableLegend(); }
+
 void vector_sink_f_impl::enable_autoscale(bool en) { d_main_gui->autoScale(en); }
 
 void vector_sink_f_impl::clear_max_hold() { d_main_gui->clearMaxHold(); }
@@ -284,7 +279,7 @@ int vector_sink_f_impl::work(int noutput_items,
     for (int i = 0; i < noutput_items; i++) {
         if (gr::high_res_timer_now() - d_last_time > d_update_time) {
             for (int n = 0; n < d_nconnections; n++) {
-                in = ((const float*)input_items[n]) + d_vlen;
+                in = ((const float*)input_items[n]) + i * d_vlen;
                 for (unsigned int x = 0; x < d_vlen; x++) {
                     d_magbufs[n][x] =
                         (double)((1.0 - d_vecavg) * d_magbufs[n][x] + (d_vecavg)*in[x]);

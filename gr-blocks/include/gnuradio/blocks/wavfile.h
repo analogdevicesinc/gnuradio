@@ -14,8 +14,6 @@
 #ifndef _GR_WAVFILE_H_
 #define _GR_WAVFILE_H_
 
-#include <cstdio>
-
 namespace gr {
 namespace blocks {
 
@@ -57,6 +55,7 @@ enum wavfile_subformat_t {
     FORMAT_FLOAT,
     FORMAT_DOUBLE,
     FORMAT_VORBIS = 0x0060,
+    FORMAT_OPUS = 0x0064,
 };
 
 } /* namespace blocks */

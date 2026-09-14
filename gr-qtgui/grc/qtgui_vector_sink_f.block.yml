@@ -88,14 +88,24 @@ parameters:
     dtype: real
     default: '0.10'
     hide: part
--   id: gui_hint
-    label: GUI Hint
-    dtype: gui_hint
-    hide: part
 -   id: showports
     label: Show Msg Ports
     dtype: bool
     default: 'False'
+    options: ['True', 'False']
+    option_labels: ['Yes', 'No']
+    hide: part
+-   id: gui_hint
+    label: GUI Hint
+    dtype: gui_hint
+    hide: part
+-   id: legend
+    label: Legend
+    category: Config
+    dtype: enum
+    default: 'True'
+    options: ['True', 'False']
+    option_labels: ['Yes', 'No']
     hide: part
 -   id: label1
     label: Line 1 Label
@@ -291,9 +301,7 @@ outputs:
 
 templates:
     imports: |-
-        from PyQt5 import Qt
-        from gnuradio import qtgui
-        import sip
+        from PyQt6 import sip
     callbacks:
     - set_update_time(${update_time})
     - set_x_axis(${x_start}, ${x_step})
@@ -323,6 +331,10 @@ templates:
         self.${id}.set_y_axis_units(${y_units})
         self.${id}.set_ref_level(${ref_level})
 
+        % if legend == "False":
+        self.${id}.disable_legend()
+        % endif
+
         labels = [${label1}, ${label2}, ${label3}, ${label4}, ${label5},
             ${label6}, ${label7}, ${label8}, ${label9}, ${label10}]
         widths = [${width1}, ${width2}, ${width3}, ${width4}, ${width5},
@@ -341,7 +353,7 @@ templates:
             self.${id}.set_line_color(i, colors[i])
             self.${id}.set_line_alpha(i, alphas[i])
 
-        ${win} = sip.wrapinstance(self.${id}.qwidget(), Qt.QWidget)
+        ${win} = sip.wrapinstance(self.${id}.qwidget(), QtWidgets.QWidget)
         ${gui_hint() % win}
 
 documentation: |-

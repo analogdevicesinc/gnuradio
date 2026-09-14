@@ -11,14 +11,10 @@
 #ifndef INCLUDED_QTGUI_TIME_RASTER_SINK_F_H
 #define INCLUDED_QTGUI_TIME_RASTER_SINK_F_H
 
-#ifdef ENABLE_PYTHON
-#include <Python.h>
-#endif
-
 #include <gnuradio/qtgui/api.h>
 #include <gnuradio/sync_block.h>
-#include <qapplication.h>
 #include <qwt_symbol.h>
+#include <QApplication>
 
 namespace gr {
 namespace qtgui {
@@ -71,7 +67,7 @@ public:
                      int nconnections = 1,
                      QWidget* parent = NULL);
 
-    virtual void exec_() = 0;
+    virtual void exec() = 0;
     virtual QWidget* qwidget() = 0;
 
     virtual void set_x_label(const std::string& label) = 0;

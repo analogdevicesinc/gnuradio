@@ -13,8 +13,8 @@
 /* If manual edits are made, the following tags should be modified accordingly.    */
 /* BINDTOOL_GEN_AUTOMATIC(0)                                                       */
 /* BINDTOOL_USE_PYGCCXML(0)                                                        */
-/* BINDTOOL_HEADER_FILE(rfnoc_tx_streamer.h)                                        */
-/* BINDTOOL_HEADER_FILE_HASH(881e20a2c6c893bdb9f5d302f690174d)                     */
+/* BINDTOOL_HEADER_FILE(rfnoc_tx_streamer.h)                                       */
+/* BINDTOOL_HEADER_FILE_HASH(8d684dbb360bb19f5a2c239090302e2a)                     */
 /***********************************************************************************/
 
 #include <pybind11/complex.h>

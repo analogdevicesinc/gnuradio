@@ -15,7 +15,6 @@
 #include "ber_bf_impl.h"
 #include <gnuradio/io_signature.h>
 #include <volk/volk.h>
-#include <boost/format.hpp>
 #include <cmath>
 
 namespace gr {
@@ -62,8 +61,8 @@ int ber_bf_impl::general_work(int noutput_items,
                               gr_vector_const_void_star& input_items,
                               gr_vector_void_star& output_items)
 {
-    unsigned char* inbuffer0 = (unsigned char*)input_items[0];
-    unsigned char* inbuffer1 = (unsigned char*)input_items[1];
+    const unsigned char* inbuffer0 = (const unsigned char*)input_items[0];
+    const unsigned char* inbuffer1 = (const unsigned char*)input_items[1];
     float* outbuffer = (float*)output_items[0];
 
     int items = ninput_items[0] <= ninput_items[1] ? ninput_items[0] : ninput_items[1];
@@ -79,14 +78,15 @@ int ber_bf_impl::general_work(int noutput_items,
 
             if (d_total_errors >= d_berminerrors) {
                 outbuffer[0] = calculate_log_ber();
-                GR_LOG_INFO(d_logger,
-                            boost::format("    %1% over %2% --> %3%") % d_total_errors %
-                                (d_total * 8) % outbuffer[0]);
+                d_logger->info("    {:d} over {:d} --> {:g}",
+                               d_total_errors,
+                               d_total * 8,
+                               outbuffer[0]);
                 return 1;
             }
             // check for total_errors to prevent early shutdown at high SNR simulations
             else if (calculate_log_ber() < d_ber_limit && d_total_errors > 0) {
-                GR_LOG_INFO(d_logger, "    Min. BER limit reached");
+                d_logger->info("    Min. BER limit reached");
                 outbuffer[0] = d_ber_limit;
                 d_total_errors = d_berminerrors + 1;
                 return 1;

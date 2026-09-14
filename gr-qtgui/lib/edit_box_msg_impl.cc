@@ -17,7 +17,6 @@
 #include <gnuradio/io_signature.h>
 #include <gnuradio/prefs.h>
 #include <gnuradio/qtgui/utils.h>
-#include <boost/format.hpp>
 #include <sstream>
 
 namespace gr {
@@ -81,11 +80,7 @@ edit_box_msg_impl::edit_box_msg_impl(data_type_t type,
             d_key->setEnabled(false);
 
             QFontMetrics fm = d_key->fontMetrics();
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 11, 0))
             int width = 15 + fm.horizontalAdvance(key_text);
-#else
-            int width = 15 + fm.width(key_text);
-#endif
 
             d_key->setFixedWidth(width);
 
@@ -135,7 +130,8 @@ edit_box_msg_impl::edit_box_msg_impl(data_type_t type,
     d_vlayout->addItem(d_hlayout);
     d_group->setLayout(d_vlayout);
 
-    QObject::connect(d_val, SIGNAL(editingFinished()), this, SLOT(edit_finished()));
+    // use returnPressed signal specifically to not trigger when focus is lost
+    QObject::connect(d_val, SIGNAL(returnPressed()), this, SLOT(edit_finished()));
 
     d_msg = pmt::PMT_NIL;
 
@@ -147,14 +143,8 @@ edit_box_msg_impl::edit_box_msg_impl(data_type_t type,
 
 edit_box_msg_impl::~edit_box_msg_impl()
 {
-    delete d_group;
-    delete d_hlayout;
-    delete d_vlayout;
-    delete d_val;
     if (d_is_pair)
         delete d_key;
-    if (d_label)
-        delete d_label;
 }
 
 bool edit_box_msg_impl::start()
@@ -167,7 +157,7 @@ bool edit_box_msg_impl::start()
     return block::start();
 }
 
-void edit_box_msg_impl::exec_() { d_qApplication->exec(); }
+void edit_box_msg_impl::exec() { d_qApplication->exec(); }
 
 QWidget* edit_box_msg_impl::qwidget() { return (QWidget*)d_group; }
 
@@ -234,16 +224,14 @@ void edit_box_msg_impl::set_value(pmt::pmt_t val)
             if (d_is_static) {
                 std::string cur_key = d_key->text().toStdString();
                 if (skey != cur_key) {
-                    GR_LOG_WARN(d_logger,
-                                boost::format("Got key '%1%' but expected '%2%'") % skey %
-                                    cur_key);
+                    d_logger->warn("Got key '{:s}' but expected '{:s}'", skey, cur_key);
                     return;
                 }
             }
             val = pmt::cdr(val);
             d_key->setText(QString(skey.c_str()));
         } else {
-            GR_LOG_WARN(d_logger, "Did not find PMT pair");
+            d_logger->warn("Did not find PMT pair");
             return;
         }
     }
@@ -254,7 +242,7 @@ void edit_box_msg_impl::set_value(pmt::pmt_t val)
             xi = pmt::to_long(val);
             d_val->setText(QString::number(xi));
         } else {
-            GR_LOG_WARN(d_logger, "Conversion from integer failed");
+            d_logger->warn("Conversion from integer failed");
             return;
         }
         break;
@@ -267,7 +255,7 @@ void edit_box_msg_impl::set_value(pmt::pmt_t val)
             }
             d_val->setText(text_list.join(", "));
         } else {
-            GR_LOG_WARN(d_logger, "Conversion from integer vector failed");
+            d_logger->warn("Conversion from integer vector failed");
             return;
         }
         break;
@@ -276,7 +264,7 @@ void edit_box_msg_impl::set_value(pmt::pmt_t val)
             xf = pmt::to_float(val);
             d_val->setText(QString::number(xf));
         } else {
-            GR_LOG_WARN(d_logger, "Conversion from float failed");
+            d_logger->warn("Conversion from float failed");
             return;
         }
         break;
@@ -289,7 +277,7 @@ void edit_box_msg_impl::set_value(pmt::pmt_t val)
             }
             d_val->setText(text_list.join(", "));
         } else {
-            GR_LOG_WARN(d_logger, "Conversion from float vector failed");
+            d_logger->warn("Conversion from float vector failed");
             return;
         }
         break;
@@ -298,7 +286,7 @@ void edit_box_msg_impl::set_value(pmt::pmt_t val)
             xd = pmt::to_double(val);
             d_val->setText(QString::number(xd));
         } else {
-            GR_LOG_WARN(d_logger, "Conversion from double failed");
+            d_logger->warn("Conversion from double failed");
             return;
         }
         break;
@@ -311,7 +299,7 @@ void edit_box_msg_impl::set_value(pmt::pmt_t val)
             }
             d_val->setText(text_list.join(", "));
         } else {
-            GR_LOG_WARN(d_logger, "Conversion from double vector failed");
+            d_logger->warn("Conversion from double vector failed");
             return;
         }
         break;
@@ -320,7 +308,7 @@ void edit_box_msg_impl::set_value(pmt::pmt_t val)
             xc = pmt::to_complex(val);
             d_val->setText(QString("(%1,%2)").arg(xc.real()).arg(xc.imag()));
         } else {
-            GR_LOG_WARN(d_logger, "Conversion from complex failed");
+            d_logger->warn("Conversion from complex failed");
             return;
         }
         break;
@@ -333,7 +321,7 @@ void edit_box_msg_impl::set_value(pmt::pmt_t val)
             }
             d_val->setText(text_list.join(", "));
         } else {
-            GR_LOG_WARN(d_logger, "Conversion from complex vector failed");
+            d_logger->warn("Conversion from complex vector failed");
             return;
         }
         break;
@@ -342,7 +330,7 @@ void edit_box_msg_impl::set_value(pmt::pmt_t val)
             xs = pmt::symbol_to_string(val);
             d_val->setText(QString(xs.c_str()));
         } else {
-            GR_LOG_WARN(d_logger, "Conversion from string failed");
+            d_logger->warn("Conversion from string failed");
             return;
         }
         break;
@@ -369,7 +357,7 @@ void edit_box_msg_impl::edit_finished()
         if (conv_ok) {
             d_msg = pmt::from_long(xi);
         } else {
-            GR_LOG_WARN(d_logger, "Conversion to integer failed");
+            d_logger->warn("Conversion to integer failed");
             return;
         }
         break;
@@ -383,7 +371,7 @@ void edit_box_msg_impl::edit_finished()
             if (conv_ok) {
                 xv.push_back(t);
             } else {
-                GR_LOG_WARN(d_logger, "Conversion to integer vector failed");
+                d_logger->warn("Conversion to integer vector failed");
                 return;
             }
         }
@@ -394,7 +382,7 @@ void edit_box_msg_impl::edit_finished()
         if (conv_ok) {
             d_msg = pmt::from_float(xf);
         } else {
-            GR_LOG_WARN(d_logger, "Conversion to float failed");
+            d_logger->warn("Conversion to float failed");
             return;
         }
         break;
@@ -408,7 +396,7 @@ void edit_box_msg_impl::edit_finished()
             if (conv_ok) {
                 xv.push_back(t);
             } else {
-                GR_LOG_WARN(d_logger, "Conversion to float vector failed");
+                d_logger->warn("Conversion to float vector failed");
                 return;
             }
         }
@@ -419,7 +407,7 @@ void edit_box_msg_impl::edit_finished()
         if (conv_ok) {
             d_msg = pmt::from_double(xd);
         } else {
-            GR_LOG_WARN(d_logger, "Conversion to double failed");
+            d_logger->warn("Conversion to double failed");
             return;
         }
         break;
@@ -433,7 +421,7 @@ void edit_box_msg_impl::edit_finished()
             if (conv_ok) {
                 xv.push_back(t);
             } else {
-                GR_LOG_WARN(d_logger, "Conversion to double vector failed");
+                d_logger->warn("Conversion to double vector failed");
                 return;
             }
         }
@@ -443,9 +431,7 @@ void edit_box_msg_impl::edit_finished()
         std::stringstream ss(text.toStdString());
         ss >> xc;
         if (static_cast<size_t>(ss.tellg()) != ss.str().size()) {
-            GR_LOG_WARN(d_logger,
-                        boost::format("Conversion of %s to complex failed") %
-                            text.toStdString());
+            d_logger->warn("Conversion of {:s} to complex failed", text.toStdString());
             return;
         }
         d_msg = pmt::from_complex(xc.real(), xc.imag());
@@ -471,7 +457,7 @@ void edit_box_msg_impl::edit_finished()
                     even = true;
                 }
             } else {
-                GR_LOG_WARN(d_logger, "Conversion to complex vector failed");
+                d_logger->warn("Conversion to complex vector failed");
                 return;
             }
         }

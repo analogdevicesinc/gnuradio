@@ -11,17 +11,10 @@
 #ifndef INCLUDED_QTGUI_SINK_F_H
 #define INCLUDED_QTGUI_SINK_F_H
 
-#ifdef ENABLE_PYTHON
-#pragma push_macro("slots")
-#undef slots
-#include "Python.h"
-#pragma pop_macro("slots")
-#endif
-
 #include <gnuradio/block.h>
 #include <gnuradio/qtgui/api.h>
-#include <qapplication.h>
 #include <qwt_symbol.h>
+#include <QApplication>
 
 
 namespace gr {
@@ -89,7 +82,7 @@ public:
                      bool plotconst,
                      QWidget* parent = NULL);
 
-    virtual void exec_() = 0;
+    virtual void exec() = 0;
     virtual QWidget* qwidget() = 0;
 
     virtual void set_fft_size(const int fftsize) = 0;

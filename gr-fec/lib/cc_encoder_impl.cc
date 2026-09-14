@@ -17,7 +17,6 @@
 #include <gnuradio/fec/generic_encoder.h>
 #include <volk/volk.h>
 #include <volk/volk_typedefs.h>
-#include <boost/format.hpp>
 #include <cmath>
 #include <cstdio>
 #include <sstream>
@@ -105,9 +104,9 @@ bool cc_encoder_impl::set_frame_size(unsigned int frame_size)
 {
     bool ret = true;
     if (frame_size > d_max_frame_size) {
-        GR_LOG_INFO(d_logger,
-                    boost::format("tried to set frame to %1%; max possible is %2%") %
-                        frame_size % d_max_frame_size);
+        d_logger->info("tried to set frame to {:d}; max possible is {:d}",
+                       frame_size,
+                       d_max_frame_size);
         frame_size = d_max_frame_size;
         ret = false;
     }
@@ -163,7 +162,7 @@ void cc_encoder_impl::partab_init(void)
     }
 }
 
-void cc_encoder_impl::generic_work(void* in_buffer, void* out_buffer)
+void cc_encoder_impl::generic_work(const void* in_buffer, void* out_buffer)
 {
     const unsigned char* in = (const unsigned char*)in_buffer;
     unsigned char* out = (unsigned char*)out_buffer;

@@ -47,6 +47,23 @@ void constellation_decoder_cb_impl::forecast(int noutput_items,
         ninput_items_required[i] = input_required;
 }
 
+void constellation_decoder_cb_impl::set_constellation(
+    constellation_sptr new_constellation)
+{
+    if (new_constellation->dimensionality() != d_dim) {
+        d_logger->warn("Attempting to change to a new dimensionality constellation (from "
+                       "{} to {}). This may cause buffering issues",
+                       d_dim,
+                       new_constellation->dimensionality());
+    }
+
+    gr::thread::scoped_lock l(d_mutex);
+
+    d_constellation = new_constellation;
+    d_dim = d_constellation->dimensionality();
+    set_relative_rate(1, (uint64_t)d_dim);
+}
+
 int constellation_decoder_cb_impl::general_work(int noutput_items,
                                                 gr_vector_int& ninput_items,
                                                 gr_vector_const_void_star& input_items,
@@ -54,6 +71,8 @@ int constellation_decoder_cb_impl::general_work(int noutput_items,
 {
     gr_complex const* in = (const gr_complex*)input_items[0];
     unsigned char* out = (unsigned char*)output_items[0];
+
+    gr::thread::scoped_lock l(d_mutex);
 
     for (int i = 0; i < noutput_items; i++) {
         out[i] = d_constellation->decision_maker(&(in[i * d_dim]));

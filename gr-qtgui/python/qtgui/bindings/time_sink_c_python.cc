@@ -11,7 +11,6 @@
 
 #include <pybind11/buffer_info.h>
 #include <pybind11/complex.h>
-#include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
@@ -57,7 +56,7 @@ void bind_time_sink_c(py::module& m)
              D(time_sink_c, make))
 
 
-        .def("exec_", &time_sink_c::exec_, D(time_sink_c, exec_))
+        .def("exec", &time_sink_c::exec, D(time_sink_c, exec))
 
 
         .def(
@@ -246,14 +245,14 @@ void bind_time_sink_c(py::module& m)
 
 
         .def("enable_tags",
-             (void (time_sink_c::*)(unsigned int, bool)) & time_sink_c::enable_tags,
+             (void(time_sink_c::*)(unsigned int, bool)) & time_sink_c::enable_tags,
              py::arg("which"),
              py::arg("en"),
              D(time_sink_c, enable_tags, 0))
 
 
         .def("enable_tags",
-             (void (time_sink_c::*)(bool)) & time_sink_c::enable_tags,
+             (void(time_sink_c::*)(bool)) & time_sink_c::enable_tags,
              py::arg("en"),
              D(time_sink_c, enable_tags, 1))
 

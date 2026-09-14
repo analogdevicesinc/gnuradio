@@ -10,18 +10,28 @@
 ########################################################################
 include(GrBoost)
 
-find_package(FFTW3f)
+if(WIN32 AND CONAN_TOOLCHAIN_DETECTED)
+    # Name on Windows does not include datatype
+    set(fftw_name FFTW3)
+else()
+    set(fftw_name FFTW3f)
+endif()
+gr_find_package(${fftw_name})
 
 ########################################################################
 # Register component
 ########################################################################
 include(GrComponent)
 
-GR_REGISTER_COMPONENT("gr-fft" ENABLE_GR_FFT
-    Boost_FOUND
-    ENABLE_GNURADIO_RUNTIME
-    ENABLE_GR_BLOCKS
-    FFTW3f_FOUND
+gr_register_component(
+    NAME "gr-fft"
+    VAR ENABLE_GR_FFT
+    REQUIRED_COMPONENTS
+        gnuradio-runtime
+        gr-blocks
+    REQUIRED_TPLS
+        Boost_FOUND
+        ${fftw_name}_FOUND
 )
 
 ########################################################################
@@ -29,30 +39,26 @@ GR_REGISTER_COMPONENT("gr-fft" ENABLE_GR_FFT
 ########################################################################
 if(ENABLE_GR_FFT)
 
-########################################################################
-# Add subdirectories
-########################################################################
-add_subdirectory(include/gnuradio/fft)
-add_subdirectory(lib)
-if(ENABLE_PYTHON)
-    add_subdirectory(python/fft)
-endif(ENABLE_PYTHON)
-if(ENABLE_GRC)
-    add_subdirectory(grc)
-endif(ENABLE_GRC)
-add_subdirectory(docs)
+    ########################################################################
+    # Add subdirectories
+    ########################################################################
+    add_subdirectory(include/gnuradio/fft)
+    add_subdirectory(lib)
+    if(ENABLE_PYTHON)
+        add_subdirectory(python/fft)
+    endif(ENABLE_PYTHON)
+    if(ENABLE_GRC)
+        add_subdirectory(grc)
+    endif(ENABLE_GRC)
+    add_subdirectory(docs)
 
-########################################################################
-# Create Pkg Config File
-########################################################################
-configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/gnuradio-fft.pc.in
-    ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-fft.pc
-@ONLY)
+    ########################################################################
+    # Create Pkg Config File
+    ########################################################################
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/gnuradio-fft.pc.in
+                   ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-fft.pc @ONLY)
 
-install(
-    FILES ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-fft.pc
-    DESTINATION ${GR_LIBRARY_DIR}/pkgconfig
-)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-fft.pc
+            DESTINATION ${GR_LIBRARY_DIR}/pkgconfig)
 
 endif(ENABLE_GR_FFT)

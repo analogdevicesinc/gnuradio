@@ -67,7 +67,7 @@ number_sink_impl::number_sink_impl(
     initialize();
 }
 
-number_sink_impl::~number_sink_impl() {}
+number_sink_impl::~number_sink_impl() { QMetaObject::invokeMethod(d_main_gui, "close"); }
 
 bool number_sink_impl::check_topology(int ninputs, int noutputs)
 {
@@ -83,13 +83,22 @@ void number_sink_impl::initialize()
     }
 
     d_main_gui = new NumberDisplayForm(d_nconnections, d_type, d_parent);
+    switch (d_itemsize) {
+    case sizeof(char):
+    case sizeof(short):
+        d_main_gui->set_display_format(NumberDisplayForm::FORMAT_INT);
+        break;
+    default:
+        d_main_gui->set_display_format(NumberDisplayForm::FORMAT_FLOAT);
+        break;
+    }
     d_main_gui->setAverage(d_average);
 
     // initialize update time to 10 times a second
     set_update_time(0.1);
 }
 
-void number_sink_impl::exec_() { d_qApplication->exec(); }
+void number_sink_impl::exec() { d_qApplication->exec(); }
 
 QWidget* number_sink_impl::qwidget() { return d_main_gui; }
 
@@ -233,21 +242,21 @@ void number_sink_impl::_gui_update_trigger()
 
 float number_sink_impl::get_item(const void* input_items, int n)
 {
-    char* inc;
-    short* ins;
-    float* inf;
+    const char* inc;
+    const short* ins;
+    const float* inf;
 
     switch (d_itemsize) {
     case (1):
-        inc = (char*)input_items;
+        inc = (const char*)input_items;
         return static_cast<float>(inc[n]);
         break;
     case (2):
-        ins = (short*)input_items;
+        ins = (const short*)input_items;
         return static_cast<float>(ins[n]);
         break;
     case (4):
-        inf = (float*)input_items;
+        inf = (const float*)input_items;
         return static_cast<float>(inf[n]);
         break;
     default:

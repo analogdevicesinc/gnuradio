@@ -11,16 +11,13 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include "vmcircbuf.h"
 #include <gnuradio/block.h>
 #include <gnuradio/buffer.h>
 #include <gnuradio/buffer_double_mapped.h>
 #include <gnuradio/buffer_reader.h>
 #include <gnuradio/buffer_single_mapped.h>
 #include <gnuradio/buffer_type.h>
-#include <gnuradio/integer_math.h>
 #include <gnuradio/math.h>
-#include <boost/format.hpp>
 #include <algorithm>
 #include <cassert>
 #include <stdexcept>
@@ -168,19 +165,6 @@ void buffer::add_item_tag(const tag_t& tag)
     d_item_tags.insert(std::pair<uint64_t, tag_t>(tag.offset, tag));
 }
 
-void buffer::remove_item_tag(const tag_t& tag, long id)
-{
-    gr::thread::scoped_lock guard(*mutex());
-    for (std::multimap<uint64_t, tag_t>::iterator it =
-             d_item_tags.lower_bound(tag.offset);
-         it != d_item_tags.upper_bound(tag.offset);
-         ++it) {
-        if ((*it).second == tag) {
-            (*it).second.marked_deleted.push_back(id);
-        }
-    }
-}
-
 void buffer::prune_tags(uint64_t max_time)
 {
     /* NOTE: this function _should_ lock the mutex before editing
@@ -258,11 +242,14 @@ std::ostream& operator<<(std::ostream& os, const buffer& buf)
 
 void buffer::set_transfer_type(const transfer_type& type)
 {
-    if ((d_transfer_type == transfer_type::DEFAULT_INVALID) ||
-        (d_transfer_type == type)) {
+    if (d_transfer_type == transfer_type::DEFAULT_INVALID) {
         // Set the transfer type if the existing value is the default or if it is the
         // same as what's already been set
         d_transfer_type = type;
+        // Let derived buffers react (e.g. deferred host allocation).
+        on_transfer_type_set(type);
+    } else if (d_transfer_type == type) {
+        // Already set to the same value: no-op.
     } else {
         // Otherwise error out as the transfer type value cannot be changed after
         // it is set

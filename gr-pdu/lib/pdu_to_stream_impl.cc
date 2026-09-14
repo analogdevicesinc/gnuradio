@@ -16,8 +16,8 @@
 #include <gnuradio/io_signature.h>
 #include <gnuradio/pdu.h>
 
-#include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/thread/thread.hpp>
+#include <chrono>
+#include <thread>
 
 namespace gr {
 namespace pdu {
@@ -103,15 +103,15 @@ void pdu_to_stream_impl<T>::store_pdu(pmt::pmt_t pdu)
     // check and see if there is already data in the vector, drop if not in an append mode
     if (d_drop_early_bursts & (d_data.size() | d_pdu_queue.size())) {
         if (d_early_burst_err) {
-            GR_LOG_ERROR(this->d_logger,
-                         "PDU received before previous burst finished writing - dropped");
+            this->d_logger->error(
+                "PDU received before previous burst finished writing - dropped");
         }
         return;
     }
 
     // make sure PDU data is formed properly
     if (!(pmt::is_pdu(pdu))) {
-        GR_LOG_ERROR(this->d_logger, "PMT is not a PDU, dropping");
+        this->d_logger->error("PMT is not a PDU, dropping");
         return;
     }
 
@@ -121,9 +121,9 @@ void pdu_to_stream_impl<T>::store_pdu(pmt::pmt_t pdu)
     if (pmt::length(v_data) != 0) {
         size_t v_itemsize = pmt::uniform_vector_itemsize(v_data);
         if (v_itemsize != d_itemsize) {
-            GR_LOG_ERROR(this->d_logger,
-                         boost::format("PDU received has incorrect itemsize (%d != %d)") %
-                             v_itemsize % d_itemsize);
+            this->d_logger->error("PDU received has incorrect itemsize ({:d} != {:d})",
+                                  v_itemsize,
+                                  d_itemsize);
             return;
         }
 
@@ -133,12 +133,11 @@ void pdu_to_stream_impl<T>::store_pdu(pmt::pmt_t pdu)
             d_drop_ctr = 0;
         } else {
             d_drop_ctr++;
-            GR_LOG_WARN(this->d_logger,
-                        boost::format("Queue full, PDU dropped (%d dropped so far)") %
-                            d_drop_ctr);
+            this->d_logger->warn("Queue full, PDU dropped ({:d} dropped so far)",
+                                 d_drop_ctr);
         }
     } else {
-        GR_LOG_WARN(this->d_logger, "zero size PDU ignored");
+        this->d_logger->warn("zero size PDU ignored");
     }
 
     return;
@@ -244,14 +243,14 @@ int pdu_to_stream_impl<T>::work(int noutput_items,
         if (d_pdu_queue.empty()) {
             // if we have nothing to do, sleep for a short duration to prevent rapid
             // successive calls and then return zero items
-            boost::this_thread::sleep(boost::posix_time::microseconds(25));
+            std::this_thread::sleep_for(std::chrono::microseconds(25));
             return 0;
         }
 
         // fetch another PDU of data and update the size of the data
         data_remaining = queue_data();
         if (data_remaining == 0) {
-            boost::this_thread::sleep(boost::posix_time::microseconds(25));
+            std::this_thread::sleep_for(std::chrono::microseconds(25));
             return 0;
         }
     } /* end if data_remaining == 0 */

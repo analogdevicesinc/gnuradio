@@ -17,7 +17,6 @@
 
 #include <gnuradio/io_signature.h>
 #include <gnuradio/prefs.h>
-#include <boost/format.hpp>
 #include <stdexcept>
 
 namespace gr {
@@ -74,7 +73,7 @@ osx_source::osx_source(int sample_rate, const std::string& device_name, bool ok_
     // set the desired output sample rate
 
     if (sample_rate <= 0) {
-        GR_LOG_ERROR(d_logger, boost::format("Invalid Sample Rate: %d") % sample_rate);
+        d_logger->error("Invalid Sample Rate: {:d}", sample_rate);
         throw std::invalid_argument("audio_osx_source");
     } else {
         d_output_sample_rate = (Float64)sample_rate;
@@ -110,9 +109,7 @@ void osx_source::setup()
             if (all_names[0].compare(d_desired_name) != 0) {
 
                 // yes: log the full device name
-                GR_LOG_INFO(d_logger,
-                            boost::format("Using input audio device '%s'.") %
-                                all_names[0]);
+                d_logger->info("Using input audio device '{:s}'.", all_names[0]);
             }
 
             // store info on this device
@@ -137,7 +134,7 @@ void osx_source::setup()
             for (UInt32 nn = 0; nn < all_names.size(); ++nn) {
                 err_str += "    " + all_names[nn] + "\n";
             }
-            GR_LOG_ERROR(d_logger, boost::format(err_str));
+            d_logger->error(err_str);
             throw std::runtime_error("audio_osx_source::setup");
         }
     }
@@ -184,14 +181,13 @@ void osx_source::setup()
 
             } else {
 
-                GR_LOG_INFO(d_logger,
-                            boost::format("\n\nUsing input audio device '%s'.\n  ... "
-                                          "which is the current default input audio"
-                                          " device.\n  Changing the default input"
-                                          " audio device in the System Preferences"
-                                          " will \n  result in changing it here, too "
-                                          "(with an internal reconfiguration).\n") %
-                                std::string(c_name_buf));
+                d_logger->info("\n\nUsing input audio device '{:s}'.\n  ... "
+                               "which is the current default input audio"
+                               " device.\n  Changing the default input"
+                               " audio device in the System Preferences"
+                               " will \n  result in changing it here, too "
+                               "(with an internal reconfiguration).\n",
+                               std::string(c_name_buf));
             }
 
             d_selected_name = c_name_buf;
@@ -221,19 +217,14 @@ void osx_source::setup()
         (d_output_sample_rate < 50000.0 ? 50000 : (UInt32)d_output_sample_rate);
 
 #if _OSX_AU_DEBUG_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("source(): max # samples = %d") % d_buffer_sample_count);
+    d_debug_logger->debug("source(): max # samples = {:d}", d_buffer_sample_count);
 #endif
 
     // create the default AudioUnit for input
 
     // Open the default input unit
 
-#ifndef GR_USE_OLD_AUDIO_UNIT
     AudioComponentDescription desc;
-#else
-    ComponentDescription desc;
-#endif
 
     desc.componentType = kAudioUnitType_Output;
     desc.componentSubType = kAudioUnitSubType_HALOutput;
@@ -241,28 +232,14 @@ void osx_source::setup()
     desc.componentFlags = 0;
     desc.componentFlagsMask = 0;
 
-#ifndef GR_USE_OLD_AUDIO_UNIT
-
     AudioComponent comp = AudioComponentFindNext(NULL, &desc);
     if (!comp) {
-        GR_LOG_FATAL(d_logger, boost::format("AudioComponentFindNext Failed"));
+        d_logger->fatal("AudioComponentFindNext Failed");
         throw std::runtime_error("audio_osx_source::setup");
     }
     err = AudioComponentInstanceNew(comp, &d_input_au);
     check_error_and_throw(
         err, "AudioComponentInstanceNew Failed", "audio_osx_source::setup");
-
-#else
-
-    Component comp = FindNextComponent(NULL, &desc);
-    if (!comp) {
-        GR_LOG_FATAL(d_logger, boost::format("FindNextComponent Failed"));
-        throw std::runtime_error("audio_osx_source::setup");
-    }
-    err = OpenAComponent(comp, &d_input_au);
-    check_error_and_throw(err, "OpenAComponent Failed", "audio_osx_source::setup");
-
-#endif
 
     // must enable the AUHAL for input and disable output
     // before setting the AUHAL's current device
@@ -332,9 +309,8 @@ void osx_source::setup()
         err, "Get Device Input Stream Format (before) failed", "audio_osx_source::setup");
 
 #if _OSX_AU_DEBUG_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("\n---- Device Stream Format (before) ----\n%s\n") %
-                     d_asbd_device);
+    d_debug_logger->debug("\n---- Device Stream Format (before) ----\n{:s}\n",
+                          d_asbd_device);
 #endif
 
     // try to set the device (input) side of the audio device to the
@@ -365,9 +341,8 @@ void osx_source::setup()
         err, "Get Device Input Stream Format (after) failed", "audio_osx_source::setup");
 
 #if _OSX_AU_DEBUG_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("\n---- Device Stream Format (after) ----\n%s\n") %
-                     d_asbd_device);
+    d_debug_logger->debug("\n---- Device Stream Format (after) ----\n{:s}\n",
+                          d_asbd_device);
 #endif
 
     d_device_sample_rate = d_asbd_device.mSampleRate;
@@ -387,9 +362,8 @@ void osx_source::setup()
                           "audio_osx_source::setup");
 
 #if _OSX_AU_DEBUG_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("---- Client Stream Format (Before) ----\n%s\n") %
-                     d_asbd_client);
+    d_debug_logger->debug("---- Client Stream Format (Before) ----\n{:s}\n",
+                          d_asbd_client);
 #endif
 
     // Set the format of all the AUs to the
@@ -436,9 +410,8 @@ void osx_source::setup()
         err, "Get Device Output Stream Format (after) failed", "audio_osx_source::setup");
 
 #if _OSX_AU_DEBUG_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("---- Client Stream Format (After) ----\n%s\n") %
-                     d_asbd_client);
+    d_debug_logger->debug("---- Client Stream Format (After) ----\n{:s}\n",
+                          d_asbd_client);
 #endif
 
     d_pass_through = (d_asbd_client.mSampleRate == d_output_sample_rate);
@@ -578,10 +551,6 @@ void osx_source::setup()
 
     // set up listeners
 
-#ifndef GR_USE_OLD_AUDIO_UNIT
-
-    // 10.4 and newer
-
     {
 
         // set up a listener if hardware changes (at all)
@@ -616,56 +585,37 @@ void osx_source::setup()
         check_error(err, "Adding Default Input Audio Listener failed");
     }
 
-#else
-
-    // 10.5 and older
-
-    err = AudioHardwareAddPropertyListener(
-        kAudioHardwarePropertyDevices,
-        reinterpret_cast<AudioHardwarePropertyListenerProc>(
-            &osx_source::hardware_listener),
-        reinterpret_cast<void*>(this));
-    check_error(err, "Adding Audio Hardware Listener failed");
-
-    if (d_using_default_device) {
-
-        err = AudioHardwareAddPropertyListener(
-            kAudioHardwarePropertyDefaultInputDevice,
-            reinterpret_cast<AudioHardwarePropertyListenerProc>(
-                &osx_source::default_listener),
-            reinterpret_cast<void*>(this));
-        check_error(err, "Adding Default Input Audio Listener failed");
-    }
-
-#endif
-
     // initialize the AU for input, so that it is ready to be used
 
     err = AudioUnitInitialize(d_input_au);
     check_error_and_throw(err, "AudioUnitInitialize", "audio_osx_source::check_channels");
 
 #if _OSX_AU_DEBUG_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format(R"EOF(
+    d_debug_logger->debug(R"EOF(
 audio_osx_source Parameters:
-  Device Sample Rate is %d
-  Client Sample Rate is %d
-  User Sample Rate is %d
-  Do Passthrough is %s
-  Max Sample Count is %d
-  # Device Channels is %d
-  Device Buffer Size in Frames = %d
-  Lead Size in Frames = %d
-  Trail Size in Frames = %d
-  Input Buffer Size in Frames = %d
-  Output Buffer Size in Frames = %d
-)EOF") % d_device_sample_rate %
-                     (d_pass_through ? d_output_sample_rate : d_device_sample_rate) %
-                     d_output_sample_rate % (d_pass_through ? "true" : "false") %
-                     d_buffer_sample_count % d_n_dev_channels %
-                     d_device_buffer_size_frames % d_lead_size_frames %
-                     d_trail_size_frames % d_input_buffer_size_frames %
-                     d_output_buffer_size_frames);
+  Device Sample Rate is {:d}
+  Client Sample Rate is {:d}
+  User Sample Rate is {:d}
+  Do Passthrough is {:s}
+  Max Sample Count is {:d}
+  # Device Channels is {:d}
+  Device Buffer Size in Frames = {:d}
+  Lead Size in Frames = {:d}
+  Trail Size in Frames = {:d}
+  Input Buffer Size in Frames = {:d}
+  Output Buffer Size in Frames = {:d}
+)EOF",
+                          d_device_sample_rate,
+                          d_pass_through ? d_output_sample_rate : d_device_sample_rate,
+                          d_output_sample_rate,
+                          d_pass_through ? "true" : "false",
+                          d_buffer_sample_count,
+                          d_n_dev_channels,
+                          d_device_buffer_size_frames,
+                          d_lead_size_frames,
+                          d_trail_size_frames,
+                          d_input_buffer_size_frames,
+                          d_output_buffer_size_frames);
 #endif
 }
 
@@ -682,9 +632,9 @@ void osx_source::alloc_audio_buffer_list(AudioBufferList** t_abl,
     int counter = n_channels;
 
 #if _OSX_AU_DEBUG_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("alloc_audio_buffer_list: (#chan, #bytes) == (%d, %d)") %
-                     n_channels % input_buffer_size_bytes);
+    d_debug_logger->debug("alloc_audio_buffer_list: (#chan, #bytes) == ({:d}, {:d})",
+                          n_channels,
+                          input_buffer_size_bytes);
 #endif
 
     while (--counter >= 0) {
@@ -732,17 +682,15 @@ bool osx_source::is_running()
 bool osx_source::start()
 {
 #if _OSX_AU_DEBUG_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("%s : audio_osx_source::start: Starting.") %
-                     ((void*)(pthread_self())));
+    d_debug_logger->debug("{:p} : audio_osx_source::start: Starting.",
+                          (void*)pthread_self());
 #endif
 
     if ((!is_running()) && d_input_au) {
 
 #if _OSX_AU_DEBUG_
-        GR_LOG_DEBUG(d_debug_logger,
-                     boost::format("%s : audio_osx_source::start: Starting Audio Unit.") %
-                         ((void*)(pthread_self())));
+        d_debug_logger->debug("{:p} : audio_osx_source::start: Starting Audio Unit.",
+                              (void*)pthread_self());
 #endif
 
         // reset buffers before starting
@@ -763,9 +711,8 @@ bool osx_source::start()
     }
 
 #if _OSX_AU_DEBUG_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("%s : audio_osx_source::start: Returning.") %
-                     (void*)(pthread_self()));
+    d_debug_logger->debug("{:p} : audio_osx_source::start: Returning.",
+                          (void*)pthread_self());
 
 #endif
 
@@ -775,16 +722,14 @@ bool osx_source::start()
 bool osx_source::stop()
 {
 #if _OSX_AU_DEBUG_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("%s : audio_osx_source::stop: Starting.") %
-                     ((void*)(pthread_self())));
+    d_debug_logger->debug("{:p} : audio_osx_source::stop: Starting.",
+                          (void*)pthread_self());
 #endif
     if (is_running()) {
 
 #if _OSX_AU_DEBUG_
-        GR_LOG_DEBUG(d_debug_logger,
-                     boost::format("%s : audio_osx_source::stop: stopping audio unit.") %
-                         ((void*)(pthread_self())));
+        d_debug_logger->debug("{:p} : audio_osx_source::stop: stopping audio unit.",
+                              (void*)pthread_self());
 #endif
 
         // stop the audio unit
@@ -800,9 +745,8 @@ bool osx_source::stop()
     }
 
 #if _OSX_AU_DEBUG_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("%s : audio_osx_source::stop: Returning.") %
-                     ((void*)(pthread_self())));
+    d_debug_logger->debug("{:p} : audio_osx_source::stop: Returning.",
+                          (void*)pthread_self());
 #endif
 
     return (true);
@@ -811,9 +755,8 @@ bool osx_source::stop()
 void osx_source::teardown()
 {
 #if _OSX_AU_DEBUG_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("%s : audio_osx_source::teardown: Starting.") %
-                     ((void*)(pthread_self())));
+    d_debug_logger->debug("{:p} : audio_osx_source::teardown: Starting.",
+                          (void*)pthread_self());
 #endif
 
     OSStatus err = noErr;
@@ -824,9 +767,6 @@ void osx_source::teardown()
 
     // remove the listeners
 
-#ifndef GR_USE_OLD_AUDIO_UNIT
-
-    // 10.4 and newer
     {
         AudioObjectPropertyAddress property = { kAudioHardwarePropertyDevices,
                                                 kAudioObjectPropertyScopeGlobal,
@@ -863,30 +803,6 @@ void osx_source::teardown()
 
         d_using_default_device = false;
     }
-#else
-
-    // 10.5 and older
-
-    err = AudioHardwareRemovePropertyListener(
-        kAudioHardwarePropertyDevices,
-        reinterpret_cast<AudioHardwarePropertyListenerProc>(
-            &osx_source::hardware_listener));
-#if _OSX_AU_DEBUG_
-    check_error(err, "AudioObjectRemovePropertyListener hardware");
-#endif
-
-    if (d_using_default_device) {
-        err = AudioHardwareRemovePropertyListener(
-            kAudioHardwarePropertyDefaultInputDevice,
-            reinterpret_cast<AudioHardwarePropertyListenerProc>(
-                &osx_source::default_listener));
-#if _OSX_AU_DEBUG_
-        check_error(err, "AudioObjectRemovePropertyListener default");
-#endif
-        d_using_default_device = false;
-    }
-
-#endif // GR_USE_OLD_AUDIO_UNIT
 
     // free pre-allocated audio buffers
     free_audio_buffer_list(&d_input_buffer);
@@ -905,16 +821,9 @@ void osx_source::teardown()
     check_error(err, "~audio_osx_source: AudioUnitUninitialize");
 #endif
 
-#ifndef GR_USE_OLD_AUDIO_UNIT
     err = AudioComponentInstanceDispose(d_input_au);
 #if _OSX_AU_DEBUG_
     check_error(err, "~audio_osx_source: AudioComponentInstanceDispose");
-#endif
-#else
-    err = CloseComponent(d_input_au);
-#if _OSX_AU_DEBUG_
-    check_error(err, "~audio_osx_source: CloseComponent");
-#endif
 #endif
 
     // empty and delete the queues
@@ -937,9 +846,8 @@ void osx_source::teardown()
     d_using_default_device = false;
 
 #if _OSX_AU_DEBUG_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("%s : audio_osx_source::teardown: Returning.") %
-                     ((void*)(pthread_self())));
+    d_debug_logger->debug("{:p} : audio_osx_source::teardown: Returning.",
+                          (void*)pthread_self());
 #endif
 }
 
@@ -948,21 +856,20 @@ bool osx_source::check_topology(int ninputs, int noutputs)
     // check # inputs to make sure it's valid
     if (ninputs != 0) {
 
-        GR_LOG_FATAL(d_logger,
-                     boost::format("check_topology(): number of input "
-                                   "streams provided (%d) should be 0.") %
-                         ninputs);
+        d_logger->fatal("check_topology(): number of input "
+                        "streams provided ({:d}) should be 0.",
+                        ninputs);
         throw std::runtime_error("audio_osx_source::check_topology");
     }
 
     // check # outputs to make sure it's valid
     if ((noutputs < 1) | (noutputs > (int)d_n_dev_channels)) {
 
-        GR_LOG_FATAL(d_logger,
-                     boost::format("check_topology(): number of output "
-                                   "streams provided (%d) should be in [1,%d] "
-                                   "for the selected input audio device.") %
-                         noutputs % d_n_dev_channels);
+        d_logger->fatal("check_topology(): number of output "
+                        "streams provided ({:d}) should be in [1,{:d}] "
+                        "for the selected input audio device.",
+                        noutputs,
+                        d_n_dev_channels);
         throw std::runtime_error("audio_osx_source::check_topology");
     }
 
@@ -971,9 +878,7 @@ bool osx_source::check_topology(int ninputs, int noutputs)
     d_n_user_channels = noutputs;
 
 #if _OSX_AU_DEBUG_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("chk_topo: Actual # user output channels = %d") %
-                     noutputs);
+    d_debug_logger->debug("chk_topo: Actual # user output channels = {:d}", noutputs);
 #endif
 
     return (true);
@@ -984,9 +889,8 @@ int osx_source::work(int noutput_items,
                      gr_vector_void_star& output_items)
 {
 #if _OSX_AU_DEBUG_RENDER_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("%s : audio_osx_source::work: Starting.") %
-                     ((void*)(pthread_self())));
+    d_debug_logger->debug("{:p} : audio_osx_source::work: Starting.",
+                          (void*)pthread_self());
 #endif
     if (d_do_reset) {
         if (d_hardware_changed) {
@@ -1001,10 +905,9 @@ int osx_source::work(int noutput_items,
             }
             if (!found) {
 
-                GR_LOG_FATAL(d_logger,
-                             boost::format("The selected input audio device ('%s') "
-                                           "is no longer available.\n") %
-                                 d_selected_name);
+                d_logger->fatal("The selected input audio device ('{:s}') "
+                                "is no longer available.\n",
+                                d_selected_name);
                 return (gr::block::WORK_DONE);
             }
 
@@ -1013,13 +916,12 @@ int osx_source::work(int noutput_items,
         } else {
 
 #if _OSX_AU_DEBUG_RENDER_
-            GR_LOG_DEBUG(d_debug_logger, "audio_osx_source::work: doing reset.");
+            d_debug_logger->debug("audio_osx_source::work: doing reset.");
 #endif
 
-            GR_LOG_WARN(d_logger,
-                        "\n\nThe default input audio device has "
-                        "changed; resetting audio.\nThere may "
-                        "be a sound glitch while resetting.\n");
+            d_logger->warn("\n\nThe default input audio device has "
+                           "changed; resetting audio.\nThere may "
+                           "be a sound glitch while resetting.\n");
 
             // for any changes, just tear down the current
             // configuration, then set it up again using the user's
@@ -1030,15 +932,14 @@ int osx_source::work(int noutput_items,
             gr::thread::scoped_lock l(d_internal);
 
 #if _OSX_AU_DEBUG_RENDER_
-            GR_LOG_DEBUG(d_debug_logger, "audio_osx_source::work: mutex locked.");
+            d_debug_logger->debug("audio_osx_source::work: mutex locked.");
 #endif
 
             setup();
             start();
 
 #if _OSX_AU_DEBUG_RENDER_
-            GR_LOG_DEBUG(d_debug_logger,
-                         "audio_osx_source::work: returning after reset.");
+            d_debug_logger->debug("audio_osx_source::work: returning after reset.");
 #endif
             return (0);
         }
@@ -1047,11 +948,12 @@ int osx_source::work(int noutput_items,
     gr::thread::scoped_lock l(d_internal);
 
 #if _OSX_AU_DEBUG_RENDER_
-    GR_LOG_DEBUG(d_debug_logger, "audio_osx_source::work: mutex locked.");
+    d_debug_logger->debug("audio_osx_source::work: mutex locked.");
 
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("work1: SC=%d, #OI=%d, #Chan=%d") % d_queue_sample_count %
-                     noutput_items % output_items.size());
+    d_debug_logger->debug("work1: SC={:d}, #OI={:d}, #Chan={:d}",
+                          d_queue_sample_count,
+                          noutput_items,
+                          output_items.size());
 #endif
 
     // set the actual # of output items to the 'desired' amount then
@@ -1071,13 +973,13 @@ int osx_source::work(int noutput_items,
                     // release control so-as to allow data to be retrieved;
                     // block until there is data to return
 #if _OSX_AU_DEBUG_RENDER_
-                    GR_LOG_DEBUG(d_debug_logger, "audio_osx_source::work: waiting.");
+                    d_debug_logger->debug("audio_osx_source::work: waiting.");
 #endif
                     d_waiting_for_data = true;
                     d_cond_data.wait(l);
                     d_waiting_for_data = false;
 #if _OSX_AU_DEBUG_RENDER_
-                    GR_LOG_DEBUG(d_debug_logger, "audio_osx_source::work: done waiting.");
+                    d_debug_logger->debug("audio_osx_source::work: done waiting.");
 #endif
                     // the condition's 'notify' was called; acquire control to
                     // keep thread safe
@@ -1086,8 +988,8 @@ int osx_source::work(int noutput_items,
                     // up the next time this method is called.
                     if (d_do_reset) {
 #if _OSX_AU_DEBUG_RENDER_
-                        GR_LOG_DEBUG(d_debug_logger,
-                                     "audio_osx_source::work: returning for reset.");
+                        d_debug_logger->debug(
+                            "audio_osx_source::work: returning for reset.");
 #endif
                         return (0);
                     }
@@ -1095,8 +997,7 @@ int osx_source::work(int noutput_items,
             } else {
                 // no data & not blocking; return nothing
 #if _OSX_AU_DEBUG_RENDER_
-                GR_LOG_DEBUG(
-                    d_debug_logger,
+                d_debug_logger->debug(
                     "audio_osx_source::work: no data & not blocking; returning 0.");
 #endif
                 return (0);
@@ -1108,9 +1009,8 @@ int osx_source::work(int noutput_items,
     }
 
 #if _OSX_AU_DEBUG_RENDER_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("audio_osx_source::work: copying %d items per channel") %
-                     actual_noutput_items);
+    d_debug_logger->debug("audio_osx_source::work: copying {:d} items per channel",
+                          actual_noutput_items);
 #endif
 
     // number of channels
@@ -1126,11 +1026,10 @@ int osx_source::work(int noutput_items,
 
         if (t_n_output_items != actual_noutput_items) {
 
-            GR_LOG_FATAL(d_logger,
-                         boost::format("work(): ERROR: number of available "
-                                       "items changing unexpectedly; expecting %d"
-                                       ", got %d.") %
-                             actual_noutput_items % t_n_output_items);
+            d_logger->fatal("work(): ERROR: number of available "
+                            "items changing unexpectedly; expecting {:d}, got {:d}.",
+                            actual_noutput_items,
+                            t_n_output_items);
             throw std::runtime_error("audio_osx_source::work()");
         }
     }
@@ -1141,12 +1040,12 @@ int osx_source::work(int noutput_items,
     d_queue_sample_count -= actual_noutput_items;
 
 #if _OSX_AU_DEBUG_RENDER_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("work2: SC = %d, act#OI = %d\nReturning.") %
-                     d_queue_sample_count % actual_noutput_items);
+    d_debug_logger->debug("work2: SC = {:d}, act#OI = {:d}\nReturning.",
+                          d_queue_sample_count,
+                          actual_noutput_items);
 #endif
 #if _OSX_AU_DEBUG_RENDER_
-    GR_LOG_DEBUG(d_debug_logger, "audio_osx_source::work: returning.");
+    d_debug_logger->debug("audio_osx_source::work: returning.");
 #endif
 
     return (actual_noutput_items);
@@ -1171,9 +1070,10 @@ OSStatus osx_source::converter_callback(AudioConverterRef in_audio_converter,
     This->d_n_actual_input_frames = (*io_number_data_packets);
 
 #if _OSX_AU_DEBUG_RENDER_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("cc1: io#DP = %d, TIBSB = %d, #C = %d") %
-                     (*io_number_data_packets) % total_input_buffer_size_bytes % counter);
+    d_debug_logger->debug("cc1: io#DP = {:d}, TIBSB = {:d}, #C = {:d}",
+                          *io_number_data_packets,
+                          total_input_buffer_size_bytes,
+                          counter);
 #endif
 
     while (--counter >= 0) {
@@ -1184,7 +1084,7 @@ OSStatus osx_source::converter_callback(AudioConverterRef in_audio_converter,
     }
 
 #if _OSX_AU_DEBUG_RENDER_
-    GR_LOG_DEBUG(d_debug_logger, "cc2: Returning.");
+    d_debug_logger->debug("cc2: Returning.");
 #endif
 
     return (noErr);
@@ -1198,9 +1098,9 @@ OSStatus osx_source::au_input_callback(void* in_ref_con,
                                        AudioBufferList* io_data)
 {
 #if _OSX_AU_DEBUG_RENDER_
-    // GR_LOG_DEBUG(This->d_debug_logger, boost::format("%s :
-    // audio_osx_source::au_input_callback: Starting." )
-    //         % ((void*)(pthread_self())));
+    // This->d_debug_logger->debug("{:p} : audio_osx_source::au_input_callback:
+    //                             Starting.",
+    //                             (void*)pthread_self());
 #endif
 
     osx_source* This = reinterpret_cast<osx_source*>(in_ref_con);
@@ -1209,19 +1109,20 @@ OSStatus osx_source::au_input_callback(void* in_ref_con,
     gr::logger_ptr d_debug_logger = This->d_debug_logger;
 
 #if _OSX_AU_DEBUG_RENDER_
-    GR_LOG_DEBUG(d_debug_logger, "audio_osx_source::au_input_callback: mutex locked.");
+    d_debug_logger->debug("audio_osx_source::au_input_callback: mutex locked.");
 #endif
 
     OSStatus err = noErr;
 
 #if _OSX_AU_DEBUG_RENDER_
-    GR_LOG_DEBUG(
-        d_debug_logger,
-        boost::format(
-            "cb0: in#Fr = %d, inBus# = %d, idD = %d, d_ib = %d, d_ib#c = %d, SC = %d") %
-            in_number_frames % in_bus_number % ((void*)io_data) %
-            ((void*)(This->d_input_buffer)) % This->d_input_buffer->mNumberBuffers %
-            This->d_queue_sample_count);
+    d_debug_logger->debug("cb0: in#Fr = {:d}, inBus# = {:d}, idD = {:p}, d_ib = {:p}, "
+                          "d_ib#c = {:d}, SC = {:d}",
+                          in_number_frames,
+                          in_bus_number,
+                          (void*)io_data,
+                          (void*)(This->d_input_buffer),
+                          This->d_input_buffer->mNumberBuffers,
+                          This->d_queue_sample_count);
 #endif
 
     if (This->d_do_reset) {
@@ -1296,9 +1197,9 @@ OSStatus osx_source::au_input_callback(void* in_ref_con,
 #endif
 
 #if _OSX_AU_DEBUG_RENDER_
-        GR_LOG_DEBUG(d_debug_logger,
-                     boost::format("cb1:  avail: #IF = %d, #OF = %d") %
-                         available_input_frames % available_output_frames);
+        d_debug_logger->debug("cb1:  avail: #IF = {:d}, #OF = {:d}",
+                              available_input_frames,
+                              available_output_frames);
 #endif
         actual_output_frames = available_output_frames;
 
@@ -1321,14 +1222,14 @@ OSStatus osx_source::au_input_callback(void* in_ref_con,
         // output frames
 
 #if _OSX_AU_DEBUG_RENDER_
-        GR_LOG_DEBUG(d_debug_logger,
-                     boost::format("cb2: actual: #IF = %d, #OF = %d") %
-                         This->d_n_actual_input_frames % actual_output_frames);
+        d_debug_logger->debug("cb2: actual: #IF = {:d}, #OF = {:d}",
+                              This->d_n_actual_input_frames,
+                              actual_output_frames);
 
         if (This->d_n_actual_input_frames != available_input_frames)
-            GR_LOG_WARN(d_debug_logger,
-                        boost::format("cb2.1: (avail#IF = %d) != (actual#IF = %d)") %
-                            available_input_frames % This->d_n_actual_input_frames);
+            d_debug_logger->warn("cb2.1: (avail#IF = {:d}) != (actual#IF = {:d})",
+                                 available_input_frames,
+                                 This->d_n_actual_input_frames);
 #endif
     }
 
@@ -1341,7 +1242,7 @@ OSStatus osx_source::au_input_callback(void* in_ref_con,
         float* in_buffer = (float*)This->d_output_buffer->mBuffers[counter].mData;
 
 #if _OSX_AU_DEBUG_RENDER_
-        GR_LOG_DEBUG(d_debug_logger, "cb3: enqueuing audio data.");
+        d_debug_logger->debug("cb3: enqueuing audio data.");
 #endif
 
         int l_res = This->d_buffers[counter]->enqueue(in_buffer, actual_output_frames);
@@ -1362,10 +1263,10 @@ OSStatus osx_source::au_input_callback(void* in_ref_con,
     }
 
 #if _OSX_AU_DEBUG_RENDER_
-    GR_LOG_DEBUG(d_debug_logger,
-                 boost::format("cb4: #OI = %d, #Cnt = %d, mSC = %d") %
-                     actual_output_frames % This->d_queue_sample_count %
-                     This->d_buffer_sample_count);
+    d_debug_logger->debug("cb4: #OI = {:d}, #Cnt = {:d}, mSC = {:d}",
+                          actual_output_frames,
+                          This->d_queue_sample_count,
+                          This->d_buffer_sample_count);
 #endif
 
     // signal that data is available, if appropriate
@@ -1375,44 +1276,26 @@ OSStatus osx_source::au_input_callback(void* in_ref_con,
     }
 
 #if _OSX_AU_DEBUG_RENDER_
-    GR_LOG_DEBUG(d_debug_logger, "cb5: returning.");
+    d_debug_logger->debug("cb5: returning.");
 #endif
 
     return (err);
 }
 
-#ifndef GR_USE_OLD_AUDIO_UNIT
-
 OSStatus osx_source::hardware_listener(AudioObjectID in_object_id,
                                        UInt32 in_num_addresses,
                                        const AudioObjectPropertyAddress in_addresses[],
                                        void* in_client_data)
-
-#else
-
-OSStatus osx_source::hardware_listener(AudioHardwarePropertyID in_property_id,
-                                       void* in_client_data)
-
-#endif
 {
     osx_source* This = reinterpret_cast<osx_source*>(in_client_data);
     This->reset(true);
     return (noErr);
 }
 
-#ifndef GR_USE_OLD_AUDIO_UNIT
-
 OSStatus osx_source::default_listener(AudioObjectID in_object_id,
                                       UInt32 in_num_addresses,
                                       const AudioObjectPropertyAddress in_addresses[],
                                       void* in_client_data)
-
-#else
-
-OSStatus osx_source::default_listener(AudioHardwarePropertyID in_property_id,
-                                      void* in_client_data)
-
-#endif
 {
     osx_source* This = reinterpret_cast<osx_source*>(in_client_data);
     This->reset(false);

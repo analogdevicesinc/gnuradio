@@ -124,7 +124,7 @@ int conv_bit_corr_bb_impl::general_work(int noutput_items,
     }
 
     const uint8_t* in = (const uint8_t*)input_items[0];
-    uint8_t* score_in = (uint8_t*)input_items[0];
+    const uint8_t* score_in = (const uint8_t*)input_items[0];
 
     // counting on  1:1 forecast + history to provide enough ninput_items... may need to
     // insert check printf("%d, %d, %d", ninput_items[0], noutput_items, d_counter);
@@ -243,8 +243,8 @@ float conv_bit_corr_bb_impl::data_garble_rate(int taps, float target)
     answer = 0.5 * (1 - pow(base, expo));
 
     if ((errno == EDOM) || (errno == ERANGE)) {
-        GR_LOG_ERROR(d_logger, "Out of range errors while computing garble rate.");
-        exit(-1);
+        d_logger->error("Out of range errors while computing garble rate.");
+        throw std::runtime_error("conv_bit_corr_bb_impl::data_garble_rate");
     }
     return answer;
 }

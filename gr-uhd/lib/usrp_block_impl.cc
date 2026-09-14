@@ -9,11 +9,12 @@
  */
 
 #include "usrp_block_impl.h"
-#include <boost/format.hpp>
+#include "gnuradio/uhd/usrp_block.h"
 #include <chrono>
 #include <thread>
 
-using namespace gr::uhd;
+using gr::uhd::usrp_block;
+using gr::uhd::usrp_block_impl;
 using namespace std::chrono_literals;
 
 namespace {
@@ -123,6 +124,22 @@ const pmt::pmt_t gr::uhd::cmd_gpio_key()
     return val;
 }
 
+const pmt::pmt_t gr::uhd::cmd_stream_cmd_key()
+{
+    static const pmt::pmt_t val = pmt::mp("stream_cmd");
+    return val;
+}
+const pmt::pmt_t gr::uhd::cmd_tx_sob_key()
+{
+    static const pmt::pmt_t val = pmt::mp("tx_sob");
+    return val;
+}
+const pmt::pmt_t gr::uhd::cmd_tx_eob_key()
+{
+    static const pmt::pmt_t val = pmt::mp("tx_eob");
+    return val;
+}
+
 const pmt::pmt_t gr::uhd::direction_rx()
 {
     static const pmt::pmt_t val = pmt::mp("RX");
@@ -224,36 +241,6 @@ bool usrp_block_impl::_wait_for_locked_sensor(std::vector<std::string> sensor_na
     return get_sensor_fn(sensor_name).to_bool();
 }
 
-bool usrp_block_impl::_unpack_chan_command(std::string& command,
-                                           pmt::pmt_t& cmd_val,
-                                           int& chan,
-                                           const pmt::pmt_t& cmd_pmt)
-{
-    try {
-        chan = -1; // Default value
-        if (pmt::is_tuple(cmd_pmt) and
-            (pmt::length(cmd_pmt) == 2 or pmt::length(cmd_pmt) == 3)) {
-            command = pmt::symbol_to_string(pmt::tuple_ref(cmd_pmt, 0));
-            cmd_val = pmt::tuple_ref(cmd_pmt, 1);
-            if (pmt::length(cmd_pmt) == 3) {
-                chan = pmt::to_long(pmt::tuple_ref(cmd_pmt, 2));
-            }
-        } else if (pmt::is_pair(cmd_pmt)) {
-            command = pmt::symbol_to_string(pmt::car(cmd_pmt));
-            cmd_val = pmt::cdr(cmd_pmt);
-            if (pmt::is_pair(cmd_val)) {
-                chan = pmt::to_long(pmt::car(cmd_val));
-                cmd_val = pmt::cdr(cmd_val);
-            }
-        } else {
-            return false;
-        }
-    } catch (pmt::wrong_type& w) {
-        return false;
-    }
-    return true;
-}
-
 bool usrp_block_impl::_check_mboard_sensors_locked()
 {
     bool clocks_locked = true;
@@ -274,11 +261,10 @@ bool usrp_block_impl::_check_mboard_sensors_locked()
                                                 this->get_mboard_sensor(name,
                                                                         mboard_index));
                                         })) {
-            GR_LOG_WARN(
-                d_logger,
-                boost::format(
-                    "Sensor '%s' failed to lock within timeout on motherboard %d.") %
-                    sensor_name % mboard_index);
+            d_logger->warn(
+                "Sensor '{:s}' failed to lock within timeout on motherboard {:d}.",
+                sensor_name,
+                mboard_index);
             clocks_locked = false;
         }
     }
@@ -288,19 +274,18 @@ bool usrp_block_impl::_check_mboard_sensors_locked()
 
 void usrp_block_impl::_set_center_freq_from_internals_allchans()
 {
-    unsigned int chan;
-    while (_rx_chans_to_tune.any()) {
-        // This resets() bits, so this loop should not run indefinitely
-        chan = _rx_chans_to_tune.find_first();
-        _set_center_freq_from_internals(chan, direction_rx());
-        _rx_chans_to_tune.reset(chan);
+    for (size_t chan = 0; chan < _rx_chans_to_tune.size(); chan++) {
+        if (_rx_chans_to_tune[chan]) {
+            _set_center_freq_from_internals(chan, direction_rx());
+            _rx_chans_to_tune[chan] = false;
+        }
     }
 
-    while (_tx_chans_to_tune.any()) {
-        // This resets() bits, so this loop should not run indefinitely
-        chan = _tx_chans_to_tune.find_first();
-        _set_center_freq_from_internals(chan, direction_tx());
-        _tx_chans_to_tune.reset(chan);
+    for (size_t chan = 0; chan < _tx_chans_to_tune.size(); chan++) {
+        if (_tx_chans_to_tune[chan]) {
+            _set_center_freq_from_internals(chan, direction_tx());
+            _tx_chans_to_tune[chan] = false;
+        }
     }
 }
 
@@ -378,7 +363,7 @@ uint32_t usrp_block_impl::get_gpio_attr(const std::string& bank,
                                         const std::string& attr,
                                         const size_t mboard)
 {
-    throw std::runtime_error("not implemented in this version");
+    return _dev->get_gpio_attr(bank, attr, mboard);
 }
 
 void usrp_block_impl::set_time_now(const ::uhd::time_spec_t& time_spec, size_t mboard)
@@ -466,8 +451,8 @@ void usrp_block_impl::msg_handler_command(pmt::pmt_t msg)
     // hopefully remove this:
     if (pmt::is_tuple(msg)) {
         if (pmt::length(msg) != 2 && pmt::length(msg) != 3) {
-            GR_LOG_ALERT(d_logger,
-                         boost::format("Error while unpacking command PMT: %s") % msg);
+            d_logger->alert("Error while unpacking command PMT: {}",
+                            pmt::write_string(msg));
             return;
         }
         pmt::pmt_t new_msg = pmt::make_dict();
@@ -475,8 +460,8 @@ void usrp_block_impl::msg_handler_command(pmt::pmt_t msg)
         if (pmt::length(msg) == 3) {
             new_msg = pmt::dict_add(new_msg, cmd_chan_key(), pmt::tuple_ref(msg, 2));
         }
-        GR_LOG_WARN(d_debug_logger,
-                    boost::format("Using legacy message format (tuples): %s") % msg);
+        d_debug_logger->warn("Using legacy message format (tuples): {}",
+                             pmt::write_string(msg));
         return msg_handler_command(new_msg);
     }
     // End of legacy backward compat code.
@@ -484,18 +469,18 @@ void usrp_block_impl::msg_handler_command(pmt::pmt_t msg)
     // pmt_dict is a subclass of pmt_pair. Make sure we use pmt_pair!
     // Old behavior was that these checks were interchangeable. Be aware of this change!
     if (!(pmt::is_dict(msg)) && pmt::is_pair(msg)) {
-        GR_LOG_DEBUG(
-            d_logger,
-            boost::format(
-                "Command message is pair, converting to dict: '%s': car(%s), cdr(%s)") %
-                msg % pmt::car(msg) % pmt::cdr(msg));
+        d_logger->debug(
+            "Command message is pair, converting to dict: '{}': car({}), cdr({})",
+            pmt::write_string(msg),
+            pmt::write_string(pmt::car(msg)),
+            pmt::write_string(pmt::cdr(msg)));
         msg = pmt::dict_add(pmt::make_dict(), pmt::car(msg), pmt::cdr(msg));
     }
 
     // Make sure, we use dicts!
     if (!pmt::is_dict(msg)) {
-        GR_LOG_ERROR(d_logger,
-                     boost::format("Command message is neither dict nor pair: %s") % msg);
+        d_logger->error("Command message is neither dict nor pair: {}",
+                        pmt::write_string(msg));
         return;
     }
 
@@ -515,9 +500,7 @@ void usrp_block_impl::msg_handler_command(pmt::pmt_t msg)
                 time_t(pmt::to_uint64(pmt::car(timespec_p))), // Full secs
                 pmt::to_double(pmt::cdr(timespec_p))          // Frac secs
             );
-            GR_LOG_DEBUG(d_debug_logger,
-                         boost::format("Setting command time on mboard %d") %
-                             mboard_index);
+            d_debug_logger->debug("Setting command time on mboard {}", mboard_index);
             set_command_time(timespec, mboard_index);
         }
     }
@@ -532,7 +515,7 @@ void usrp_block_impl::msg_handler_command(pmt::pmt_t msg)
     _force_tune = pmt::dict_has_key(msg, cmd_direction_key());
 
     /// 4) Loop through all the values
-    GR_LOG_DEBUG(d_debug_logger, boost::format("Processing command message %s") % msg);
+    d_debug_logger->debug("Processing command message {}", pmt::write_string(msg));
     pmt::pmt_t msg_items = pmt::dict_items(msg);
     for (size_t i = 0; i < pmt::length(msg_items); i++) {
         try {
@@ -541,10 +524,9 @@ void usrp_block_impl::msg_handler_command(pmt::pmt_t msg)
                                      chan,
                                      msg);
         } catch (pmt::wrong_type& e) {
-            GR_LOG_ALERT(d_logger,
-                         boost::format("Invalid command value for key %s: %s") %
-                             pmt::car(pmt::nth(i, msg_items)) %
-                             pmt::cdr(pmt::nth(i, msg_items)));
+            d_logger->alert("Invalid command value for key {}: {}",
+                            pmt::write_string(pmt::car(pmt::nth(i, msg_items))),
+                            pmt::write_string(pmt::cdr(pmt::nth(i, msg_items))));
             break;
         }
     }
@@ -590,7 +572,7 @@ void usrp_block_impl::_update_curr_tune_req(::uhd::tune_request_t& tune_req,
             tune_req.dsp_freq_policy != _curr_rx_tune_req[chan].dsp_freq_policy ||
             _force_tune) {
             _curr_rx_tune_req[chan] = tune_req;
-            _rx_chans_to_tune.set(chan);
+            _rx_chans_to_tune[chan] = true;
         }
     } else {
         if (tune_req.target_freq != _curr_tx_tune_req[chan].target_freq ||
@@ -600,7 +582,7 @@ void usrp_block_impl::_update_curr_tune_req(::uhd::tune_request_t& tune_req,
             tune_req.dsp_freq_policy != _curr_tx_tune_req[chan].dsp_freq_policy ||
             _force_tune) {
             _curr_tx_tune_req[chan] = tune_req;
-            _tx_chans_to_tune.set(chan);
+            _tx_chans_to_tune[chan] = true;
         }
     }
 }
@@ -711,18 +693,15 @@ void usrp_block_impl::_cmd_handler_gpio(const pmt::pmt_t& gpio_attr,
         ));
 
     if (!pmt::is_dict(gpio_attr)) {
-        GR_LOG_ERROR(d_logger,
-                     boost::format("gpio_attr in  message is neither dict nor pair: %s") %
-                         gpio_attr);
+        d_logger->error("gpio_attr in  message is neither dict nor pair: {}",
+                        pmt::write_string(gpio_attr));
         return;
     }
     if (!pmt::dict_has_key(gpio_attr, pmt::mp("bank")) ||
         !pmt::dict_has_key(gpio_attr, pmt::mp("attr")) ||
         !pmt::dict_has_key(gpio_attr, pmt::mp("value")) ||
         !pmt::dict_has_key(gpio_attr, pmt::mp("mask"))) {
-        GR_LOG_ERROR(
-            d_logger,
-            boost::format("gpio_attr message must include bank, attr, value and mask"));
+        d_logger->error("gpio_attr message must include bank, attr, value and mask");
         return;
     }
     std::string bank =

@@ -27,7 +27,7 @@ static const char* __doc_gr_qtgui_vector_sink_f_vector_sink_f_1 = R"doc()doc";
 static const char* __doc_gr_qtgui_vector_sink_f_make = R"doc()doc";
 
 
-static const char* __doc_gr_qtgui_vector_sink_f_exec_ = R"doc()doc";
+static const char* __doc_gr_qtgui_vector_sink_f_exec = R"doc()doc";
 
 
 static const char* __doc_gr_qtgui_vector_sink_f_qwidget = R"doc()doc";
@@ -112,6 +112,9 @@ static const char* __doc_gr_qtgui_vector_sink_f_set_size = R"doc()doc";
 
 
 static const char* __doc_gr_qtgui_vector_sink_f_enable_menu = R"doc()doc";
+
+
+static const char* __doc_gr_qtgui_vector_sink_f_disable_legend = R"doc()doc";
 
 
 static const char* __doc_gr_qtgui_vector_sink_f_enable_grid = R"doc()doc";

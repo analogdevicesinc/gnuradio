@@ -78,20 +78,21 @@ parameters:
     options: ['True', 'False']
     option_labels: ['On', 'Off']
     hide: part
--   id: gui_hint
-    label: GUI Hint
-    dtype: gui_hint
-    hide: part
 -   id: showports
     label: Show Msg Ports
     dtype: bool
     default: 'False'
+    options: ['True', 'False']
+    option_labels: ['Yes', 'No']
+    hide: part
+-   id: gui_hint
+    label: GUI Hint
+    dtype: gui_hint
     hide: part
 
 inputs:
 -   domain: stream
     dtype: ${ type }
-    multiplicity: ${ num_inputs }
 -   domain: message
     id: freq
     optional: true
@@ -104,15 +105,12 @@ outputs:
     hide: ${ not showports }
 
 asserts:
-- ${fftsize >= 32 and fftsize <= 32768}
-- ${not (fftsize & (fftsize -1))}
+- ${fftsize >= 32 and fftsize <= 32768#The FFT Size is out of range 32 - 32768}
+- ${not (fftsize & (fftsize -1))#The FFT Size should be a power of 2}
 
 templates:
     imports: |-
-        from PyQt5 import Qt
-        from gnuradio import qtgui
-        from gnuradio.filter import firdes
-        import sip
+        from PyQt6 import sip
     callbacks:
     - set_frequency_range(${fc}, ${bw})
     make: |-
@@ -132,7 +130,7 @@ templates:
             None # parent
         )
         self.${id}.set_update_time(1.0/${rate})
-        ${win} = sip.wrapinstance(self.${id}.qwidget(), Qt.QWidget)
+        ${win} = sip.wrapinstance(self.${id}.qwidget(), QtWidgets.QWidget)
 
         self.${id}.enable_rf_freq(${showrf})
 
@@ -140,7 +138,7 @@ templates:
 
 
 cpp_templates:
-  includes: ['#include <gnuradio/qtgui/${type.fcn}.h>', '#include <gnuradio/filter/firdes.h>']
+  includes: ['#include <gnuradio/qtgui/${type.fcn}.h>', '#include <gnuradio/fft/window.h>']
   declarations: gr::qtgui::${type.fcn}::sptr ${id};
   make: |-
     <%
@@ -164,9 +162,6 @@ cpp_templates:
     ${gui_hint() % win}
     
   link: ['gnuradio::gnuradio-qtgui']
-  translations:
-    'True': 'true'
-    'False': 'false'
 
 documentation: |-
     The GUI hint can be used to position the widget within the application. The hint is of the form [tab_id@tab_index]: [row, col, row_span, col_span]. Both the tab specification and the grid position are optional.

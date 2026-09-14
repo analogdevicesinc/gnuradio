@@ -219,13 +219,6 @@ class qa_ofdm_frame_equalizer_vcvc (gr_unittest.TestCase):
             0, 0, 1j, 1j, 0, 1j, 1j, 0,  # Go crazy here!
             0, 0, 1j, 1j, 0, 1j, 1j, 0
         ]
-        channel = [
-            0, 0, 1, 1, 0, 1, 1, 0,
-            # These coefficients will be rotated slightly (but less than \pi/2)
-            0, 0, 1, 1, 0, 1, 1, 0,
-            0, 0, 1j, 1j, 0, 1j, 1j, 0,  # Go crazy here!
-            0, 0, 1j, 1j, 0, 1j, 1j, 0
-        ]
         for idx in range(fft_len, 2 * fft_len):
             channel[idx] = channel[idx - fft_len] * \
                 numpy.exp(1j * .1 * numpy.pi * (numpy.random.rand() - .5))
@@ -340,7 +333,7 @@ class qa_ofdm_frame_equalizer_vcvc (gr_unittest.TestCase):
         self.assertEqual(len(packets), 1)
         self.assertEqual(len(packets[0]), len(tx_data))
 
-    def test_002_static_wo_tags(self):
+    def test_002_static_wo_tags_2(self):
         fft_len = 8
         #           4   5  6  7   0  1  2   3
         tx_data = [-1, -1, 1, 2, -1, 3, 0, -1,  # 0

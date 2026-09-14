@@ -21,8 +21,11 @@ class SpectrumGUIClass;
 #include <gnuradio/qtgui/SpectrumGUIClass.h>
 #include <gnuradio/qtgui/TimeDomainDisplayPlot.h>
 #include <gnuradio/qtgui/WaterfallDisplayPlot.h>
+#include <QCloseEvent>
+#include <QResizeEvent>
 #include <QTimer>
 #include <QValidator>
+#include <deque>
 #include <vector>
 
 class SpectrumDisplayForm : public QWidget, public Ui::SpectrumDisplayForm

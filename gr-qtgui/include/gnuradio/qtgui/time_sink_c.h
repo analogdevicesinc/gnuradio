@@ -11,14 +11,10 @@
 #ifndef INCLUDED_QTGUI_TIME_SINK_C_H
 #define INCLUDED_QTGUI_TIME_SINK_C_H
 
-#ifdef ENABLE_PYTHON
-#include <Python.h>
-#endif
-
 #include <gnuradio/qtgui/api.h>
 #include <gnuradio/qtgui/trigger_mode.h>
 #include <gnuradio/sync_block.h>
-#include <qapplication.h>
+#include <QApplication>
 
 namespace gr {
 namespace qtgui {
@@ -68,7 +64,7 @@ public:
                      unsigned int nconnections = 1,
                      QWidget* parent = NULL);
 
-    virtual void exec_() = 0;
+    virtual void exec() = 0;
     virtual QWidget* qwidget() = 0;
 
     virtual void set_y_axis(double min, double max) = 0;

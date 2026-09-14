@@ -5,8 +5,9 @@
 #
 
 
-import traceback
+import logging
 import sys
+import traceback
 
 #  A list of functions that can receive a message.
 MESSENGERS_LIST = list()
@@ -40,7 +41,11 @@ def send(message):
         message: a message string
     """
     for messenger in MESSENGERS_LIST:
-        messenger(_indent + message)
+        try:
+            messenger(_indent + message)
+        except:
+            logging.getLogger(__name__).error(
+                "Error in messenger: %s (message: %s)", messenger, message)
 
 
 # register stdout by default
@@ -88,11 +93,16 @@ def send_fail_load(error):
 
 
 def send_start_gen(file_path):
-    send('\nGenerating: %r\n' % file_path)
+    send('\nGenerating: "%s"\n' % file_path)
 
 
 def send_auto_gen(file_path):
-    send('>>> Generating: %r\n' % file_path)
+    send('>>> Generating: "%s"\n' % file_path)
+
+
+def send_verbose_gen(verbose):
+    """Send an arbitrary message during generation."""
+    send(verbose)
 
 
 def send_fail_gen(error):

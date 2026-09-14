@@ -19,13 +19,7 @@
 #include <cstdio>
 #include <vector>
 
-#if QWT_VERSION < 0x060000
-#include <gnuradio/qtgui/plot_waterfall.h>
-#else
 #include <qwt_interval.h>
-
-typedef QwtInterval QwtDoubleInterval;
-#endif
 
 /*!
  * \brief QWidget for displaying waterfall (spectrogram) plots.
@@ -58,7 +52,7 @@ public:
     double getStartFrequency() const;
     double getStopFrequency() const;
 
-    void plotNewData(const std::vector<double*> dataPoints,
+    void plotNewData(const std::vector<const double*> dataPoints,
                      const int64_t numDataPoints,
                      const double timePerFFT,
                      const gr::high_res_timer_type timestamp,
@@ -119,11 +113,7 @@ private:
 
     std::vector<WaterfallData*> d_data;
 
-#if QWT_VERSION < 0x060000
-    std::vector<PlotWaterfall*> d_spectrogram;
-#else
     std::vector<QwtPlotSpectrogram*> d_spectrogram;
-#endif
 
     std::vector<int> d_intensity_color_map_type;
     QColor d_user_defined_low_intensity_color;

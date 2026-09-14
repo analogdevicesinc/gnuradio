@@ -177,9 +177,9 @@ namespace digital {
  * error, which has some gain \f$K_{ted}\f$.  The gain, \f$K_{ted}\f$, is
  * defined as the slope of a TED's S-curve plot at a symbol clock phase
  * offset of \f$\tau = 0\f$.  The S-curve shape and central slope, and
- * hence the gain \f$K_{ted}\f$, depend on the TED's estimator espression,
+ * hence the gain \f$K_{ted}\f$, depend on the TED's estimator expression,
  * the input signal level, the pulse shaping filter, and the \f$E_s/N_0\f$
- * of the incomping signal.  The user must determine the TED's
+ * of the incoming signal.  The user must determine the TED's
  * S-curve by analysis or simulation of the particular situation, in order
  * to determine an appropriate value for \f$K_{ted}\f$.
  *
@@ -537,7 +537,7 @@ public:
      *
      * \details
      * Sets the PI filter proportional gain, alpha.
-     * This gain directly mutliplies the clock phase/timing error
+     * This gain directly multiplies the clock phase/timing error
      * term in the PI filter when advancing the loop.
      * It most directly affects the instantaneous clock period estimate,
      * T_inst, and instantaneous clock phase estimate, tau.

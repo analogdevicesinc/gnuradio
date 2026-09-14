@@ -28,7 +28,7 @@ DOXYFILE_ENCODING      = UTF-8
 # identify the project. Note that if you do not use Doxywizard you need
 # to put quotes around the project name if it contains spaces.
 
-PROJECT_NAME           = "GNU Radio Manual and C++ API Reference"
+PROJECT_NAME           = "GNU Radio C++ API Reference"
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number.
 # This could be handy for archiving the generated documentation or
@@ -47,7 +47,7 @@ PROJECT_BRIEF          = "The Free & Open Software Radio Ecosystem"
 # exceed 55 pixels and the maximum width should not exceed 200 pixels.
 # Doxygen will copy the logo to the output directory.
 
-PROJECT_LOGO           = @CMAKE_SOURCE_DIR@/docs/doxygen/gnuradio_logo_icon.png
+PROJECT_LOGO           = @PROJECT_SOURCE_DIR@/docs/doxygen/gnuradio_logo_icon.png
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute)
 # base path where the generated documentation will be put.
@@ -141,42 +141,52 @@ STRIP_FROM_PATH        =
 # definition is used. Otherwise one should specify the include paths that
 # are normally passed to the compiler using the -I flag.
 
-STRIP_FROM_INC_PATH    = @CMAKE_SOURCE_DIR@/gnuradio-runtime/include \
-                         @CMAKE_BINARY_DIR@/gnuradio-runtime/include \
-                         @CMAKE_SOURCE_DIR@/gr-analog/include \
-                         @CMAKE_BINARY_DIR@/gr-analog/include \
-                         @CMAKE_SOURCE_DIR@/gr-audio/include \
-                         @CMAKE_BINARY_DIR@/gr-audio/include \
-                         @CMAKE_SOURCE_DIR@/gr-blocks/include \
-                         @CMAKE_BINARY_DIR@/gr-blocks/include \
-                         @CMAKE_SOURCE_DIR@/gr-channels/include \
-                         @CMAKE_BINARY_DIR@/gr-channels/include \
-                         @CMAKE_SOURCE_DIR@/gr-digital/include \
-                         @CMAKE_BINARY_DIR@/gr-digital/include \
-                         @CMAKE_SOURCE_DIR@/gr-dtv/include \
-                         @CMAKE_BINARY_DIR@/gr-dtv/include \
-                         @CMAKE_SOURCE_DIR@/gr-fec/include \
-                         @CMAKE_BINARY_DIR@/gr-fec/include \
-                         @CMAKE_SOURCE_DIR@/gr-fft/include \
-                         @CMAKE_BINARY_DIR@/gr-fft/include \
-                         @CMAKE_SOURCE_DIR@/gr-filter/include \
-                         @CMAKE_BINARY_DIR@/gr-filter/include \
-                         @CMAKE_SOURCE_DIR@/gr-pdu/include \
-                         @CMAKE_BINARY_DIR@/gr-pdu/include \
-                         @CMAKE_SOURCE_DIR@/gr-qtgui/include \
-                         @CMAKE_BINARY_DIR@/gr-qtgui/include \
-                         @CMAKE_SOURCE_DIR@/gr-trellis/include \
-                         @CMAKE_BINARY_DIR@/gr-trellis/include \
-                         @CMAKE_SOURCE_DIR@/gr-uhd/include \
-                         @CMAKE_BINARY_DIR@/gr-uhd/include \
-                         @CMAKE_SOURCE_DIR@/gr-video-sdl/include \
-                         @CMAKE_BINARY_DIR@/gr-video-sdl/include \
-                         @CMAKE_SOURCE_DIR@/gr-vocoder/include \
-                         @CMAKE_BINARY_DIR@/gr-vocoder/include \
-                         @CMAKE_SOURCE_DIR@/gr-wavelet/include \
-                         @CMAKE_BINARY_DIR@/gr-wavelet/include \
-                         @CMAKE_SOURCE_DIR@/gr-zeromq/include \
-                         @CMAKE_BINARY_DIR@/gr-zeromq/include
+STRIP_FROM_INC_PATH    = @PROJECT_SOURCE_DIR@/gnuradio-runtime/include \
+                         @PROJECT_BINARY_DIR@/gnuradio-runtime/include \
+                         @PROJECT_SOURCE_DIR@/gnuradio-runtime/ \
+                         @PROJECT_BINARY_DIR@/gnuradio-runtime/ \
+                         @PROJECT_SOURCE_DIR@/gr-analog/include \
+                         @PROJECT_BINARY_DIR@/gr-analog/include \
+                         @PROJECT_SOURCE_DIR@/gr-audio/include \
+                         @PROJECT_BINARY_DIR@/gr-audio/include \
+                         @PROJECT_SOURCE_DIR@/gr-blocks/include \
+                         @PROJECT_BINARY_DIR@/gr-blocks/include \
+                         @PROJECT_SOURCE_DIR@/gr-channels/include \
+                         @PROJECT_BINARY_DIR@/gr-channels/include \
+                         @PROJECT_SOURCE_DIR@/gr-digital/include \
+                         @PROJECT_BINARY_DIR@/gr-digital/include \
+                         @PROJECT_SOURCE_DIR@/gr-dtv/include \
+                         @PROJECT_BINARY_DIR@/gr-dtv/include \
+                         @PROJECT_SOURCE_DIR@/gr-fec/include \
+                         @PROJECT_BINARY_DIR@/gr-fec/include \
+                         @PROJECT_SOURCE_DIR@/gr-fft/include \
+                         @PROJECT_BINARY_DIR@/gr-fft/include \
+                         @PROJECT_SOURCE_DIR@/gr-filter/include \
+                         @PROJECT_BINARY_DIR@/gr-filter/include \
+                         @PROJECT_SOURCE_DIR@/gr-iio/include \
+                         @PROJECT_BINARY_DIR@/gr-iio/include \
+                         @PROJECT_SOURCE_DIR@/gr-network/include \
+                         @PROJECT_BINARY_DIR@/gr-network/include \
+                         @PROJECT_SOURCE_DIR@/gr-pdu/include \
+                         @PROJECT_BINARY_DIR@/gr-pdu/include \
+                         @PROJECT_SOURCE_DIR@/gr-qtgui/include \
+                         @PROJECT_BINARY_DIR@/gr-qtgui/include \
+                         @PROJECT_SOURCE_DIR@/gr-soapy/include \
+                         @PROJECT_BINARY_DIR@/gr-soapy/include \
+                         @PROJECT_SOURCE_DIR@/gr-trellis/include \
+                         @PROJECT_BINARY_DIR@/gr-trellis/include \
+                         @PROJECT_SOURCE_DIR@/gr-uhd/include \
+                         @PROJECT_BINARY_DIR@/gr-uhd/include \
+                         @PROJECT_SOURCE_DIR@/gr-utils/include \
+                         @PROJECT_BINARY_DIR@/gr-utils/include \
+                         @PROJECT_SOURCE_DIR@/gr-video-sdl/include \
+                         @PROJECT_BINARY_DIR@/gr-video-sdl/include \
+                         @PROJECT_SOURCE_DIR@/gr-vocoder/include \
+                         @PROJECT_BINARY_DIR@/gr-vocoder/include \
+                         @PROJECT_SOURCE_DIR@/gr-wavelet/include \
+                         @PROJECT_BINARY_DIR@/gr-wavelet/include \
+                         @PROJECT_SOURCE_DIR@/gr-zeromq/include \
+                         @PROJECT_BINARY_DIR@/gr-zeromq/include
 
 # If the SHORT_NAMES tag is set to YES, doxygen will generate much shorter
 # (but less readable) file names. This can be useful if your file system
@@ -721,6 +731,7 @@ EXCLUDE                = @abs_top_builddir@/cmake/msvc \
                          @abs_top_builddir@/docs/doxygen/html \
                          @abs_top_builddir@/docs/doxygen/xml \
                          @abs_top_builddir@/docs/doxygen/other/doxypy.py \
+                         @abs_top_srcdir@/docs/sphinx \
                          @abs_top_srcdir@/docs/doxygen/other/shared_ptr_docstub.h \
                          @abs_top_builddir@/dtools \
                          @abs_top_builddir@/gnuradio-runtime/lib/runtime/gr_error_handler.cc \
@@ -763,10 +774,20 @@ EXCLUDE                = @abs_top_builddir@/cmake/msvc \
                          @abs_top_builddir@/gr-filter/lib \
                          @abs_top_srcdir@/gr-fft/lib \
                          @abs_top_builddir@/gr-fft/lib \
+                         @abs_top_srcdir@/gr-iio/lib \
+                         @abs_top_builddir@/gr-iio/lib \
+                         @abs_top_srcdir@/gr-network/lib \
+                         @abs_top_builddir@/gr-network/lib \
                          @abs_top_srcdir@/gr-pdu/lib \
                          @abs_top_builddir@/gr-pdu/lib \
                          @abs_top_srcdir@/gr-qtgui/lib \
                          @abs_top_builddir@/gr-qtgui/lib \
+                         @abs_top_srcdir@/gr-qtgui/examples \
+                         @abs_top_builddir@/gr-qtgui/examples \
+                         @abs_top_srcdir@/gr-soapy/lib \
+                         @abs_top_builddir@/gr-soapy/lib \
+                         @abs_top_srcdir@/gr-soapy/python \
+                         @abs_top_builddir@/gr-soapy/python \
                          @abs_top_srcdir@/gr-trellis/lib \
                          @abs_top_builddir@/gr-trellis/lib \
                          @abs_top_srcdir@/gr-uhd/lib \
@@ -1485,13 +1506,6 @@ LATEX_BATCHMODE        = NO
 
 LATEX_HIDE_INDICES     = NO
 
-# If LATEX_SOURCE_CODE is set to YES then doxygen will include
-# source code with syntax highlighting in the LaTeX output.
-# Note that which sources are shown also depends on other settings
-# such as SOURCE_BROWSER.
-
-LATEX_SOURCE_CODE      = NO
-
 # The LATEX_BIB_STYLE tag can be used to specify the style to use for the
 # bibliography, e.g. plainnat, or ieeetr. The default style is "plain". See
 # http://en.wikipedia.org/wiki/BibTeX for more info.
@@ -1764,14 +1778,6 @@ EXTERNAL_PAGES         = YES
 #---------------------------------------------------------------------------
 # Configuration options related to the dot tool
 #---------------------------------------------------------------------------
-
-# If the CLASS_DIAGRAMS tag is set to YES (the default) Doxygen will
-# generate a inheritance diagram (in HTML, RTF and LaTeX) for classes with base
-# or super classes. Setting the tag to NO turns the diagrams off. Note that
-# this option also works with HAVE_DOT disabled, but it is recommended to
-# install and use dot, since it yields more powerful graphs.
-
-CLASS_DIAGRAMS         = YES
 
 # If set to YES, the inheritance and collaboration graphs will hide
 # inheritance and usage relations if the target is undocumented

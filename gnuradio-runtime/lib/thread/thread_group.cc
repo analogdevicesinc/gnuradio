@@ -3,6 +3,7 @@
  * Copyright (C) 2001-2003 William E. Kempf
  * Copyright (C) 2007 Anthony Williams
  * Copyright 2008 Free Software Foundation, Inc.
+ * Copyright 2023 Marcus Müller
  *
  *  Distributed under the Boost Software License, Version 1.0. (See accompanying
  *  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -13,57 +14,50 @@
  */
 
 #include <gnuradio/thread/thread_group.h>
+#include <cassert>
+#include <functional>
 #include <memory>
+#include <mutex>
+#include <stdexcept>
 
 namespace gr {
 namespace thread {
 
-thread_group::thread_group() {}
-
-thread_group::~thread_group() {}
-
-boost::thread* thread_group::create_thread(const boost::function0<void>& threadfunc)
+boost::thread* thread_group::create_thread(const std::function<void()>& threadfunc)
 {
-    // No scoped_lock required here since the only "shared data" that's
-    // modified here occurs inside add_thread which does scoped_lock.
     auto thrd = std::make_unique<boost::thread>(threadfunc);
+    if (!thrd) {
+        throw std::runtime_error("could not create thread");
+    }
     auto thrdp = thrd.get();
-    add_thread(std::move(thrd));
+
+    std::scoped_lock guard(m_mutex);
+    m_threads.insert(std::move(thrd));
     return thrdp;
 }
 
-void thread_group::add_thread(std::unique_ptr<boost::thread> thrd)
+void thread_group::add_thread(std::unique_ptr<boost::thread> thrd) noexcept
 {
-    boost::lock_guard<boost::shared_mutex> guard(m_mutex);
+    std::scoped_lock guard(m_mutex);
 
-    // For now we'll simply ignore requests to add a thread object
-    // multiple times. Should we consider this an error and either
-    // throw or return an error value?
-    auto it = std::find(m_threads.begin(), m_threads.end(), thrd);
-    BOOST_ASSERT(it == m_threads.end());
-    if (it == m_threads.end())
-        m_threads.push_back(std::move(thrd));
+    // we currently don't care whether a thread was already present; std::unordered_set
+    // guarantees we only have one copy in m_threads
+    m_threads.insert(std::move(thrd));
 }
 
-void thread_group::remove_thread(boost::thread* thrd)
+void thread_group::remove_thread(boost::thread* thrd) noexcept
 {
-    boost::lock_guard<boost::shared_mutex> guard(m_mutex);
+    std::scoped_lock guard(m_mutex);
 
     // For now we'll simply ignore requests to remove a thread
     // object that's not in the group. Should we consider this an
     // error and either throw or return an error value?
-    auto it = std::find_if(
-        m_threads.begin(),
-        m_threads.end(),
-        [&thrd](std::unique_ptr<boost::thread>& it) -> bool { return thrd == it.get(); });
-    BOOST_ASSERT(it != m_threads.end());
-    if (it != m_threads.end())
-        m_threads.erase(it);
+    m_threads.erase(std::unique_ptr<boost::thread>(thrd));
 }
 
 void thread_group::join_all()
 {
-    boost::shared_lock<boost::shared_mutex> guard(m_mutex);
+    std::shared_lock<std::shared_mutex> guard(m_mutex);
     for (auto& thrd : m_threads) {
         thrd->join();
     }
@@ -71,15 +65,15 @@ void thread_group::join_all()
 
 void thread_group::interrupt_all()
 {
-    boost::shared_lock<boost::shared_mutex> guard(m_mutex);
+    std::shared_lock<std::shared_mutex> guard(m_mutex);
     for (auto& thrd : m_threads) {
         thrd->interrupt();
     }
 }
 
-size_t thread_group::size() const
+size_t thread_group::size() const noexcept
 {
-    boost::shared_lock<boost::shared_mutex> guard(m_mutex);
+    std::shared_lock<std::shared_mutex> guard(m_mutex);
     return m_threads.size();
 }
 

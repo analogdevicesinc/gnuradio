@@ -11,10 +11,10 @@
 #ifndef INCLUDED_NETWORK_UDP_SOURCE_IMPL_H
 #define INCLUDED_NETWORK_UDP_SOURCE_IMPL_H
 
+#include <gnuradio/buffer.h>
+#include <gnuradio/buffer_reader.h>
 #include <gnuradio/network/udp_source.h>
-#include <boost/asio.hpp>
-#include <boost/asio/ip/udp.hpp>
-#include <boost/circular_buffer.hpp>
+#include <asio.hpp>
 
 #include <gnuradio/network/packet_headers.h>
 
@@ -42,19 +42,18 @@ protected:
     int d_precomp_data_over_item_size;
     size_t d_block_size;
 
-    char* d_local_buffer;
+    asio::error_code ec;
 
-    boost::system::error_code ec;
+    asio::io_context d_io_context;
+    asio::ip::udp::endpoint d_endpoint;
+    asio::ip::udp::socket* d_udpsocket = nullptr;
 
-    boost::asio::io_service d_io_service;
-    boost::asio::ip::udp::endpoint d_endpoint;
-    boost::asio::ip::udp::socket* d_udpsocket;
-
-    boost::asio::streambuf d_read_buffer;
+    asio::streambuf d_read_buffer;
 
     // A queue is required because we have 2 different timing
     // domains: The network packets and the GR work()/scheduler
-    boost::circular_buffer<char>* d_localqueue;
+    gr::buffer_sptr d_localqueue_writer;
+    gr::buffer_reader_sptr d_localqueue_reader;
 
     uint64_t get_header_seqnum();
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #
 # Copyright 2008,2010,2012,2013 Free Software Foundation, Inc.
+# Copyright 2024 Daniel Estevez <daniel@destevez.net>
 #
 # This file is part of GNU Radio
 #
@@ -42,7 +43,7 @@ class test_scrambler(gr_unittest.TestCase):
         reg = np.zeros(52, np.int8)
         reg[::-1][(51, 3, 0), ] = 1
         res = (np.convolve(seq, reg) % 2)
-        self.assertTrue(sum(res[52:-52]) == 0, "LRS not generated properly")
+        self.assertEqual(sum(res[52:-52]), 0, msg="LRS not generated properly")
 
     def test_scrambler_descrambler_001(self):
         src_data = np.random.randint(0, 2, 500, dtype=np.int8)
@@ -102,6 +103,18 @@ class test_scrambler(gr_unittest.TestCase):
         self.tb.connect(src, scrambler, descrambler, dst)
         self.tb.run()
         self.assertEqual(tuple(src_data), tuple(dst.data()))
+
+    def test_additive_soft_symbols_001(self):
+        _a = lfsr_args(1, 51, 3, 0)  # i p(x) = x^51+x^3+1, seed 0x1
+        src_data = np.random.randn(1000).tolist()
+        src = blocks.vector_source_f(src_data, False)
+        scrambler = digital.additive_scrambler_ff(*_a)
+        descrambler = digital.additive_scrambler_ff(*_a)
+        dst = blocks.vector_sink_f()
+        self.tb.connect(src, scrambler, descrambler, dst)
+        self.tb.run()
+        self.assertFloatTuplesAlmostEqual(tuple(src_data), tuple(dst.data()),
+                                          places=6)
 
     def test_additive_scrambler_002(self):
         _a = lfsr_args(1, 51, 3, 0)  # i p(x) = x^51+x^3+1, seed 0x1
