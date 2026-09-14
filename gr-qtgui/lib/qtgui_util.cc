@@ -4,56 +4,46 @@
  *
  * This file is part of GNU Radio
  *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
- * Boston, MA 02110-1301, USA.
  */
 
 #include <gnuradio/qtgui/utils.h>
+
+#include <gnuradio/prefs.h>
+
+#include <qapplication.h>
+#include <QCoreApplication>
 #include <QDebug>
 #include <QFile>
 
-QString
-get_qt_style_sheet(QString filename)
+QString get_qt_style_sheet(QString filename)
 {
-  QString sstext;
-  QFile ss(filename);
-  if(!ss.open(QIODevice::ReadOnly | QIODevice::Text)) {
+    QString sstext;
+    QFile ss(filename);
+    if (!ss.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        return sstext;
+    }
+
+    QTextStream sstream(&ss);
+    while (!sstream.atEnd()) {
+        sstext += sstream.readLine();
+    }
+    ss.close();
+
     return sstext;
-  }
-
-  QTextStream sstream(&ss);
-  while(!sstream.atEnd()) {
-    sstext += sstream.readLine();
-  }
-  ss.close();
-
-  return sstext;
 }
 
 QwtPickerDblClickPointMachine::QwtPickerDblClickPointMachine()
 #if QWT_VERSION < 0x060000
-    : QwtPickerMachine ()
+    : QwtPickerMachine()
 #else
-    : QwtPickerMachine (PointSelection)
+    : QwtPickerMachine(PointSelection)
 #endif
 {
 }
 
-QwtPickerDblClickPointMachine::~QwtPickerDblClickPointMachine()
-{
-}
+QwtPickerDblClickPointMachine::~QwtPickerDblClickPointMachine() {}
 
 #if QWT_VERSION < 0x060000
 #define CMDLIST_TYPE QwtPickerMachine::CommandList
@@ -61,43 +51,49 @@ QwtPickerDblClickPointMachine::~QwtPickerDblClickPointMachine()
 #define CMDLIST_TYPE QList<QwtPickerMachine::Command>
 #endif
 CMDLIST_TYPE
-QwtPickerDblClickPointMachine::transition(const QwtEventPattern &eventPattern,
-					  const QEvent *e)
+QwtPickerDblClickPointMachine::transition(const QwtEventPattern& eventPattern,
+                                          const QEvent* e)
 {
-  CMDLIST_TYPE cmdList;
-  switch(e->type()) {
+    CMDLIST_TYPE cmdList;
+    switch (e->type()) {
     case QEvent::MouseButtonDblClick:
-      if ( eventPattern.mouseMatch(QwtEventPattern::MouseSelect1,
-				   (const QMouseEvent *)e) ) {
-	cmdList += QwtPickerMachine::Begin;
-	cmdList += QwtPickerMachine::Append;
-	cmdList += QwtPickerMachine::End;
-      }
-      break;
-  default:
-    break;
-  }
-  return cmdList;
+        if (eventPattern.mouseMatch(QwtEventPattern::MouseSelect1,
+                                    (const QMouseEvent*)e)) {
+            cmdList += QwtPickerMachine::Begin;
+            cmdList += QwtPickerMachine::Append;
+            cmdList += QwtPickerMachine::End;
+        }
+        break;
+    default:
+        break;
+    }
+    return cmdList;
 }
 
 #if QWT_VERSION < 0x060100
 QwtDblClickPlotPicker::QwtDblClickPlotPicker(QwtPlotCanvas* canvas)
-#else /* QWT_VERSION < 0x060100 */
+#else  /* QWT_VERSION < 0x060100 */
 QwtDblClickPlotPicker::QwtDblClickPlotPicker(QWidget* canvas)
 #endif /* QWT_VERSION < 0x060100 */
-  : QwtPlotPicker(canvas)
+    : QwtPlotPicker(canvas)
 {
 #if QWT_VERSION < 0x060000
-  setSelectionFlags(QwtPicker::PointSelection);
+    setSelectionFlags(QwtPicker::PointSelection);
 #endif
 }
 
-QwtDblClickPlotPicker::~QwtDblClickPlotPicker()
+QwtDblClickPlotPicker::~QwtDblClickPlotPicker() {}
+
+QwtPickerMachine* QwtDblClickPlotPicker::stateMachine(int n) const
 {
+    return new QwtPickerDblClickPointMachine;
 }
 
-QwtPickerMachine*
-QwtDblClickPlotPicker::stateMachine(int n) const
+void check_set_qss(QApplication* app)
 {
-  return new QwtPickerDblClickPointMachine;
+    std::string qssfile = gr::prefs::singleton()->get_string("qtgui", "qss", "");
+    if (!qssfile.empty()) {
+        QString sstext = get_qt_style_sheet(QString(qssfile.c_str()));
+        app->setStyleSheet(sstext);
+    }
 }

@@ -1,31 +1,22 @@
 #!/usr/bin/env python
 #
-# Copyright 2004,2010 Free Software Foundation, Inc.
+# Copyright 2004,2010,2018 Free Software Foundation, Inc.
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 #
 """
 GNU radio specific extension of unittest.
 """
 
+import time
 import unittest
-import gr_xmlrunner
-import sys, os, stat
+
+# We allow snakeCase here for consistency with unittest
+# pylint: disable=invalid-name
+
 
 class TestCase(unittest.TestCase):
     """A subclass of unittest.TestCase that adds additional assertions
@@ -34,72 +25,142 @@ class TestCase(unittest.TestCase):
     assertComplexTuplesAlmostEqual and assertFloatTuplesAlmostEqual
     """
 
-    def assertComplexAlmostEqual (self, first, second, places=7, msg=None):
+    def assertComplexAlmostEqual(self, first, second, places=7, msg=None):
         """Fail if the two complex objects are unequal as determined by their
            difference rounded to the given number of decimal places
            (default 7) and comparing to zero.
 
            Note that decimal places (from zero) is usually not the same
-           as significant digits (measured from the most signficant digit).
+           as significant digits (measured from the most significant digit).
        """
-        if round(second.real-first.real, places) != 0:
-            raise self.failureException, \
-                  (msg or '%s != %s within %s places' % (`first`, `second`, `places` ))
-        if round(second.imag-first.imag, places) != 0:
-            raise self.failureException, \
-                  (msg or '%s != %s within %s places' % (`first`, `second`, `places` ))
+        if round(second.real - first.real, places) != 0:
+            raise self.failureException(
+                msg or '%r != %r within %r places' % (first, second, places))
+        if round(second.imag - first.imag, places) != 0:
+            raise self.failureException(
+                msg or '%r != %r within %r places' % (first, second, places)
+            )
 
-    def assertComplexAlmostEqual2 (self, ref, x, abs_eps=1e-12, rel_eps=1e-6, msg=None):
+    def assertComplexAlmostEqual2(self, ref, x, abs_eps=1e-12, rel_eps=1e-6, msg=None):
         """
-        Fail if the two complex objects are unequal as determined by...
+        Fail if the two complex objects are unequal as determined by both
+        absolute delta (abs_eps) and relative delta (rel_eps).
         """
         if abs(ref - x) < abs_eps:
             return
 
         if abs(ref) > abs_eps:
-            if abs(ref-x)/abs(ref) > rel_eps:
-                raise self.failureException, \
-                      (msg or '%s != %s rel_error = %s rel_limit = %s' % (
-                    `ref`, `x`, abs(ref-x)/abs(ref), `rel_eps` ))
+            if abs(ref - x) / abs(ref) > rel_eps:
+                raise self.failureException(
+                    msg or '%r != %r rel_error = %r rel_limit = %r' % (
+                        ref, x, abs(ref - x) / abs(ref), rel_eps
+                    )
+                )
         else:
-            raise self.failureException, \
-                      (msg or '%s != %s rel_error = %s rel_limit = %s' % (
-                    `ref`, `x`, abs(ref-x)/abs(ref), `rel_eps` ))
+            raise self.failureException(
+                msg or '%r != %r rel_error = %r rel_limit = %r' % (
+                    ref, x, abs(ref - x) / abs(ref), rel_eps
+                )
+            )
 
+    def assertComplexTuplesAlmostEqual(self, a, b, places=7, msg=None):
+        """
+        Fail if the two complex tuples are not approximately equal.
+        Approximate equality is determined by specifying the number of decimal
+        places.0
+        """
+        self.assertEqual(len(a), len(b))
+        return all([
+            self.assertComplexAlmostEqual(x, y, places, msg)
+            for (x, y) in zip(a, b)
+        ])
 
+    def assertComplexTuplesAlmostEqual2(self, a, b,
+                                        abs_eps=1e-12, rel_eps=1e-6, msg=None):
+        """
+        Fail if the two complex tuples are not approximately equal.
+        Approximate equality is determined by calling assertComplexAlmostEqual().
+        """
+        self.assertEqual(len(a), len(b))
+        return all([
+            self.assertComplexAlmostEqual2(x, y, abs_eps, rel_eps, msg)
+            for (x, y) in zip(a, b)
+        ])
 
-    def assertComplexTuplesAlmostEqual (self, a, b, places=7, msg=None):
-        self.assertEqual (len(a), len(b))
-        for i in xrange (len(a)):
-            self.assertComplexAlmostEqual (a[i], b[i], places, msg)
+    def assertFloatTuplesAlmostEqual(self, a, b, places=7, msg=None):
+        """
+        Fail if the two real-valued tuples are not approximately equal.
+        Approximate equality is determined by specifying the number of decimal
+        places.
+        """
+        self.assertEqual(len(a), len(b))
+        return all([
+            self.assertAlmostEqual(x, y, places, msg)
+            for (x, y) in zip(a, b)
+        ])
 
-    def assertComplexTuplesAlmostEqual2 (self, ref, x,
-                                         abs_eps=1e-12, rel_eps=1e-6, msg=None):
-        self.assertEqual (len(ref), len(x))
-        for i in xrange (len(ref)):
-            try:
-                self.assertComplexAlmostEqual2 (ref[i], x[i], abs_eps, rel_eps, msg)
-            except self.failureException, e:
-                #sys.stderr.write("index = %d " % (i,))
-                #sys.stderr.write("%s\n" % (e,))
-                raise
+    def assertFloatTuplesAlmostEqual2(self, a, b,
+                                      abs_eps=1e-12, rel_eps=1e-6, msg=None):
+        self.assertEqual(len(a), len(b))
+        return all([
+            self.assertComplexAlmostEqual2(x, y, abs_eps, rel_eps, msg)
+            for (x, y) in zip(a, b)
+        ])
 
-    def assertFloatTuplesAlmostEqual (self, a, b, places=7, msg=None):
-        self.assertEqual (len(a), len(b))
-        for i in xrange (len(a)):
-            self.assertAlmostEqual (a[i], b[i], places, msg)
+    def assertSequenceEqualGR(self, data_in, data_out):
+        """
+        Note this function exists because of this bug: https://bugs.python.org/issue19217
+        Calling self.assertEqual(seqA, seqB) can hang if seqA and seqB are not equal.
+        """
+        if len(data_in) != len(data_out):
+            print(
+                'Lengths do not match: {:d} -- {:d}'.format(len(data_in), len(data_out)))
+        self.assertTrue(len(data_in) == len(data_out))
+        total_miscompares = 0
+        for idx, item in enumerate(zip(data_in, data_out)):
+            if item[0] != item[1]:
+                total_miscompares += 1
+                print(
+                    'Miscompare at: {:d} ({:d} -- {:d})'.format(idx, item[0], item[1]))
+        if total_miscompares > 0:
+            print('Total miscompares: {:d}'.format(total_miscompares))
+        self.assertTrue(total_miscompares == 0)
 
+    def waitFor(
+            self,
+            condition,
+            timeout=5.0,
+            poll_interval=0.2,
+            fail_on_timeout=True,
+            fail_msg=None):
+        """
+        Helper function: Wait for a callable to return True within a given
+        timeout.
 
-    def assertFloatTuplesAlmostEqual2 (self, ref, x,
-                                       abs_eps=1e-12, rel_eps=1e-6, msg=None):
-        self.assertEqual (len(ref), len(x))
-        for i in xrange (len(ref)):
-            try:
-                self.assertComplexAlmostEqual2 (ref[i], x[i], abs_eps, rel_eps, msg)
-            except self.failureException, e:
-                #sys.stderr.write("index = %d " % (i,))
-                #sys.stderr.write("%s\n" % (e,))
-                raise
+        This is useful for running tests where an exact wait time is not known.
+
+        Arguments:
+        - condition: A callable. Must return True when a 'good' condition is met.
+        - timeout: Timeout in seconds. `condition` must return True within this
+                   timeout.
+        - poll_interval: Time between calls to condition() in seconds
+        - fail_on_timeout: If True, the test case will fail when the timeout
+                           occurs. If False, this function will return False in
+                           that case.
+        - fail_msg: The message that is printed when a timeout occurs and
+                    fail_on_timeout is true.
+        """
+        if not callable(condition):
+            self.fail("Invalid condition provided to waitFor()!")
+        stop_time = time.monotonic() + timeout
+        while time.monotonic() <= stop_time:
+            if condition():
+                return True
+            time.sleep(poll_interval)
+        if fail_on_timeout:
+            fail_msg = fail_msg or "Timeout exceeded during call to waitFor()!"
+            self.fail(fail_msg)
+        return False
 
 
 TestResult = unittest.TestResult
@@ -110,56 +171,17 @@ TextTestRunner = unittest.TextTestRunner
 TestProgram = unittest.TestProgram
 main = TestProgram
 
-def run(PUT, filename=None):
+
+def run(PUT, filename=None, verbosity=1):
     '''
-    Runs the unittest on a TestCase and produces an optional XML report
+    Runs the unittest on a TestCase
     PUT:      the program under test and should be a gr_unittest.TestCase
-    filename: an optional filename to save the XML report of the tests
-              this will live in ./.unittests/python
+    filename: This argument is here for historical reasons.
     '''
-
-    # Run this is given a file name
-    if(filename is not None):
-        basepath = "./.unittests"
-        path = basepath + "/python"
-
-        if not os.path.exists(basepath):
-            os.makedirs(basepath, 0750)
-
-        xmlrunner = None
-        # only proceed if .unittests is writable
-        st = os.stat(basepath)[stat.ST_MODE]
-        if(st & stat.S_IWUSR > 0):
-            # Test if path exists; if not, build it
-            if not os.path.exists(path):
-                os.makedirs(path, 0750)
-
-            # Just for safety: make sure we can write here, too
-            st = os.stat(path)[stat.ST_MODE]
-            if(st & stat.S_IWUSR > 0):
-                # Create an XML runner to filename
-                fout = file(path+"/"+filename, "w")
-                xmlrunner = gr_xmlrunner.XMLTestRunner(fout)
-
-        txtrunner = TextTestRunner(verbosity=1)
-
-        # Run the test; runner also creates XML output file
-        # FIXME: make xmlrunner output to screen so we don't have to do run and main
-        suite = TestLoader().loadTestsFromTestCase(PUT)
-
-        # use the xmlrunner if we can write the the directory
-        if(xmlrunner is not None):
-            xmlrunner.run(suite)
-
-        main()
-
-        # This will run and fail make check if problem
-        # but does not output to screen.
-        #main(testRunner = xmlrunner)
-
-    else:
-        # If no filename is given, just run the test
-        main()
+    if filename:
+        print("DEPRECATED: Using filename with gr_unittest does no longer "
+              "have any effect.")
+    main(verbosity=verbosity)
 
 
 ##############################################################################

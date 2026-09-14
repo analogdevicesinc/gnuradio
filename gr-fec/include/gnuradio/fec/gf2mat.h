@@ -4,32 +4,20 @@
  *
  * This file is part of GNU Radio
  *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
- * Boston, MA 02110-1301, USA.
  */
 
 #ifndef GF2MAT_H
 #define GF2MAT_H
-#include <vector>
-#include "gf2vec.h"
 #include "alist.h"
+#include "gf2vec.h"
+#include <vector>
 
 class GF2Mat
 {
     //! The matrix H
-    std::vector < std::vector <char> > H;
+    std::vector<std::vector<uint8_t>> H;
 
     //! Number of rows in H
     int M;
@@ -37,9 +25,9 @@ class GF2Mat
     //! Number of columns in H
     int N;
 
-  public:
+public:
     //! Default constructor
-    GF2Mat() {};
+    GF2Mat(){};
 
     //! Construct an M x N matrix with all 0 entries
     GF2Mat(int m, int n);
@@ -48,7 +36,7 @@ class GF2Mat
     GF2Mat(alist _list);
 
     //! Initializes the class from a 2-D vector X
-    GF2Mat(std::vector <std::vector <char> > X);
+    GF2Mat(std::vector<std::vector<uint8_t>> X);
 
     //! Returns the variable M
     int get_M();
@@ -90,7 +78,7 @@ class GF2Mat
     void add_rows(int i, int j);
 
     //! Returns the variable H
-    std::vector<std::vector<char> > get_H();
+    std::vector<std::vector<uint8_t>> get_H();
 
     /*!
      * \brief Obtains an equivalent representation of H for encoding
@@ -105,8 +93,7 @@ class GF2Mat
      * \param p The column permutation during this operation.
      * \param rank The rank of the matrix.
      */
-    GF2Mat get_G(std::vector<int> & p, int & rank);
-
+    GF2Mat get_G(std::vector<int>& p, int& rank);
 };
 
 #endif // #ifndef GF2MAT_H

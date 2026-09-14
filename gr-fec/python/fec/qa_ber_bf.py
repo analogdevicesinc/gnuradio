@@ -4,26 +4,16 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 #
 
-from gnuradio import gr, gr_unittest, blocks
-import fec_swig as fec
+
 import numpy
 import copy
+
+from gnuradio import gr, gr_unittest, blocks
+from gnuradio import fec
 
 
 class test_ber_bf(gr_unittest.TestCase):
@@ -54,7 +44,8 @@ class test_ber_bf(gr_unittest.TestCase):
         self.tb.run()
 
         data = dst.data()
-        expected_result = self.log_ber(1., N) # [numpy.log10(1.0 / (8.0 * N)), ]
+        # [numpy.log10(1.0 / (8.0 * N)), ]
+        expected_result = self.log_ber(1., N)
 
         self.assertFloatTuplesAlmostEqual(expected_result, data, 5)
 
@@ -132,8 +123,8 @@ class test_ber_bf(gr_unittest.TestCase):
         data = dst.data()
         expected_result = [-2.0, ]
 
-        print data
-        print expected_result
+        print(data)
+        print(expected_result)
 
         self.assertFloatTuplesAlmostEqual(expected_result, data, 5)
 
@@ -169,4 +160,4 @@ class test_ber_bf(gr_unittest.TestCase):
 
 
 if __name__ == '__main__':
-    gr_unittest.run(test_ber_bf, "test_ber_bf.xml")
+    gr_unittest.run(test_ber_bf)

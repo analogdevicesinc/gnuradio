@@ -4,19 +4,8 @@
  *
  * This file is part of GNU Radio
  *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, write to the Free Software Foundation, Inc.,
- * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -30,31 +19,37 @@
 
 namespace gr {
 
-  class tpb_container
-  {
+class tpb_container
+{
     block_sptr d_block;
     int d_max_noutput_items;
+    thread::barrier_sptr d_start_sync;
 
-  public:
-    tpb_container(block_sptr block, int max_noutput_items)
-      : d_block(block), d_max_noutput_items(max_noutput_items) {}
+public:
+    tpb_container(block_sptr block,
+                  int max_noutput_items,
+                  thread::barrier_sptr start_sync)
+        : d_block(block), d_max_noutput_items(max_noutput_items), d_start_sync(start_sync)
+    {
+    }
 
     void operator()()
     {
-      tpb_thread_body body(d_block, d_max_noutput_items);
+        tpb_thread_body body(d_block, d_start_sync, d_max_noutput_items);
     }
-  };
+};
 
-  scheduler_sptr
-  scheduler_tpb::make(flat_flowgraph_sptr ffg, int max_noutput_items)
-  {
-    return scheduler_sptr(new scheduler_tpb(ffg, max_noutput_items));
-  }
+scheduler_sptr
+scheduler_tpb::make(flat_flowgraph_sptr ffg, int max_noutput_items, bool catch_exceptions)
+{
+    return scheduler_sptr(new scheduler_tpb(ffg, max_noutput_items, catch_exceptions));
+}
 
-  scheduler_tpb::scheduler_tpb(flat_flowgraph_sptr ffg,
-                               int max_noutput_items)
-    : scheduler(ffg, max_noutput_items)
-  {
+scheduler_tpb::scheduler_tpb(flat_flowgraph_sptr ffg,
+                             int max_noutput_items,
+                             bool catch_exceptions)
+    : scheduler(ffg, max_noutput_items, catch_exceptions)
+{
     int block_max_noutput_items;
 
     // Get a topologically sorted vector of all the blocks in use.
@@ -67,46 +62,37 @@ namespace gr {
 
     // Ensure that the done flag is clear on all blocks
 
-    for(size_t i = 0; i < blocks.size(); i++) {
-      blocks[i]->detail()->set_done(false);
+    for (size_t i = 0; i < blocks.size(); i++) {
+        blocks[i]->detail()->set_done(false);
     }
+
+    thread::barrier_sptr start_sync =
+        std::make_shared<thread::barrier>(blocks.size() + 1);
 
     // Fire off a thead for each block
 
-    for(size_t i = 0; i < blocks.size(); i++) {
-      std::stringstream name;
-      name << "thread-per-block[" << i << "]: " << blocks[i];
+    for (size_t i = 0; i < blocks.size(); i++) {
+        std::stringstream name;
+        name << "thread-per-block[" << i << "]: " << blocks[i];
 
-      // If set, use internal value instead of global value
-      if(blocks[i]->is_set_max_noutput_items()) {
-        block_max_noutput_items = blocks[i]->max_noutput_items();
-      }
-      else {
-        block_max_noutput_items = max_noutput_items;
-      }
-
-      d_threads.create_thread(
-	    gr::thread::thread_body_wrapper<tpb_container>
-            (tpb_container(blocks[i], block_max_noutput_items),
-             name.str()));
+        // If set, use internal value instead of global value
+        if (blocks[i]->is_set_max_noutput_items()) {
+            block_max_noutput_items = blocks[i]->max_noutput_items();
+        } else {
+            block_max_noutput_items = max_noutput_items;
+        }
+        d_threads.create_thread(thread::thread_body_wrapper<tpb_container>(
+            tpb_container(blocks[i], block_max_noutput_items, start_sync),
+            name.str(),
+            catch_exceptions));
     }
-  }
+    start_sync->wait();
+}
 
-  scheduler_tpb::~scheduler_tpb()
-  {
-    stop();
-  }
+scheduler_tpb::~scheduler_tpb() { stop(); }
 
-  void
-  scheduler_tpb::stop()
-  {
-    d_threads.interrupt_all();
-  }
+void scheduler_tpb::stop() { d_threads.interrupt_all(); }
 
-  void
-  scheduler_tpb::wait()
-  {
-    d_threads.join_all();
-  }
+void scheduler_tpb::wait() { d_threads.join_all(); }
 
 } /* namespace gr */

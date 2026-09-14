@@ -2,21 +2,25 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 
 ########################################################################
-file(GLOB xml_files "*.xml")
-install(FILES ${xml_files} DESTINATION ${GRC_BLOCKS_DIR} COMPONENT "fec_python")
+file(GLOB yml_files "*.yml")
+
+# Without GSL, we don't build some of the LDPC work, so we can't use
+# it in grc
+if(NOT GSL_FOUND)
+    list(REMOVE_ITEM
+         yml_files
+         ${CMAKE_CURRENT_SOURCE_DIR}/variable_ldpc_bit_flip_decoder.block.yml
+         ${CMAKE_CURRENT_SOURCE_DIR}/variable_ldpc_G_matrix_object.block.yml
+         ${CMAKE_CURRENT_SOURCE_DIR}/variable_ldpc_H_matrix_object.block.yml
+         ${CMAKE_CURRENT_SOURCE_DIR}/variable_ldpc_encoder_G.block.yml
+         ${CMAKE_CURRENT_SOURCE_DIR}/variable_ldpc_encoder_H.block.yml
+)
+endif(NOT GSL_FOUND)
+install(FILES
+        ${yml_files}
+        DESTINATION ${GRC_BLOCKS_DIR}
+)

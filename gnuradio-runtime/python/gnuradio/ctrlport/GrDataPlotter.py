@@ -4,50 +4,42 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
-#
+
 
 from gnuradio import gr
 from gnuradio import blocks
-from gnuradio import filter
+from gnuradio import filter, fft
 from gnuradio.ctrlport.GNURadio import ControlPort
-import sys, time, struct
+import sys
+import time
+import struct
 
 try:
     from gnuradio import qtgui
-    from PyQt4 import QtGui, QtCore
+    from PyQt5 import Qt, QtCore
     import sip
 except ImportError:
-    print "Error: Program requires PyQt4 and gr-qtgui."
+    print("Error: Program requires PyQt5 and gr-qtgui.")
     sys.exit(1)
 
-class GrDataPlotParent(gr.top_block, QtGui.QWidget):
+
+class GrDataPlotParent(gr.top_block, Qt.QWidget):
     # Setup signals
-    plotupdated = QtCore.pyqtSignal(QtGui.QWidget)
+    plotupdated = QtCore.pyqtSignal(Qt.QWidget)
 
     def __init__(self, name, rate, pmin=None, pmax=None):
         gr.top_block.__init__(self)
-        QtGui.QWidget.__init__(self, None)
+        Qt.QWidget.__init__(self, None)
 
         self._name = name
         self._npts = 500
         self._rate = rate
-        self.knobnames = [name,]
+        self.knobnames = [name, ]
 
-        self.layout = QtGui.QVBoxLayout()
+        self.layout = Qt.QVBoxLayout()
         self.setLayout(self.layout)
 
         self.setAcceptDrops(True)
@@ -62,11 +54,11 @@ class GrDataPlotParent(gr.top_block, QtGui.QWidget):
             self.layout.removeWidget(self.py_window)
             self.disconnect(self.thr, (self.snk, 0))
             self.disconnect(self.src[0], self.thr)
-            for n in xrange(1, self._ncons):
-                self.disconnect(self.src[n], (self.snk,n))
+            for n in range(1, self._ncons):
+                self.disconnect(self.src[n], (self.snk, n))
 
         self._ncons = nconnections
-        self._data_len = self._ncons*[0,]
+        self._data_len = self._ncons * [0, ]
 
         self.thr = blocks.throttle(self._datasize, self._rate)
         self.snk = self.get_qtsink()
@@ -75,18 +67,18 @@ class GrDataPlotParent(gr.top_block, QtGui.QWidget):
 
         self._last_data = []
         self.src = []
-        for n in xrange(self._ncons):
+        for n in range(self._ncons):
             self.set_line_label(n, self.knobnames[n])
 
-            self._last_data.append(int(self._npts)*[0,])
+            self._last_data.append(int(self._npts) * [0, ])
             self.src.append(self.get_vecsource())
 
             if(n == 0):
                 self.connect(self.src[n], self.thr)
             else:
-                self.connect(self.src[n], (self.snk,n))
+                self.connect(self.src[n], (self.snk, n))
 
-        self.py_window = sip.wrapinstance(self.snk.pyqwidget(), QtGui.QWidget)
+        self.py_window = sip.wrapinstance(self.snk.qwidget(), Qt.QWidget)
 
         self.layout.addWidget(self.py_window)
 
@@ -133,7 +125,7 @@ class GrDataPlotParent(gr.top_block, QtGui.QWidget):
         if(self._iscomplex):
             data_r = data[0::2]
             data_i = data[1::2]
-            data = [complex(r,i) for r,i in zip(data_r, data_i)]
+            data = [complex(r, i) for r, i in zip(data_r, data_i)]
         return data
 
     def update(self, data):
@@ -141,34 +133,36 @@ class GrDataPlotParent(gr.top_block, QtGui.QWidget):
         npts = self.get_npts()
         if(self._npts != npts):
 
-            # Adjust buffers to accomodate new settings
-            for n in xrange(self._ncons):
+            # Adjust buffers to accommodate new settings
+            for n in range(self._ncons):
                 if(npts < self._npts):
                     if(self._data_len[n] < npts):
                         self._last_data[n] = self._last_data[n][0:npts]
                     else:
-                        self._last_data[n] = self._last_data[n][self._data_len[n]-npts:self._data_len[n]]
+                        self._last_data[n] = self._last_data[n][self._data_len[n] -
+                                                                npts:self._data_len[n]]
                         self._data_len[n] = npts
                 else:
-                    self._last_data[n] += (npts - self._npts)*[0,]
+                    self._last_data[n] += (npts - self._npts) * [0, ]
             self._npts = npts
             self.snk.reset()
 
         if(self._stripchart):
             # Update the plot data depending on type
-            for n in xrange(self._ncons):
+            for n in range(self._ncons):
                 if(type(data[n]) == list):
                     data[n] = self.data_to_complex(data[n])
                     if(len(data[n]) > self._npts):
                         self.src[n].set_data(data[n])
                         self._last_data[n] = data[n][-self._npts:]
                     else:
-                        newdata = self._last_data[n][-(self._npts-len(data)):]
+                        newdata = self._last_data[n][-(
+                            self._npts - len(data)):]
                         newdata += data[n]
                         self.src[n].set_data(newdata)
                         self._last_data[n] = newdata
 
-                else: # single value update
+                else:  # single value update
                     if(self._iscomplex):
                         data[n] = complex(data[n][0], data[n][1])
                     if(self._data_len[n] < self._npts):
@@ -179,12 +173,11 @@ class GrDataPlotParent(gr.top_block, QtGui.QWidget):
                         self._last_data[n].append(data[n])
                     self.src[n].set_data(self._last_data[n])
         else:
-            for n in xrange(self._ncons):
+            for n in range(self._ncons):
                 if(type(data[n]) != list):
-                    data[n] = [data[n],]
+                    data[n] = [data[n], ]
                 data[n] = self.data_to_complex(data[n])
                 self.src[n].set_data(data[n])
-
 
 
 class GrDataPlotterC(GrDataPlotParent):
@@ -214,8 +207,8 @@ class GrDataPlotterC(GrDataPlotParent):
         return self._npts
 
     def set_line_label(self, n, name):
-        self.snk.set_line_label(2*n+0, "Re{" + self.knobnames[n] + "}")
-        self.snk.set_line_label(2*n+1, "Im{" + self.knobnames[n] + "}")
+        self.snk.set_line_label(2 * n + 0, "Re{" + self.knobnames[n] + "}")
+        self.snk.set_line_label(2 * n + 1, "Im{" + self.knobnames[n] + "}")
 
 
 class GrDataPlotterF(GrDataPlotParent):
@@ -291,7 +284,7 @@ class GrDataPlotterPsdC(GrDataPlotParent):
         self._iscomplex = True
 
         self._npts = 2048
-        self._wintype = filter.firdes.WIN_BLACKMAN_hARRIS
+        self._wintype = fft.window.WIN_BLACKMAN_hARRIS
         self._fc = 0
 
         self._setup(1)
@@ -324,7 +317,7 @@ class GrDataPlotterPsdF(GrDataPlotParent):
         self._iscomplex = False
 
         self._npts = 2048
-        self._wintype = filter.firdes.WIN_BLACKMAN_hARRIS
+        self._wintype = fft.window.WIN_BLACKMAN_hARRIS
         self._fc = 0
 
         self._setup(1)
@@ -377,6 +370,7 @@ class GrTimeRasterF(GrDataPlotParent):
     def set_line_label(self, n, name):
         self.snk.set_line_label(n, self.knobnames[n])
 
+
 class GrTimeRasterB(GrDataPlotParent):
     def __init__(self, name, rate, pmin=None, pmax=None):
         GrDataPlotParent.__init__(self, name, rate, pmin, pmax)
@@ -407,15 +401,15 @@ class GrTimeRasterB(GrDataPlotParent):
         self.snk.set_line_label(n, self.knobnames[n])
 
 
-class GrDataPlotterValueTable:
+class GrDataPlotterValueTable(object):
     def __init__(self, uid, parent, x, y, xsize, ysize,
                  headers=['Statistic Key ( Source Block :: Stat Name )  ',
                           'Curent Value', 'Units', 'Description']):
-	# must encapsulate, cuz Qt's bases are not classes
+        # must encapsulate, cuz Qt's bases are not classes
         self.uid = uid
-        self.treeWidget = QtGui.QTreeWidget(parent)
+        self.treeWidget = Qt.QTreeWidget(parent)
         self.treeWidget.setColumnCount(len(headers))
-        self.treeWidget.setGeometry(x,y,xsize,ysize)
+        self.treeWidget.setGeometry(x, y, xsize, ysize)
         self.treeWidget.setHeaderLabels(headers)
         self.treeWidget.resizeColumnToContents(0)
 
@@ -434,7 +428,7 @@ class GrDataPlotterValueTable:
 
             # itemKey is the text in the first column of a QTreeWidgetItem
             itemKey = str(item.text(0))
-            if itemKey in knobs.keys():
+            if itemKey in list(knobs.keys()):
 
                 # This key was found in the tree, update its values.
                 foundKeys.append(itemKey)
@@ -443,19 +437,19 @@ class GrDataPlotterValueTable:
                 descr = str(knobprops[itemKey].description)
 
                 if(type(v) == ControlPort.complex):
-                    v = v.re + v.im*1j
+                    v = v.re + v.im * 1j
                 # If it's a byte stream, Python thinks it's a string.
                 # Unpack and convert to floats for plotting.
                 # Ignore the edge list knob if it's being exported
                 elif(type(v) == str and itemKey.find('probe2_b') == 0):
-                    v = struct.unpack(len(v)*'b', v)
+                    v = struct.unpack(len(v) * 'b', v)
 
                 # Convert the final value to a string for displaying
                 v = str(v)
 
                 if (item.text(1) != v or
                     item.text(2) != units or
-                    item.text(3) != descr):
+                        item.text(3) != descr):
 
                     item.setText(1, v)
                     item.setText(2, units)
@@ -465,24 +459,25 @@ class GrDataPlotterValueTable:
                 deleteKeys.append(itemKey)
 
         # Add items to tree that are not currently in the tree.
-        for k in knobs.keys():
+        for k in list(knobs.keys()):
             if k not in foundKeys:
                 v = knobs[k].value
                 if(type(v) == ControlPort.complex):
-                    v = v.re + v.im*1j
+                    v = v.re + v.im * 1j
                 # If it's a byte stream, Python thinks it's a string.
                 # Unpack and convert to floats for plotting.
                 # Ignore the edge list knob if it's being exported
                 elif(type(v) == str and k.find('probe2_b') == 0):
-                    v = struct.unpack(len(v)*'b', v)
+                    v = struct.unpack(len(v) * 'b', v)
 
-                item = QtGui.QTreeWidgetItem([k, str(v),
-                            knobprops[k].units, knobprops[k].description])
+                item = Qt.QTreeWidgetItem([k, str(v),
+                                           knobprops[k].units, knobprops[k].description])
                 self.treeWidget.addTopLevelItem(item)
 
         # Remove items currently in tree that are not in the knob list.
         for itemKey in deleteKeys:
-            qtwiList = self.treeWidget.findItems(itemKey, Qt.Qt.MatchFixedString)
+            qtwiList = self.treeWidget.findItems(
+                itemKey, Qt.Qt.MatchFixedString)
             if (len(qtwiList) > 1):
                 raise Exception('More than one item with key %s in tree' %
                                 itemKey)

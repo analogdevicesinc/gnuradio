@@ -3,27 +3,16 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 #
 
-import sys
+
 from gnuradio import gr
 from gnuradio import fft
 from gnuradio import blocks
-from filter_swig import fft_filter_ccc
+from .filter_python import fft_filter_ccc
+
 
 def _generate_synthesis_taps(mpoints):
     return []   # FIXME
@@ -32,7 +21,7 @@ def _generate_synthesis_taps(mpoints):
 def _split_taps(taps, mpoints):
     assert (len(taps) % mpoints) == 0
     result = [list() for x in range(mpoints)]
-    for i in xrange(len(taps)):
+    for i in range(len(taps)):
         (result[i % mpoints]).append(taps[i])
     return [tuple(x) for x in result]
 
@@ -43,6 +32,7 @@ class synthesis_filterbank(gr.hier_block2):
 
     See http://cnx.org/content/m10424/latest
     """
+
     def __init__(self, mpoints, taps=None):
         """
         Takes M complex streams in, produces single complex stream out
@@ -87,9 +77,9 @@ class synthesis_filterbank(gr.hier_block2):
         """
         item_size = gr.sizeof_gr_complex
         gr.hier_block2.__init__(self, "synthesis_filterbank",
-                                gr.io_signature(mpoints, mpoints, item_size), # Input signature
+                                # Input signature
+                                gr.io_signature(mpoints, mpoints, item_size),
                                 gr.io_signature(1, 1, item_size))             # Output signature
-
 
         if taps is None:
             taps = _generate_synthesis_taps(mpoints)
@@ -119,7 +109,8 @@ class synthesis_filterbank(gr.hier_block2):
             self.connect((self.v2ss, i), f)
             self.connect(f, (self.ss2s, i))
 
-	self.connect(self.ss2s, self)
+            self.connect(self.ss2s, self)
+
 
 class analysis_filterbank(gr.hier_block2):
     """
@@ -127,6 +118,7 @@ class analysis_filterbank(gr.hier_block2):
 
     See http://cnx.org/content/m10424/latest
     """
+
     def __init__(self, mpoints, taps=None):
         """
         Takes 1 complex stream in, produces M complex streams out
@@ -140,8 +132,9 @@ class analysis_filterbank(gr.hier_block2):
         """
         item_size = gr.sizeof_gr_complex
         gr.hier_block2.__init__(self, "analysis_filterbank",
-                                gr.io_signature(1, 1, item_size),             # Input signature
-                                gr.io_signature(mpoints, mpoints, item_size)) # Output signature
+                                # Input signature
+                                gr.io_signature(1, 1, item_size),
+                                gr.io_signature(mpoints, mpoints, item_size))  # Output signature
 
         if taps is None:
             taps = _generate_synthesis_taps(mpoints)
@@ -154,7 +147,7 @@ class analysis_filterbank(gr.hier_block2):
         # split in mpoints separate set of taps
         sub_taps = _split_taps(taps, mpoints)
 
-        # print >> sys.stderr, "mpoints =", mpoints, "len(sub_taps) =", len(sub_taps)
+        # print(>> sys.stderr, "mpoints =", mpoints, "len(sub_taps) =", len(sub_taps))
 
         self.s2ss = blocks.stream_to_streams(item_size, mpoints)
         # filters here
@@ -166,7 +159,7 @@ class analysis_filterbank(gr.hier_block2):
 
         # build mpoints fir filters...
         for i in range(mpoints):
-            f = fft_filter_ccc(1, sub_taps[mpoints-i-1])
+            f = fft_filter_ccc(1, sub_taps[mpoints - i - 1])
             self.connect((self.s2ss, i), f)
             self.connect(f, (self.ss2v, i))
             self.connect((self.v2ss, i), (self, i))

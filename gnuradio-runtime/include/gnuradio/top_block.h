@@ -4,20 +4,8 @@
  *
  * This file is part of GNU Radio
  *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
- * Boston, MA 02110-1301, USA.
  */
 
 #ifndef INCLUDED_GR_TOP_BLOCK_H
@@ -28,27 +16,29 @@
 
 namespace gr {
 
-  class top_block_impl;
+class top_block_impl;
 
-  GR_RUNTIME_API top_block_sptr make_top_block(const std::string &name);
+GR_RUNTIME_API top_block_sptr make_top_block(const std::string& name,
+                                             bool catch_exceptions = true);
 
-  /*!
-   *\brief Top-level hierarchical block representing a flowgraph
-   * \ingroup container_blk
-   */
-  class GR_RUNTIME_API top_block : public hier_block2
-  {
-  private:
-    friend GR_RUNTIME_API top_block_sptr
-      make_top_block(const std::string &name);
+/*!
+ *\brief Top-level hierarchical block representing a flowgraph
+ * \ingroup container_blk
+ */
+class GR_RUNTIME_API top_block : public hier_block2
+{
+private:
+    template <typename T, typename... Args>
+    friend std::shared_ptr<T> gnuradio::make_block_sptr(Args&&... args);
 
-    top_block_impl *d_impl;
 
-  protected:
-    top_block(const std::string &name);
+    std::unique_ptr<top_block_impl> d_impl;
 
-  public:
-    ~top_block();
+protected:
+    top_block(const std::string& name, bool catch_exceptions = true);
+
+public:
+    ~top_block() override;
 
     /*!
      * \brief The simple interface to running a flowgraph.
@@ -60,7 +50,7 @@ namespace gr {
      * allowed for any block in the flowgraph. This passes through to
      * the start function; see that function for more details.
      */
-    void run(int max_noutput_items=100000000);
+    void run(int max_noutput_items = 100000000);
 
     /*!
      * Start the contained flowgraph. Creates one or more threads to
@@ -74,7 +64,7 @@ namespace gr {
      * maximum. Use this to adjust the maximum latency a flowgraph can
      * exhibit.
      */
-    void start(int max_noutput_items=100000000);
+    void start(int max_noutput_items = 100000000);
 
     /*!
      * Stop the running flowgraph. Notifies each thread created by the
@@ -102,7 +92,7 @@ namespace gr {
      * thread (E.g., block::work method) or deadlock will occur
      * when reconfiguration happens.
      */
-    virtual void lock();
+    void lock() override;
 
     /*!
      * Unlock a flowgraph in preparation for reconfiguration. When an
@@ -113,7 +103,7 @@ namespace gr {
      * (E.g., block::work method) or deadlock will occur when
      * reconfiguration happens.
      */
-    virtual void unlock();
+    void unlock() override;
 
     /*!
      * Returns a string that lists the edge connections in the
@@ -140,13 +130,14 @@ namespace gr {
 
     top_block_sptr to_top_block(); // Needed for Python type coercion
 
-    void setup_rpc();
-  };
+    void setup_rpc() override;
+};
 
-  inline top_block_sptr cast_to_top_block_sptr(basic_block_sptr block) {
-    return boost::dynamic_pointer_cast<top_block, basic_block>(block);
-  }
+inline top_block_sptr cast_to_top_block_sptr(basic_block_sptr block)
+{
+    return std::dynamic_pointer_cast<top_block, basic_block>(block);
+}
 
-} /* namespce gr */
+} // namespace gr
 
 #endif /* INCLUDED_GR_TOP_BLOCK_H */

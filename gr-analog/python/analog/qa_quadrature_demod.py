@@ -4,25 +4,15 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
-#
+
 
 import cmath
 
 from gnuradio import gr, gr_unittest, analog, blocks
+
 
 class test_quadrature_demod(gr_unittest.TestCase):
 
@@ -37,15 +27,15 @@ class test_quadrature_demod(gr_unittest.TestCase):
         fs = 8000.0
 
         src_data = []
-        for i in xrange(200):
-            ti = i/fs
-            src_data.append(cmath.exp(2j*cmath.pi*f*ti))
+        for i in range(200):
+            ti = i / fs
+            src_data.append(cmath.exp(2j * cmath.pi * f * ti))
 
         # f/fs is a quarter turn per sample.
         # Set the gain based on this to get 1 out.
-        gain = 1.0/(cmath.pi/4)
+        gain = 1.0 / (cmath.pi / 4)
 
-        expected_result = [0,] + 199*[1.0]
+        expected_result = [0, ] + 199 * [1.0]
 
         src = blocks.vector_source_c(src_data)
         op = analog.quadrature_demod_cf(gain)
@@ -58,6 +48,6 @@ class test_quadrature_demod(gr_unittest.TestCase):
         result_data = dst.data()
         self.assertComplexTuplesAlmostEqual(expected_result, result_data, 5)
 
-if __name__ == '__main__':
-    gr_unittest.run(test_quadrature_demod, "test_quadrature_demod.xml")
 
+if __name__ == '__main__':
+    gr_unittest.run(test_quadrature_demod)

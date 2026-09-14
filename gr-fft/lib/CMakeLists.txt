@@ -2,64 +2,45 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
-
-########################################################################
-# Setup the include and linker paths
-########################################################################
-include_directories(
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}
-    ${GR_FFT_INCLUDE_DIRS}
-    ${GNURADIO_RUNTIME_INCLUDE_DIRS}
-    ${VOLK_INCLUDE_DIRS}
-    ${Boost_INCLUDE_DIRS}
-    ${FFTW3F_INCLUDE_DIRS}
-)
-
-link_directories(${Boost_LIBRARY_DIRS})
-link_directories(${FFTW3F_LIBRARY_DIRS})
-
-if(ENABLE_GR_CTRLPORT)
-  ADD_DEFINITIONS(-DGR_CTRLPORT)
-endif(ENABLE_GR_CTRLPORT)
 
 ########################################################################
 # Setup library
 ########################################################################
-list(APPEND fft_sources
+add_library(gnuradio-fft
   fft.cc
-  fft_vcc_fftw.cc
-  fft_vfc_fftw.cc
+  fft_v_fftw.cc
   goertzel_fc_impl.cc
   goertzel.cc
   window.cc
 )
 
+target_link_libraries(gnuradio-fft PUBLIC
+  gnuradio-runtime
+  fftw3f::fftw3f
+  Volk::volk
+)
+
+if(ENABLE_COMMON_PCH)
+  target_link_libraries(gnuradio-fft PRIVATE common-precompiled-headers)
+endif()
+
+# Address linker issues with std::filesystem on Centos 8 and Debian
+target_link_libraries(gnuradio-fft PRIVATE $<$<AND:$<CXX_COMPILER_ID:GNU>,$<VERSION_LESS:$<CXX_COMPILER_VERSION>,9.0>>:stdc++fs>)
+
+target_include_directories(gnuradio-fft
+  PUBLIC
+  $<INSTALL_INTERFACE:include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
+  )
+
 if(ENABLE_GR_CTRLPORT)
-list(APPEND fft_sources
+target_sources(gnuradio-fft PRIVATE
   ctrlport_probe_psd_impl.cc
 )
 endif(ENABLE_GR_CTRLPORT)
 
-list(APPEND fft_libs
-    gnuradio-runtime
-    ${Boost_LIBRARIES}
-    ${FFTW3F_LIBRARIES}
-)
 
 #Add Windows DLL resource file if using MSVC
 if(MSVC)
@@ -70,40 +51,26 @@ if(MSVC)
         ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-fft.rc
     @ONLY)
 
-    list(APPEND fft_sources
+    target_sources(gnuradio-fft PRIVATE
         ${CMAKE_CURRENT_BINARY_DIR}/gnuradio-fft.rc
     )
 endif(MSVC)
 
-if(FFTW3F_THREADS_LIBRARIES)
-    list(APPEND fft_libs ${FFTW3F_THREADS_LIBRARIES})
-    add_definitions("-DFFTW3F_THREADS")
+if(BUILD_SHARED_LIBS)
+  GR_LIBRARY_FOO(gnuradio-fft FFTW3f)
 endif()
 
-add_library(gnuradio-fft SHARED ${fft_sources})
-target_link_libraries(gnuradio-fft ${fft_libs})
-GR_LIBRARY_FOO(gnuradio-fft RUNTIME_COMPONENT "fft_runtime" DEVEL_COMPONENT "fft_devel")
+if(ENABLE_TESTING)
+  include(GrTest)
 
-if(ENABLE_STATIC_LIBS)
-  if(ENABLE_GR_CTRLPORT)
-    # Remove GR_CTRLPORT set this target's definitions.
-    # Makes sure we don't try to use ControlPort stuff in source files
-    GET_DIRECTORY_PROPERTY(STATIC_DEFS COMPILE_DEFINITIONS)
-    list(REMOVE_ITEM STATIC_DEFS "GR_CTRLPORT")
-    SET_PROPERTY(DIRECTORY PROPERTY COMPILE_DEFINITIONS "${STATIC_DEFS}")
+  list(APPEND test_gr_fft_sources
+    qa_fft_shift.cc
+  )
+  list(APPEND GR_TEST_TARGET_DEPS gnuradio-fft)
 
-    # readd it to the target since we removed it from the directory-wide list.
-    SET_PROPERTY(TARGET gnuradio-fft APPEND PROPERTY COMPILE_DEFINITIONS "GR_CTRLPORT")
-  endif(ENABLE_GR_CTRLPORT)
-
-  add_library(gnuradio-fft_static STATIC ${fft_sources})
-
-  if(NOT WIN32)
-    set_target_properties(gnuradio-fft_static
-      PROPERTIES OUTPUT_NAME gnuradio-fft)
-  endif(NOT WIN32)
-
-  install(TARGETS gnuradio-fft_static
-    ARCHIVE DESTINATION lib${LIB_SUFFIX} COMPONENT "fft_devel"   # .lib file
+  foreach(qa_file ${test_gr_fft_sources})
+    GR_ADD_CPP_TEST("fft_${qa_file}"
+      ${CMAKE_CURRENT_SOURCE_DIR}/${qa_file}
     )
-endif(ENABLE_STATIC_LIBS)
+  endforeach(qa_file)
+endif(ENABLE_TESTING)

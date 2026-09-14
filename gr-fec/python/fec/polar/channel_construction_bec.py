@@ -2,24 +2,13 @@
 #
 # Copyright 2015 Free Software Foundation, Inc.
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 #
 
+
 import numpy as np
-import helper_functions as hf
+from . import helper_functions as hf
 
 
 def bec_channel(eta):
@@ -27,7 +16,7 @@ def bec_channel(eta):
     binary erasure channel (BEC)
     for each y e Y
     W(y|0) * W(y|1) = 0 or W(y|0) = W(y|1)
-    transistions are 1 -> 1 or 0 -> 0 or {0, 1} -> ? (erased symbol)
+    transitions are 1 -> 1 or 0 -> 0 or {0, 1} -> ? (erased symbol)
     '''
     # looks like BSC but should be interpreted differently.
     w = np.array((1 - eta, eta, 1 - eta), dtype=float)
@@ -52,7 +41,7 @@ def calc_one_recursion(iw0):
 
 
 def calculate_bec_channel_capacities_loop(initial_channel, block_power):
-        # compare [0, Arikan] eq. 6
+    # compare [0, Arikan] eq. 6
     iw = np.array([initial_channel, ], dtype=float)
     for i in range(block_power):
         iw = calc_one_recursion(iw)
@@ -147,7 +136,7 @@ def plot_channel_capacities(capacity, save_file=None):
 
 
 def plot_average_channel_distance(save_file=None):
-    eta = 0.5 #  design_snr_to_bec_eta(-1.5917)
+    eta = 0.5  # design_snr_to_bec_eta(-1.5917)
     powers = np.arange(4, 26)
 
     try:
@@ -220,7 +209,7 @@ def plot_capacity_histogram(design_snr, save_file=None):
 
 
 def main():
-    print 'channel construction main'
+    print('channel construction main')
     n = 11
     block_size = int(2 ** n)
     design_snr = -1.59
@@ -229,6 +218,7 @@ def main():
     # capacity = calculate_bec_channel_capacities(eta, block_size)
     # plot_average_channel_distance()
     calculate_bec_channel_z_parameters(eta, block_size)
+
 
 if __name__ == '__main__':
     main()

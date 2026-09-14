@@ -4,28 +4,18 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
-#
+
 
 from gnuradio import gr, gr_unittest
 import numpy as np
 
 
 class test_random(gr_unittest.TestCase):
-    # NOTE: For tests on the output distribution of the random numbers, see gnuradio-runtime/apps/evaluation_random_numbers.py.
+    # NOTE: For tests on the output distribution of the random numbers, see
+    # gnuradio-runtime/apps/evaluation_random_numbers.py.
 
     # Check for range [0,1) of uniform distributed random numbers
     def test_1(self):
@@ -73,6 +63,43 @@ class test_random(gr_unittest.TestCase):
         self.assertGreaterEqual(minimum, np.min(rnd_vals))
         self.assertLess(np.max(rnd_vals), maximum)
 
+    def test_005_xoroshiro128p_seed_stability(self):
+        """
+        Test that seeding is stable.
+        It's basically an API break if it isn't.
+
+        We simply check for the first value of a sequence
+        being the same as it was when the module was integrated.
+        """
+        rng = gr.xoroshiro128p_prng(42)
+        self.assertEqual(3520422898491873512, rng())
+
+    def test_006_xoroshiro128p_reproducibility(self):
+        """
+        Make sure two RNGs with the same seed yield the same
+        sequence
+        """
+        seed = 123456
+        N = 10000
+        rng1 = gr.xoroshiro128p_prng(123456)
+        rng2 = gr.xoroshiro128p_prng(123456)
+        self.assertSequenceEqual(
+            tuple(rng1() for _ in range(N)),
+            tuple(rng2() for _ in range(N)))
+
+    def test_007_xoroshiro128p_range(self):
+        """
+        Check bounds.
+        Check whether a long sequence of values are within that bounds.
+        """
+        N = 10**6
+
+        self.assertEqual(gr.xoroshiro128p_prng.min(), 0)
+        self.assertEqual(gr.xoroshiro128p_prng.max(), 2**64 - 1)
+        rng = gr.xoroshiro128p_prng(42)
+        arr = all((0 <= rng() <= 2**64 - 1 for _ in range(N)))
+        self.assertTrue(arr)
+
 
 if __name__ == '__main__':
-    gr_unittest.run(test_random, "test_random.xml")
+    gr_unittest.run(test_random)

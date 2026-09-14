@@ -4,53 +4,40 @@
  *
  * This file is part of GNU Radio
  *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
- * Boston, MA 02110-1301, USA.
  */
 
 #ifndef INCLUDED_DTV_ATSC_EQUALIZER_H
 #define INCLUDED_DTV_ATSC_EQUALIZER_H
 
-#include <gnuradio/dtv/api.h>
 #include <gnuradio/block.h>
+#include <gnuradio/dtv/api.h>
 
 namespace gr {
-  namespace dtv {
+namespace dtv {
+
+/*!
+ * \brief ATSC Receiver Equalizer
+ *
+ * \ingroup dtv_atsc
+ */
+class DTV_API atsc_equalizer : virtual public gr::block
+{
+public:
+    // gr::dtv::atsc_equalizer::sptr
+    typedef std::shared_ptr<atsc_equalizer> sptr;
 
     /*!
-     * \brief ATSC Receiver Equalizer
-     *
-     * \ingroup dtv_atsc
+     * \brief Make a new instance of gr::dtv::atsc_equalizer.
      */
-    class DTV_API atsc_equalizer : virtual public gr::block
-    {
-    public:
+    static sptr make();
 
-      // gr::dtv::atsc_equalizer::sptr
-      typedef boost::shared_ptr<atsc_equalizer> sptr;
+    virtual std::vector<float> taps() const = 0;
+    virtual std::vector<float> data() const = 0;
+};
 
-      /*!
-       * \brief Make a new instance of gr::dtv::atsc_equalizer.
-       */
-      static sptr make();
-
-      virtual std::vector<float> taps() const = 0;
-      virtual std::vector<float> data() const = 0;
-    };
-
-  } /* namespace dtv */
+} /* namespace dtv */
 } /* namespace gr */
 
 #endif /* INCLUDED_DTV_ATSC_EQUALIZER_H */

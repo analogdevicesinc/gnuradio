@@ -1,0 +1,35 @@
+id: blocks_message_debug
+label: Message Debug
+flags: [ python, cpp ]
+
+parameters:
+-   id: en_uvec
+    label: PDU Vectors
+    dtype: enum
+    default: 'True'
+    options: ['True', 'False']
+    option_labels: ['On', 'Off']
+
+inputs:
+-   domain: message
+    id: print
+    optional: true
+-   domain: message
+    id: store
+    optional: true
+-   domain: message
+    id: print_pdu
+    optional: true
+
+templates:
+    imports: from gnuradio import blocks
+    make: blocks.message_debug(${en_uvec})
+    callbacks:
+    - set_vector_print(${en_uvec})
+
+cpp_templates:
+    includes: ['#include <gnuradio/blocks/message_debug.h>']
+    declarations: 'blocks::message_debug::sptr ${id};'
+    make: 'this->${id} = blocks::message_debug::make();'
+
+file_format: 1

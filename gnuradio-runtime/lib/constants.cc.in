@@ -4,20 +4,8 @@
  *
  * This file is part of GNU Radio
  *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
- * Boston, MA 02110-1301, USA.
  */
 
 #if HAVE_CONFIG_H
@@ -25,79 +13,65 @@
 #endif
 
 #include <gnuradio/constants.h>
+#include <boost/dll/runtime_symbol_info.hpp>
+#include <cstdlib>
+#include <filesystem>
+
+using std::filesystem::path;
 
 namespace gr {
+const std::string prefix()
+{
+    // Use "GR_PREFIX" environment variable when specified
+    const char* prefix = std::getenv("GR_PREFIX");
+    if (prefix != NULL)
+        return prefix;
 
-  const std::string
-  prefix()
-  {
-    return "@prefix@";
-  }
+    path prefix_rel_lib = "@prefix_relative_to_lib@";
+    path gr_runtime_lib_path = boost::dll::this_line_location().string();
+    // Canonize before decomposing path so result is reliable and without symlinks
+    path canonical_lib_path = std::filesystem::canonical(gr_runtime_lib_path);
+    path prefix_path = canonical_lib_path.parent_path() / prefix_rel_lib;
+    return prefix_path.lexically_normal().string();
+}
 
-  const std::string
-  sysconfdir()
-  {
-    return "@SYSCONFDIR@";
-  }
+const std::string sysconfdir()
+{
+    path sysconfdir_rel_prefix = "@SYSCONFDIR_relative_to_prefix@";
+    path prefix_path = prefix();
+    path sysconfdir_path = prefix_path / sysconfdir_rel_prefix;
 
-  const std::string
-  prefsdir()
-  {
-    return "@GR_PREFSDIR@";
-  }
+    return sysconfdir_path.lexically_normal().string();
+}
 
-  const std::string
-  build_date()
-  {
-    return "@BUILD_DATE@";
-  }
+const std::string prefsdir()
+{
+    path prefsdir_rel_prefix = "@GR_PREFSDIR_relative_to_prefix@";
+    path prefix_path = prefix();
+    path prefsdir_path = prefix_path / prefsdir_rel_prefix;
 
-  const std::string
-  version()
-  {
-    return "@VERSION@";
-  }
+    return prefsdir_path.lexically_normal().string();
+}
 
-  // Return individual parts of the version
-  const std::string
-  major_version()
-  {
-    return "@MAJOR_VERSION@";
-  }
+const std::string build_date() { return "@BUILD_DATE@"; }
 
-  const std::string
-  api_version()
-  {
-    return "@API_COMPAT@";
-  }
+const std::string version() { return "@VERSION@"; }
 
-  const std::string
-  minor_version()
-  {
-    return "@MINOR_VERSION@";
-  }
+// Return individual parts of the version
+const std::string major_version() { return "@MAJOR_VERSION@"; }
 
-  const std::string
-  c_compiler()
-  {
-    return "@cmake_c_compiler_version@";
-  }
+const std::string api_version() { return "@API_COMPAT@"; }
 
-  const std::string
-  cxx_compiler()
-  {
-    return "@cmake_cxx_compiler_version@";
-  }
+const std::string minor_version() { return "@MINOR_VERSION@"; }
 
-  const std::string
-  compiler_flags()
-  {
-    return "@COMPILER_INFO@";
-  }
+const std::string c_compiler() { return "@cmake_c_compiler_version@"; }
 
-  const std::string
-  build_time_enabled_components()
-  {
-    return "@_gr_enabled_components@";
-  }
+const std::string cxx_compiler() { return "@cmake_cxx_compiler_version@"; }
+
+const std::string compiler_flags() { return "@COMPILER_INFO@"; }
+
+const std::string build_time_enabled_components() { return "@_gr_enabled_components@"; }
+
+const std::string pybind_version() { return "@pybind11_VERSION@"; }
+
 } /* namespace gr */

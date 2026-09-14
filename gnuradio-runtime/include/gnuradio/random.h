@@ -4,20 +4,8 @@
  *
  * This file is part of GNU Radio
  *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
- * Boston, MA 02110-1301, USA.
  */
 
 #ifndef INCLUDED_GR_RANDOM_H
@@ -25,50 +13,89 @@
 
 #include <gnuradio/api.h>
 #include <gnuradio/gr_complex.h>
+#include <gnuradio/xoroshiro128p.h>
 
-#include <stdlib.h>
-#include <boost/random.hpp>
-#include <ctime>
+#include <limits>
+#include <random>
 
 namespace gr {
 
-  /*!
-   * \brief pseudo random number generator
-   * \ingroup math_blk
-   */
-  class GR_RUNTIME_API random
-  {
-  protected:
+/*!
+ * \brief wrapper for XOROSHIRO128+ PRNG for use in std::distributions
+ * Fulfills C++ named requirements for UniformRandomBitGenerator
+ * \ingroup math_blk
+ */
+class GR_RUNTIME_API xoroshiro128p_prng
+{
+public:
+    using result_type = uint64_t; //! \brief value type is uint64
+
+private:
+    result_type state[2];
+
+public:
+    /*!
+     * \brief minimum value
+     */
+    static constexpr result_type min() { return std::numeric_limits<result_type>::min(); }
+    /*!
+     * \brief maximum value
+     */
+    static constexpr result_type max() { return std::numeric_limits<result_type>::max(); }
+
+    /*!
+     * \brief constructor. Expects a seed.
+     */
+    xoroshiro128p_prng(uint64_t init) { seed(init); }
+
+
+    /*!
+     * \brief yield a random value and advance state
+     */
+    result_type operator()() { return xoroshiro128p_next(state); }
+
+    /*!
+     * \brief set new seed
+     */
+    void seed(uint64_t seed) { xoroshiro128p_seed(state, seed); }
+};
+/*!
+ * \brief pseudo random number generator
+ * \ingroup math_blk
+ */
+class GR_RUNTIME_API random
+{
+protected:
     long d_seed;
     bool d_gauss_stored;
     float d_gauss_value;
 
-    boost::mt19937 *d_rng; // mersenne twister as random number generator
-    boost::uniform_real<float> *d_uniform; // choose uniform distribution, default is [0,1)
-    boost::random::uniform_int_distribution<> *d_integer_dis;
-    boost::variate_generator<boost::mt19937&, boost::uniform_real<float> > *d_generator;
-    boost::variate_generator<boost::mt19937&, boost::random::uniform_int_distribution<> > *d_integer_generator;
+    xoroshiro128p_prng d_rng; // mersenne twister as random number generator
+    std::uniform_real_distribution<float>
+        d_uniform; // choose uniform distribution, default is [0,1)
+    std::uniform_int_distribution<int64_t> d_integer_dis;
 
-  public:
-    random(unsigned int seed=0, int min_integer = 0, int max_integer = 2);
+public:
+    random(uint64_t seed = 0, int64_t min_integer = 0, int64_t max_integer = 2);
     ~random();
 
     /*!
-     * \brief Change the seed for the initialized number generator. seed = 0 initializes the random number generator with the system time. Note that a fast initialization of various instances can result in the same seed.
+     * \brief Change the seed for the initialized number generator. seed = 0 initializes
+     * the random number generator with the system time.
      */
-    void reseed(unsigned int seed);
+    void reseed(uint64_t seed);
 
     /*!
      * set minimum and maximum for integer random number generator.
      * Limits are [minimum, maximum)
      * Default: [0, std::numeric_limits< IntType >::max)]
      */
-    void set_integer_limits(const int minimum, const int maximum);
+    void set_integer_limits(int64_t minimum, int64_t maximum);
 
     /*!
      * Uniform random integers in the range set by 'set_integer_limits' [min, max).
      */
-    int ran_int();
+    int64_t ran_int();
 
     /*!
      * \brief Uniform random numbers in the range [0.0, 1.0)
@@ -76,7 +103,8 @@ namespace gr {
     float ran1();
 
     /*!
-     * \brief Normally distributed random numbers (Gaussian distribution with zero mean and variance 1)
+     * \brief Normally distributed random numbers (Gaussian distribution with zero mean
+     * and variance 1)
      */
     float gasdev();
 
@@ -86,22 +114,26 @@ namespace gr {
     float laplacian();
 
     /*!
-     * \brief Rayleigh distributed random numbers (zero mean and variance 1 for the underlying Gaussian distributions)
+     * \brief Rayleigh distributed random numbers (zero mean and variance 1 for the
+     * underlying Gaussian distributions)
      */
     float rayleigh();
 
     /*!
-     * \brief FIXME: add description
+     * \brief Exponentially distributed random numbers with values less than or equal
+     * to factor replaced with zero. The underlying exponential distribution has
+     * mean sqrt(2) and variance 2.
      */
     float impulse(float factor);
 
     /*!
-     * \brief Normally distributed random numbers with zero mean and variance 1 on real and imaginary part. This results in a Rayleigh distribution for the amplitude and an uniform distribution for the phase.
+     * \brief Normally distributed random numbers with zero mean and variance 1 on real
+     * and imaginary part. This results in a Rayleigh distribution for the amplitude and
+     * an uniform distribution for the phase.
      */
     gr_complex rayleigh_complex();
-  };
+};
 
 } /* namespace gr */
 
 #endif /* INCLUDED_GR_RANDOM_H */
-

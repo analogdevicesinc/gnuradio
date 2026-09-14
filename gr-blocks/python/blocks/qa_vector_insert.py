@@ -4,24 +4,14 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
-#
+
 
 from gnuradio import gr, gr_unittest, blocks
 import math
+
 
 class test_vector_insert(gr_unittest.TestCase):
 
@@ -35,12 +25,12 @@ class test_vector_insert(gr_unittest.TestCase):
         src_data = [float(x) for x in range(16)]
         expected_result = tuple(src_data)
 
-        period = 9177;
-        offset = 0;
+        period = 9177
+        offset = 0
 
         src = blocks.null_source(1)
-        head = blocks.head(1, 10000000);
-        ins = blocks.vector_insert_b([1], period, offset);
+        head = blocks.head(1, 10000000)
+        ins = blocks.vector_insert_b([1], period, offset)
         dst = blocks.vector_sink_b()
 
         self.tb.connect(src, head, ins, dst)
@@ -48,7 +38,7 @@ class test_vector_insert(gr_unittest.TestCase):
         result_data = dst.data()
 
         for i in range(10000):
-            if(i%period == offset):
+            if(i % period == offset):
                 self.assertEqual(1, result_data[i])
             else:
                 self.assertEqual(0, result_data[i])
@@ -56,10 +46,11 @@ class test_vector_insert(gr_unittest.TestCase):
     def test_002(self):  # insert tags and check their propagation, zero offset
         period = 11000
         offset = 0
-        insert = [1.0,] * 1000
+        insert = [1.0, ] * 1000
 
         src = blocks.null_source(gr.sizeof_float)
-        s2ts = blocks.stream_to_tagged_stream(gr.sizeof_float, 1, period-len(insert), "packet")
+        s2ts = blocks.stream_to_tagged_stream(
+            gr.sizeof_float, 1, period - len(insert), "packet")
         head = blocks.head(gr.sizeof_float, 1000000)
         ins = blocks.vector_insert_f(insert, period, offset)
         dst = blocks.vector_sink_f()
@@ -76,10 +67,11 @@ class test_vector_insert(gr_unittest.TestCase):
     def test_003(self):  # insert tags and check their propagation, non-zero offset
         period = 11000
         offset = 1000
-        insert = [1.0,] * 1000
+        insert = [1.0, ] * 1000
 
         src = blocks.null_source(gr.sizeof_float)
-        s2ts = blocks.stream_to_tagged_stream(gr.sizeof_float, 1, period-len(insert), "packet")
+        s2ts = blocks.stream_to_tagged_stream(
+            gr.sizeof_float, 1, period - len(insert), "packet")
         head = blocks.head(gr.sizeof_float, 1000000)
         ins = blocks.vector_insert_f(insert, period, offset)
         dst = blocks.vector_sink_f()
@@ -97,10 +89,11 @@ class test_vector_insert(gr_unittest.TestCase):
         period = 11000
         offset = 1000
         packetlen = 2000
-        insert = [1.0,] * 1000
+        insert = [1.0, ] * 1000
 
         src = blocks.null_source(gr.sizeof_float)
-        s2ts = blocks.stream_to_tagged_stream(gr.sizeof_float, 1, packetlen, "packet")
+        s2ts = blocks.stream_to_tagged_stream(
+            gr.sizeof_float, 1, packetlen, "packet")
         head = blocks.head(gr.sizeof_float, 1000000)
         ins = blocks.vector_insert_f(insert, period, offset)
         dst = blocks.vector_sink_f()
@@ -108,12 +101,25 @@ class test_vector_insert(gr_unittest.TestCase):
         self.tb.connect(src, s2ts, head, ins, dst)
         self.tb.run()
 
-        expected_result = (0, 2000, 4000, 6000, 8000, 11000, 13000, 15000, 17000, 19000, 22000, 24000, 26000)
+        expected_result = (
+            0,
+            2000,
+            4000,
+            6000,
+            8000,
+            11000,
+            13000,
+            15000,
+            17000,
+            19000,
+            22000,
+            24000,
+            26000)
         tags = dst.tags()
         offsets = [tag.offset for tag in tags]
         for i in range(len(expected_result)):
             self.assertTrue(expected_result[i] == offsets[i])
 
-if __name__ == '__main__':
-    gr_unittest.run(test_vector_insert, "test_vector_insert.xml")
 
+if __name__ == '__main__':
+    gr_unittest.run(test_vector_insert)

@@ -4,23 +4,13 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 #
 
+
 from gnuradio import gr, gr_unittest, blocks
+
 
 class test_block_behavior(gr_unittest.TestCase):
 
@@ -41,7 +31,7 @@ class test_block_behavior(gr_unittest.TestCase):
         '''
 
         src = blocks.null_source(gr.sizeof_float)
-        op  = blocks.head(gr.sizeof_float, 100)
+        op = blocks.head(gr.sizeof_float, 100)
         snk = blocks.null_sink(gr.sizeof_float)
 
         maxn_pre = op.max_noutput_items()
@@ -60,7 +50,7 @@ class test_block_behavior(gr_unittest.TestCase):
         '''
 
         src = blocks.null_source(gr.sizeof_float)
-        op  = blocks.head(gr.sizeof_float, 100)
+        op = blocks.head(gr.sizeof_float, 100)
         snk = blocks.null_sink(gr.sizeof_float)
 
         op.set_max_noutput_items(1024)
@@ -75,5 +65,6 @@ class test_block_behavior(gr_unittest.TestCase):
         self.assertEqual(maxn_pre, 1024)
         self.assertEqual(maxn_post, 1024)
 
+
 if __name__ == '__main__':
-    gr_unittest.run(test_block_behavior, "test_block_behavior.xml")
+    gr_unittest.run(test_block_behavior)

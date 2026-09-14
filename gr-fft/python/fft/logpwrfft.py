@@ -3,28 +3,18 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 #
 
 from gnuradio import gr
 from gnuradio import blocks
-import sys, math
+import sys
+import math
 
-import fft_swig as fft
-from fft_swig import window
+from . import fft_python as fft
+from . import fft_vfc, fft_vcc
+from .fft_python import window
 
 try:
     from gnuradio import filter
@@ -32,12 +22,13 @@ except ImportError:
     sys.stderr.write('fft.logpwrfft required gr-filter.\n')
     sys.exit(1)
 
+
 class _logpwrfft_base(gr.hier_block2):
     """
     Create a log10(abs(fft)) stream chain, with real or complex input.
     """
 
-    def __init__(self, sample_rate, fft_size, ref_scale, frame_rate, avg_alpha, average, win=None):
+    def __init__(self, sample_rate, fft_size, ref_scale, frame_rate, avg_alpha, average, win=None, shift=False):
         """
         Create an log10(abs(fft)) stream chain.
         Provide access to the setting the filter and sample rate.
@@ -50,27 +41,31 @@ class _logpwrfft_base(gr.hier_block2):
             avg_alpha: FFT averaging (over time) constant [0.0-1.0]
             average: Whether to average [True, False]
             win: the window taps generation function
+            shift: shift zero-frequency component to center of spectrum
         """
         gr.hier_block2.__init__(self, self._name,
-                                gr.io_signature(1, 1, self._item_size),          # Input signature
-                                gr.io_signature(1, 1, gr.sizeof_float*fft_size)) # Output signature
+                                # Input signature
+                                gr.io_signature(1, 1, self._item_size),
+                                gr.io_signature(1, 1, gr.sizeof_float * fft_size))  # Output signature
 
         self._sd = blocks.stream_to_vector_decimator(item_size=self._item_size,
                                                      sample_rate=sample_rate,
                                                      vec_rate=frame_rate,
                                                      vec_len=fft_size)
-
-        if win is None: win = window.blackmanharris
+        if win is None:
+            win = window.blackmanharris
         fft_window = win(fft_size)
-        fft = self._fft_block[0](fft_size, True, fft_window)
-        window_power = sum(map(lambda x: x*x, fft_window))
+        fft = self._fft_block[0](fft_size, True, fft_window, shift=shift)
+        window_power = sum([x * x for x in fft_window])
 
         c2magsq = blocks.complex_to_mag_squared(fft_size)
         self._avg = filter.single_pole_iir_filter_ff(1.0, fft_size)
         self._log = blocks.nlog10_ff(10, fft_size,
-                                     -20*math.log10(fft_size)              # Adjust for number of bins
-                                     -10*math.log10(window_power/fft_size) # Adjust for windowing loss
-                                     -20*math.log10(ref_scale/2))      # Adjust for reference scale
+                                     # Adjust for number of bins
+                                     -20 * math.log10(fft_size) -
+                                     # Adjust for windowing loss
+                                     10 * math.log10(float(window_power) / fft_size) -
+                                     20 * math.log10(float(ref_scale) / 2))      # Adjust for reference scale
         self.connect(self, self._sd, fft, c2magsq, self._avg, self._log, self)
 
         self._average = average
@@ -158,19 +153,20 @@ class _logpwrfft_base(gr.hier_block2):
         """
         return self._avg_alpha
 
+
 class logpwrfft_f(_logpwrfft_base):
-        """
-        Create an fft block chain, with real input.
-        """
-        _name = "logpwrfft_f"
-        _item_size = gr.sizeof_float
-        _fft_block = (fft.fft_vfc, )
+    """
+    Create an fft block chain, with real input.
+    """
+    _name = "logpwrfft_f"
+    _item_size = gr.sizeof_float
+    _fft_block = (fft_vfc, )
+
 
 class logpwrfft_c(_logpwrfft_base):
-        """
-        Create an fft block chain, with complex input.
-        """
-        _name = "logpwrfft_c"
-        _item_size = gr.sizeof_gr_complex
-        _fft_block = (fft.fft_vcc, )
-
+    """
+    Create an fft block chain, with complex input.
+    """
+    _name = "logpwrfft_c"
+    _item_size = gr.sizeof_gr_complex
+    _fft_block = (fft_vcc, )

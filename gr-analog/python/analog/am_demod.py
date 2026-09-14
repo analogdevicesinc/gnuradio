@@ -3,25 +3,14 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 #
 
 from gnuradio import gr
 from gnuradio import blocks
 from gnuradio import filter
+
 
 class am_demod_cf(gr.hier_block2):
     """
@@ -38,23 +27,26 @@ class am_demod_cf(gr.hier_block2):
         audio_pass: audio low pass filter passband frequency (float)
         audio_stop: audio low pass filter stop frequency (float)
     """
+
     def __init__(self, channel_rate, audio_decim, audio_pass, audio_stop):
-	gr.hier_block2.__init__(self, "am_demod_cf",
-				gr.io_signature(1, 1, gr.sizeof_gr_complex), # Input signature
-				gr.io_signature(1, 1, gr.sizeof_float))      # Input signature
+        gr.hier_block2.__init__(self, "am_demod_cf",
+                                # Input signature
+                                gr.io_signature(1, 1, gr.sizeof_gr_complex),
+                                gr.io_signature(1, 1, gr.sizeof_float))      # Input signature
 
-	MAG = blocks.complex_to_mag()
-	DCR = blocks.add_const_ff(-1.0)
+        MAG = blocks.complex_to_mag()
+        DCR = blocks.add_const_ff(-1.0)
 
-	audio_taps = filter.optfir.low_pass(0.5, 	  # Filter gain
-                                            channel_rate, # Sample rate
+        audio_taps = filter.optfir.low_pass(0.5,          # Filter gain
+                                            channel_rate,  # Sample rate
                                             audio_pass,   # Audio passband
                                             audio_stop,   # Audio stopband
-                                            0.1, 	  # Passband ripple
-                                            60)	          # Stopband attenuation
-	LPF = filter.fir_filter_fff(audio_decim, audio_taps)
+                                            0.1,          # Passband ripple
+                                            60)           # Stopband attenuation
+        LPF = filter.fir_filter_fff(audio_decim, audio_taps)
 
-	self.connect(self, MAG, DCR, LPF, self)
+        self.connect(self, MAG, DCR, LPF, self)
+
 
 class demod_10k0a3e_cf(am_demod_cf):
     """
@@ -67,7 +59,8 @@ class demod_10k0a3e_cf(am_demod_cf):
         channel_rate: incoming sample rate of the AM baseband (integer)
         audio_decim: input to output decimation rate (integer)
     """
+
     def __init__(self, channel_rate, audio_decim):
-    	am_demod_cf.__init__(self, channel_rate, audio_decim,
-    	                     5000, # Audio passband
-    	                     5500) # Audio stopband
+        am_demod_cf.__init__(self, channel_rate, audio_decim,
+                             5000,  # Audio passband
+                             5500)  # Audio stopband

@@ -1,38 +1,24 @@
 # Copyright 2012 Free Software Foundation, Inc.
+# Copyright 2021 Marcus Müller
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 
 ########################################################################
 include(GrPython)
 
 GR_PYTHON_INSTALL(FILES
     __init__.py
+    exceptions.py
     tag_utils.py
     packet_utils.py
     gateway.py
-    gr_threading.py
-    gr_threading_23.py
-    gr_threading_24.py
     hier_block2.py
     top_block.py
     pubsub.py
     DESTINATION ${GR_PYTHON_DIR}/gnuradio/gr
-    COMPONENT "runtime_python"
 )
 
 ########################################################################
@@ -47,8 +33,31 @@ if(ENABLE_TESTING)
     )
   include(GrTest)
   file(GLOB py_qa_test_files "qa_*.py")
+  set(py_qa_test_files
+    qa_flowgraph.py
+    qa_prefs.py
+    qa_random.py
+    qa_tag_utils.py
+    )
+  # This is a check for whether gr-blocks is enabled
+  if(ENABLE_DEFAULT OR ENABLE_GR_BLOCKS)
+    list(APPEND py_qa_test_files
+      qa_hier_block2.py
+      qa_uncaught_exception.py
+      )
+  else()
+    message(STATUS "gr-blocks not enabled: Disabling hier block and uncaught exception test")
+  endif()
+
   foreach(py_qa_test_file ${py_qa_test_files})
     get_filename_component(py_qa_test_name ${py_qa_test_file} NAME_WE)
-    GR_ADD_TEST(${py_qa_test_name} ${QA_PYTHON_EXECUTABLE} ${PYTHON_DASH_B} ${py_qa_test_file})
+    if (CMAKE_CROSSCOMPILING)
+        get_filename_component(py_qa_test_file ${py_qa_test_file} NAME)
+        GR_ADD_TEST(${py_qa_test_name} ${QA_PYTHON_EXECUTABLE} -B ${py_qa_test_file})
+    else()
+        GR_ADD_TEST(${py_qa_test_name} ${QA_PYTHON_EXECUTABLE} -B ${CMAKE_CURRENT_SOURCE_DIR}/${py_qa_test_file})
+    endif(CMAKE_CROSSCOMPILING)
   endforeach(py_qa_test_file)
 endif(ENABLE_TESTING)
+
+add_subdirectory(bindings)

@@ -2,23 +2,13 @@
 Copyright 2007 Free Software Foundation, Inc.
 This file is part of GNU Radio
 
-GNU Radio Companion is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
+SPDX-License-Identifier: GPL-2.0-or-later
 
-GNU Radio Companion is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 """
 
-import Actions
-from Constants import STATE_CACHE_SIZE
+from . import Actions
+from .Constants import STATE_CACHE_SIZE
+
 
 class StateCache(object):
     """
@@ -32,9 +22,9 @@ class StateCache(object):
         StateCache constructor.
 
         Args:
-            initial_state: the intial state (nested data)
+            initial_state: the initial state (nested data)
         """
-        self.states = [None] * STATE_CACHE_SIZE #fill states
+        self.states = [None] * STATE_CACHE_SIZE  # fill states
         self.current_state_index = 0
         self.num_prev_states = 0
         self.num_next_states = 0
@@ -49,10 +39,12 @@ class StateCache(object):
         Args:
             state: the new state
         """
-        self.current_state_index = (self.current_state_index + 1)%STATE_CACHE_SIZE
+        self.current_state_index = (
+            self.current_state_index + 1) % STATE_CACHE_SIZE
         self.states[self.current_state_index] = state
         self.num_prev_states = self.num_prev_states + 1
-        if self.num_prev_states == STATE_CACHE_SIZE: self.num_prev_states = STATE_CACHE_SIZE - 1
+        if self.num_prev_states == STATE_CACHE_SIZE:
+            self.num_prev_states = STATE_CACHE_SIZE - 1
         self.num_next_states = 0
         self.update_actions()
 
@@ -74,7 +66,8 @@ class StateCache(object):
             the previous state or None
         """
         if self.num_prev_states > 0:
-            self.current_state_index = (self.current_state_index + STATE_CACHE_SIZE -1)%STATE_CACHE_SIZE
+            self.current_state_index = (
+                self.current_state_index + STATE_CACHE_SIZE - 1) % STATE_CACHE_SIZE
             self.num_next_states = self.num_next_states + 1
             self.num_prev_states = self.num_prev_states - 1
             return self.get_current_state()
@@ -88,7 +81,8 @@ class StateCache(object):
             the next state or None
         """
         if self.num_next_states > 0:
-            self.current_state_index = (self.current_state_index + 1)%STATE_CACHE_SIZE
+            self.current_state_index = (
+                self.current_state_index + 1) % STATE_CACHE_SIZE
             self.num_next_states = self.num_next_states - 1
             self.num_prev_states = self.num_prev_states + 1
             return self.get_current_state()
@@ -98,5 +92,5 @@ class StateCache(object):
         """
         Update the undo and redo actions based on the number of next and prev states.
         """
-        Actions.FLOW_GRAPH_REDO.set_sensitive(self.num_next_states != 0)
-        Actions.FLOW_GRAPH_UNDO.set_sensitive(self.num_prev_states != 0)
+        Actions.FLOW_GRAPH_REDO.set_enabled(self.num_next_states != 0)
+        Actions.FLOW_GRAPH_UNDO.set_enabled(self.num_prev_states != 0)

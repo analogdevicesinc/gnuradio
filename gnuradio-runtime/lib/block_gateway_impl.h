@@ -1,23 +1,11 @@
 /* -*- c++ -*- */
 /*
- * Copyright 2013 Free Software Foundation, Inc.
+ * Copyright 2013,2020 Free Software Foundation, Inc.
  *
  * This file is part of GNU Radio
  *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
- * Boston, MA 02110-1301, USA.
  */
 
 #ifndef INCLUDED_RUNTIME_BLOCK_GATEWAY_IMPL_H
@@ -27,48 +15,70 @@
 
 namespace gr {
 
-  /***********************************************************************
-   * The gr::block gateway implementation class
-   **********************************************************************/
-  class block_gateway_impl : public block_gateway
-  {
-  public:
-    block_gateway_impl(feval_ll *handler,
-                       const std::string &name,
+/***********************************************************************
+ * The gr::block gateway implementation class
+ **********************************************************************/
+class block_gateway_impl : public block_gateway
+{
+public:
+    block_gateway_impl(const py::handle& p,
+                       const std::string& name,
                        gr::io_signature::sptr in_sig,
-                       gr::io_signature::sptr out_sig,
-                       const block_gw_work_type work_type,
-                       const unsigned factor);
+                       gr::io_signature::sptr out_sig);
 
     /*******************************************************************
      * Overloads for various scheduler-called functions
      ******************************************************************/
-    void forecast(int noutput_items,
-                  gr_vector_int &ninput_items_required);
+    void forecast(int noutput_items, gr_vector_int& ninput_items_required) override;
 
     int general_work(int noutput_items,
-                     gr_vector_int &ninput_items,
-                     gr_vector_const_void_star &input_items,
-                     gr_vector_void_star &output_items);
+                     gr_vector_int& ninput_items,
+                     gr_vector_const_void_star& input_items,
+                     gr_vector_void_star& output_items) override;
 
-    int work(int noutput_items,
-             gr_vector_const_void_star &input_items,
-             gr_vector_void_star &output_items);
+    bool start(void) override;
+    bool stop(void) override;
+    void set_msg_handler_pybind(pmt::pmt_t which_port, std::string& handler_name) override
+    {
+        if (msg_queue.find(which_port) == msg_queue.end()) {
+            throw std::runtime_error(
+                "attempt to set_msg_handler_pybind() on invalid input message port!");
+        }
+        d_msg_handlers_pybind[which_port] = handler_name;
+    }
 
-    int fixed_rate_noutput_to_ninput(int noutput_items);
-    int fixed_rate_ninput_to_noutput(int ninput_items);
+protected:
+    // Message handlers back into python using pybind API
+    typedef std::map<pmt::pmt_t, std::string, pmt::comparator> msg_handlers_pybind_t;
+    msg_handlers_pybind_t d_msg_handlers_pybind;
 
-    bool start(void);
-    bool stop(void);
+    bool has_msg_handler(pmt::pmt_t which_port) override
+    {
+        if (d_msg_handlers_pybind.find(which_port) != d_msg_handlers_pybind.end()) {
+            return true;
+        } else {
+            return gr::basic_block::has_msg_handler(which_port);
+        }
+    }
 
-    block_gw_message_type& block_message(void);
+    void dispatch_msg(pmt::pmt_t which_port, pmt::pmt_t msg) override
+    {
+        // Is there a handler?
+        if (d_msg_handlers_pybind.find(which_port) != d_msg_handlers_pybind.end()) {
+            // d_msg_handlers_pybind[which_port]->calleval(msg); // Yes, invoke it.
+            py::gil_scoped_acquire acquire;
+            // std::string handler_name(d_msg_handlers_pybind[which_port]);
+            py::object ret =
+                _py_handle.attr(d_msg_handlers_pybind[which_port].c_str())(msg);
+        } else {
+            // Pass to generic dispatcher if not found
+            gr::basic_block::dispatch_msg(which_port, msg);
+        }
+    }
 
-  private:
-    feval_ll *_handler;
-    block_gw_message_type _message;
-    const block_gw_work_type _work_type;
-    unsigned _decim, _interp;
-  };
+private:
+    py::handle _py_handle;
+};
 
 } /* namespace gr */
 

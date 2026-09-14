@@ -1,28 +1,18 @@
 #!/usr/bin/env python
 #
 # Copyright 2012,2013 Free Software Foundation, Inc.
-# 
+#
 # This file is part of GNU Radio
-# 
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
-# 
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
-# 
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+#
+
 
 from gnuradio import gr, gr_unittest, digital, blocks
 
 default_access_code = '\xAC\xDD\xA4\xE2\xF2\x8C\x20\xFC'
+
 
 def string_to_1_0_list(s):
     r = []
@@ -33,10 +23,12 @@ def string_to_1_0_list(s):
             r.append(t)
     return r
 
-def to_1_0_string(L):
-    return ''.join(map(lambda x: chr(x + ord('0')), L))
 
-class test_framker_sink(gr_unittest.TestCase):
+def to_1_0_string(L):
+    return ''.join([chr(x + ord('0')) for x in L])
+
+
+class test_framer_sink(gr_unittest.TestCase):
 
     def setUp(self):
         self.tb = gr.top_block()
@@ -48,10 +40,11 @@ class test_framker_sink(gr_unittest.TestCase):
 
         code = (1, 1, 0, 1)
         access_code = to_1_0_string(code)
-        header = tuple(2*[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]) # len=1
+        header = tuple(2 * [0, 0, 0, 0, 0, 0, 0, 0, 0,
+                            0, 0, 0, 0, 0, 0, 1])  # len=1
         pad = (0,) * 100
-        src_data = code + header + (0,1,0,0,0,0,0,1) + pad
-        expected_data = 'A'
+        src_data = code + header + (0, 1, 0, 0, 0, 0, 0, 1) + pad
+        expected_data = b'A'
 
         rcvd_pktq = gr.msg_queue()
 
@@ -72,10 +65,12 @@ class test_framker_sink(gr_unittest.TestCase):
 
         code = tuple(string_to_1_0_list(default_access_code))
         access_code = to_1_0_string(code)
-        header = tuple(2*[0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0]) # len=2
+        header = tuple(2 * [0, 0, 0, 0, 0, 0, 0, 0, 0,
+                            0, 0, 0, 0, 0, 1, 0])  # len=2
         pad = (0,) * 100
-        src_data = code + header + (0,1,0,0,1,0,0,0) + (0,1,0,0,1,0,0,1) + pad
-        expected_data = 'HI'
+        src_data = code + header + \
+            (0, 1, 0, 0, 1, 0, 0, 0) + (0, 1, 0, 0, 1, 0, 0, 1) + pad
+        expected_data = b'HI'
 
         rcvd_pktq = gr.msg_queue()
 
@@ -92,6 +87,6 @@ class test_framker_sink(gr_unittest.TestCase):
         result_data = result_data.to_string()
         self.assertEqual(expected_data, result_data)
 
+
 if __name__ == '__main__':
-    gr_unittest.run(test_framker_sink, "test_framker_sink.xml")
-        
+    gr_unittest.run(test_framer_sink)

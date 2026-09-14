@@ -1,23 +1,12 @@
 /* -*- c++ -*- */
 /*
  * Copyright 2004,2009,2012,2013 Free Software Foundation, Inc.
+ * Copyright 2021 Marcus Müller
  *
  * This file is part of GNU Radio
  *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
- * Boston, MA 02110-1301, USA.
  */
 
 #ifndef INCLUDED_GR_HEAD_H
@@ -25,32 +14,37 @@
 
 #include <gnuradio/blocks/api.h>
 #include <gnuradio/sync_block.h>
-#include <stddef.h>			// size_t
+#include <cstddef> // size_t
 
 namespace gr {
-  namespace blocks {
+namespace blocks {
 
-    /*!
-     * \brief copies the first N items to the output then signals done
-     * \ingroup misc_blk
-     *
-     * \details
-     * Useful for building test cases
-     */
-    class BLOCKS_API head : virtual public sync_block
-    {
-    public:
-      // gr::blocks::head::sptr
-      typedef boost::shared_ptr<head> sptr;
+/*!
+ * \brief stop after processing the first N items
+ * \ingroup misc_blk
+ *
+ * \details
+ * Useful for building test cases, this block consumes only N items from its input, and
+ * copies them to its output, if that is connected.
+ *
+ * You can hence use this block in series with your sample flow if you want a block
+ * downstream of it to be tested with an exact number of input items; or you can put it in
+ * parallel to your data path, so that it stops at most one buffer size after the
+ * specified number of items has been produced upstream.
+ */
+class BLOCKS_API head : virtual public sync_block
+{
+public:
+    // gr::blocks::head::sptr
+    typedef std::shared_ptr<head> sptr;
 
-      static sptr make(size_t sizeof_stream_item,
-                       uint64_t nitems);
+    static sptr make(size_t sizeof_stream_item, uint64_t nitems);
 
-      virtual void reset() = 0;
-      virtual void set_length(int nitems) = 0;
-    };
+    virtual void reset() = 0;
+    virtual void set_length(uint64_t nitems) = 0;
+};
 
-  } /* namespace blocks */
+} /* namespace blocks */
 } /* namespace gr */
 
 #endif /* INCLUDED_GR_HEAD_H */

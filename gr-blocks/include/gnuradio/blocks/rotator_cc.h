@@ -4,20 +4,8 @@
  *
  * This file is part of GNU Radio
  *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
- * Boston, MA 02110-1301, USA.
  */
 
 #ifndef INCLUDED_BLOCKS_ROTATOR_CC_H
@@ -27,28 +15,48 @@
 #include <gnuradio/sync_block.h>
 
 namespace gr {
-  namespace blocks {
+namespace blocks {
+
+/*!
+ * \brief Complex rotator
+ * \ingroup math_operators_blk
+ *
+ * \details
+ *
+ * Rotates an input complex sequence using a complex exponential in the form of
+ * exp(1j * phase_inc * n), where "phase_inc" is a chosen phase increment in
+ * radians and "n" is the sample index.
+ *
+ * Message Ports:
+ *
+ * - cmd (input):
+ *    Receives a PMT dictionary with a command message to set a new phase
+ *    increment on the rotator at a specified sample offset. The new increment
+ *    must be provided as a PMT double on a key named "inc". The target sample
+ *    offset on which to update the phase increment must be given as a PMT
+ *    uint64 (with the absolute output item number) on a key named
+ *    "offset". Unlike the "inc" key, the "offset" key is optional. When not
+ *    provided, the rotator updates its phase increment immediately.
+ */
+class BLOCKS_API rotator_cc : virtual public sync_block
+{
+public:
+    // gr::blocks::rotator_cc::sptr
+    typedef std::shared_ptr<rotator_cc> sptr;
 
     /*!
-     * \brief Complex rotator
-     * \ingroup math_operators_blk
+     * \brief Make a complex rotator block
+     * \param phase_inc rotational velocity
+     * \param tag_inc_updates Tag the sample where a phase increment update is
+     *                        applied following the reception of a control
+     *                        message received via the input message port.
      */
-    class BLOCKS_API rotator_cc : virtual public sync_block
-    {
-    public:
-      // gr::blocks::rotator_cc::sptr
-      typedef boost::shared_ptr<rotator_cc> sptr;
+    static sptr make(double phase_inc = 0.0, bool tag_inc_updates = false);
 
-      /*!
-       * \brief Make an complex rotator block
-       * \param phase_inc rotational velocity
-       */
-      static sptr make(double phase_inc = 0.0);
+    virtual void set_phase_inc(double phase_inc) = 0;
+};
 
-      virtual void set_phase_inc(double phase_inc) = 0;
-    };
-
-  } /* namespace blocks */
+} /* namespace blocks */
 } /* namespace gr */
 
 #endif /* INCLUDED_BLOCKS_ROTATOR_CC_H */

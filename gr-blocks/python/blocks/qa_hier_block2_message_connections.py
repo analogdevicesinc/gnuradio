@@ -4,21 +4,10 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
-#
+
 
 import weakref
 
@@ -30,9 +19,9 @@ class block_with_message_output(gr.basic_block):
 
     def __init__(self):
         gr.basic_block.__init__(self,
-            "block_with_message_output",
-            in_sig=None,
-            out_sig=None)
+                                "block_with_message_output",
+                                in_sig=None,
+                                out_sig=None)
         self.message_port_register_out(pmt.intern("test"))
 
 
@@ -40,9 +29,9 @@ class block_with_message_input(gr.basic_block):
 
     def __init__(self):
         gr.basic_block.__init__(self,
-            "block_with_message_input",
-            in_sig=None,
-            out_sig=None)
+                                "block_with_message_input",
+                                in_sig=None,
+                                out_sig=None)
         self.message_port_register_in(pmt.intern("test"))
 
 
@@ -50,9 +39,9 @@ class hier_block_with_message_output(gr.hier_block2):
 
     def __init__(self):
         gr.hier_block2.__init__(self,
-            "hier_block_with_message_output",
-            gr.io_signature(0, 0, 0),  # Input signature
-            gr.io_signature(0, 0, 0))  # Output signature
+                                "hier_block_with_message_output",
+                                gr.io_signature(0, 0, 0),  # Input signature
+                                gr.io_signature(0, 0, 0))  # Output signature
         self.message_port_register_hier_out("test")
         self.block = block_with_message_output()
         self.msg_connect(self.block, "test", self, "test")
@@ -62,9 +51,9 @@ class hier_block_with_message_input(gr.hier_block2):
 
     def __init__(self):
         gr.hier_block2.__init__(self,
-            "hier_block_with_message_output",
-            gr.io_signature(0, 0, 0),  # Input signature
-            gr.io_signature(0, 0, 0))  # Output signature
+                                "hier_block_with_message_output",
+                                gr.io_signature(0, 0, 0),  # Input signature
+                                gr.io_signature(0, 0, 0))  # Output signature
         self.message_port_register_hier_in("test")
         self.block = block_with_message_input()
         self.msg_connect(self, "test", self.block, "test")
@@ -74,9 +63,9 @@ class hier_block_with_message_inout(gr.hier_block2):
 
     def __init__(self):
         gr.hier_block2.__init__(self,
-            "hier_block_with_message_inout",
-            gr.io_signature(0, 0, 0),  # Input signature
-            gr.io_signature(0, 0, 0))  # Output signature
+                                "hier_block_with_message_inout",
+                                gr.io_signature(0, 0, 0),  # Input signature
+                                gr.io_signature(0, 0, 0))  # Output signature
         self.message_port_register_hier_in("test")
         self.message_port_register_hier_out("test")
         self.input = block_with_message_input()
@@ -99,7 +88,7 @@ class test_hier_block2_message_connections(gr_unittest.TestCase):
         self.tb.wait()
 
     def assert_has_subscription(self, sender, send_port, receiver,
-            receive_port):
+                                receive_port):
         """assert that the given sender block has a subscription for the given
         receiver block on the appropriate send and receive ports
 
@@ -199,6 +188,6 @@ class test_hier_block2_message_connections(gr_unittest.TestCase):
         self.tb.msg_disconnect(hier, "test", x, "test")
         self.assert_has_num_subscriptions(hier.block, "test", 0)
 
+
 if __name__ == '__main__':
-    gr_unittest.run(test_hier_block2_message_connections,
-                    "test_hier_block2_message_connections.xml")
+    gr_unittest.run(test_hier_block2_message_connections)

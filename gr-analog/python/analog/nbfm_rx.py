@@ -3,71 +3,61 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
-#
+
 
 import math
-from gnuradio import gr
-from gnuradio import filter
-from fm_emph import fm_deemph
 
-try:
-    from gnuradio import analog
-except ImportError:
-    import analog_swig as analog
+from gnuradio import gr
+from gnuradio import filter, fft
+
+from . import analog_python as analog
+from .fm_emph import fm_deemph
+
 
 class nbfm_rx(gr.hier_block2):
+    """
+    Narrow Band FM Receiver.
+
+    Takes a single complex baseband input stream and produces a single
+    float output stream of audio sample in the range [-1, +1].
+
+    Args:
+        audio_rate: sample rate of audio stream, >= 16k (integer)
+        quad_rate: sample rate of output stream (integer)
+        tau: preemphasis time constant (default 75e-6) (float)
+        max_dev: maximum deviation in Hz (default 5e3) (float)
+
+    quad_rate must be an integer multiple of audio_rate.
+
+    Exported sub-blocks (attributes):
+      squelch
+      quad_demod
+      deemph
+      audio_filter
+    """
+
     def __init__(self, audio_rate, quad_rate, tau=75e-6, max_dev=5e3):
-        """
-        Narrow Band FM Receiver.
-
-        Takes a single complex baseband input stream and produces a single
-        float output stream of audio sample in the range [-1, +1].
-
-        Args:
-            audio_rate: sample rate of audio stream, >= 16k (integer)
-            quad_rate: sample rate of output stream (integer)
-            tau: preemphasis time constant (default 75e-6) (float)
-            max_dev: maximum deviation in Hz (default 5e3) (float)
-
-        quad_rate must be an integer multiple of audio_rate.
-
-        Exported sub-blocks (attributes):
-          squelch
-          quad_demod
-          deemph
-          audio_filter
-        """
-
-	gr.hier_block2.__init__(self, "nbfm_rx",
-				gr.io_signature(1, 1, gr.sizeof_gr_complex), # Input signature
-				gr.io_signature(1, 1, gr.sizeof_float))      # Output signature
+        gr.hier_block2.__init__(self, "nbfm_rx",
+                                # Input signature
+                                gr.io_signature(1, 1, gr.sizeof_gr_complex),
+                                gr.io_signature(1, 1, gr.sizeof_float))      # Output signature
 
         # FIXME audio_rate and quad_rate ought to be exact rationals
         self._audio_rate = audio_rate = int(audio_rate)
         self._quad_rate = quad_rate = int(quad_rate)
 
         if quad_rate % audio_rate != 0:
-            raise ValueError, "quad_rate is not an integer multiple of audio_rate"
+            raise ValueError(
+                "quad_rate is not an integer multiple of audio_rate")
 
-        squelch_threshold = 20		# dB
+        squelch_threshold = 20        # dB
         #self.squelch = analog.simple_squelch_cc(squelch_threshold, 0.001)
 
         # FM Demodulator  input: complex; output: float
-        k = quad_rate/(2*math.pi*max_dev)
+        k = quad_rate / (2 * math.pi * max_dev)
         self.quad_demod = analog.quadrature_demod_cf(k)
 
         # FM Deemphasis IIR filter
@@ -79,16 +69,17 @@ class nbfm_rx(gr.hier_block2):
                                             quad_rate,      # sampling rate
                                             2.7e3,          # Audio LPF cutoff
                                             0.5e3,          # Transition band
-                                            filter.firdes.WIN_HAMMING)  # filter type
+                                            fft.window.WIN_HAMMING)  # filter type
 
-        print "len(audio_taps) =", len(audio_taps)
+        print("len(audio_taps) =", len(audio_taps))
 
         # Decimating audio filter
         # input: float; output: float; taps: float
         self.audio_filter = filter.fir_filter_fff(audio_decim, audio_taps)
 
-        self.connect(self, self.quad_demod, self.deemph, self.audio_filter, self)
+        self.connect(self, self.quad_demod, self.deemph,
+                     self.audio_filter, self)
 
     def set_max_deviation(self, max_dev):
-        k = self._quad_rate/(2*math.pi*max_dev)
+        k = self._quad_rate / (2 * math.pi * max_dev)
         self.quad_demod.set_gain(k)

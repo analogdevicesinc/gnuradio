@@ -3,23 +3,9 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#
-
-import exceptions
-
 """
 RPCMethods is a dictionary listing RPC transports currently supported
 by this client.
@@ -30,9 +16,10 @@ Args:
     options: result of command argument parsing (optparse.Values)
 """
 
+
 RPCMethods = {'thrift': 'Apache Thrift',
-             #'ice': 'Zeroc ICE'
-             }
+              # 'ice': 'Zeroc ICE'
+              }
 
 
 """
@@ -75,14 +62,17 @@ Args:
     host: hostname of the connection
 """
 
+
 class RPCConnection(object):
     def __init__(self, method, port, host=None):
         (self.method, self.port) = (method, port)
-        if host is None: self.host = '127.0.0.1'
-        else: self.host = host
+        if host is None:
+            self.host = '127.0.0.1'
+        else:
+            self.host = host
 
     def __str__(self):
-        return "%s connection on %s:%s"%(self.getName(), self.getHost(), self.getPort())
+        return "%s connection on %s:%s" % (self.getName(), self.getHost(), self.getPort())
 
     def getName(self):
         return RPCMethods[self.method]
@@ -94,25 +84,25 @@ class RPCConnection(object):
         return self.port
 
     def newConnection(self, host=None, port=None):
-        raise exceptions.NotImplementedError()
+        raise NotImplementedError()
 
     def properties(self, *args):
-        raise exceptions.NotImplementedError()
+        raise NotImplementedError()
 
     def getKnobs(self, *args):
-        raise exceptions.NotImplementedError()
+        raise NotImplementedError()
 
-    def getRe(self,*args):
-        raise exceptions.NotImplementedError()
+    def getRe(self, *args):
+        raise NotImplementedError()
 
-    def postMessage(self,*args):
-        raise exceptions.NotImplementedError()
+    def postMessage(self, *args):
+        raise NotImplementedError()
 
-    def setKnobs(self,*args):
-        raise exceptions.NotImplementedError()
+    def setKnobs(self, *args):
+        raise NotImplementedError()
 
     def shutdown(self):
-        raise exceptions.NotImplementedError()
+        raise NotImplementedError()
 
     def printProperties(self, props):
-        raise exceptions.NotImplementedError()
+        raise NotImplementedError()

@@ -1,24 +1,12 @@
 #!/usr/bin/env python
 #
 # Copyright 2011 Free Software Foundation, Inc.
-# 
+#
 # This file is part of GNU Radio
-# 
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
-# 
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
-# 
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+#
 """
 This module contains functions for aligning sequences.
 
@@ -53,6 +41,7 @@ def_max_offset = 500
 # The maximum number of samples to take from two sequences to check alignment.
 def_num_samples = 1000
 
+
 def compare_sequences(d1, d2, offset, sample_indices=None):
     """
     Takes two binary sequences and an offset and returns the number of
@@ -61,18 +50,19 @@ def compare_sequences(d1, d2, offset, sample_indices=None):
     offset -- offset of d2 relative to d1
     sample_indices -- a list of indices to use for the comparison
     """
-    max_index = min(len(d1), len(d2)+offset)
+    max_index = min(len(d1), len(d2) + offset)
     if sample_indices is None:
-        sample_indices = range(0, max_index)
+        sample_indices = list(range(0, max_index))
     correct = 0
     total = 0
     for i in sample_indices:
         if i >= max_index:
             break
-        if d1[i] == d2[i-offset]:
+        if d1[i] == d2[i - offset]:
             correct += 1
         total += 1
     return (correct, total)
+
 
 def random_sample(size, num_samples=def_num_samples, seed=None):
     """
@@ -84,15 +74,16 @@ def random_sample(size, num_samples=def_num_samples, seed=None):
     if num_samples > size:
         indices = set(range(0, size))
     else:
-        if num_samples > size/2:
-            num_samples = num_samples/2
+        if num_samples > size / 2:
+            num_samples = num_samples / 2
         indices = set([])
         while len(indices) < num_samples:
-            index = rndm.randint(0, size-1)
+            index = rndm.randint(0, size - 1)
             indices.add(index)
     indices = list(indices)
     indices.sort()
     return indices
+
 
 def align_sequences(d1, d2,
                     num_samples=def_num_samples,
@@ -119,13 +110,13 @@ def align_sequences(d1, d2,
     best_offset = None
     best_compared = None
     best_correct = None
-    pos_range = range(0, min(len(d1), max_offset))
-    neg_range = range(-1, -min(len(d2), max_offset), -1)
+    pos_range = list(range(0, min(len(d1), max_offset)))
+    neg_range = list(range(-1, -min(len(d2), max_offset), -1))
     # Interleave the positive and negative offsets.
     int_range = [item for items in zip(pos_range, neg_range) for item in items]
     for offset in int_range:
         correct, compared = compare_sequences(d1, d2, offset, indices)
-        frac_correct = 1.0*correct/compared
+        frac_correct = 1.0 * correct / compared
         if frac_correct > max_frac_correct:
             max_frac_correct = frac_correct
             best_offset = offset
@@ -134,8 +125,8 @@ def align_sequences(d1, d2,
             if frac_correct > correct_cutoff:
                 break
     return max_frac_correct, best_compared, best_offset, indices
-    
+
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
-    

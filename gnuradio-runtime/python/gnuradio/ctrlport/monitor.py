@@ -4,69 +4,58 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 #
 
-import sys, subprocess, re, signal, time, atexit, os
+
+import sys
+import subprocess
+import re
+import signal
+import time
+import atexit
+import os
 from gnuradio import gr
 
-class monitor:
-    def __init__(self,tool="gr-ctrlport-monitor"):
-        print "ControlPort Monitor running."
+
+class monitor(object):
+    def __init__(self, tool="gr-ctrlport-monitor"):
+        print("ControlPort Monitor running.")
         self.started = False
         self.tool = tool
         atexit.register(self.shutdown)
 
-        try:
-            # setup export prefs
-            gr.prefs().singleton().set_bool("ControlPort","on",True);
-            if(tool == "gr-perf-monitorx"):
-                gr.prefs().singleton().set_bool("ControlPort","edges_list",True);
-                gr.prefs().singleton().set_bool("PerfCounters","on",True);
-                gr.prefs().singleton().set_bool("PerfCounters","export",True);
-        except:
-            print "no support for gr.prefs setting"
-
-    def __del__(self):
-        if(self.started):
-            self.stop()
+        # setup export prefs
+        gr.prefs().singleton().set_bool("ControlPort", "on", True)
+        gr.prefs().singleton().set_bool("PerfCounters", "on", True)
+        gr.prefs().singleton().set_bool("PerfCounters", "export", True)
+        if(tool == "gr-perf-monitorx"):
+            gr.prefs().singleton().set_bool("ControlPort", "edges_list", True)
 
     def start(self):
-        print "monitor::endpoints() = %s" % (gr.rpcmanager_get().endpoints())
         try:
-            cmd = map(lambda a: [self.tool,
-                                 re.search("-h (\S+|\d+\.\d+\.\d+\.\d+)",a).group(1),
-                                 re.search("-p (\d+)",a).group(1)],
-                      gr.rpcmanager_get().endpoints())[0]
-            print "running: %s"%(str(cmd))
-            self.proc = subprocess.Popen(cmd);
+            print("monitor::endpoints() = %s" %
+                  (gr.rpcmanager_get().endpoints()))
+            ep = gr.rpcmanager_get().endpoints()[0]
+            cmd = [self.tool, re.search(
+                r"-h (\S+|\d+\.\d+\.\d+\.\d+)", ep).group(1), re.search(r"-p (\d+)", ep).group(1)]
+            print("running: %s" % (str(cmd)))
+            self.proc = subprocess.Popen(cmd)
             self.started = True
         except:
             self.proc = None
-            print "failed to to start ControlPort Monitor on specified port"
+            print("Failed to to connect to ControlPort. Please make sure that you have Thrift installed and check your firewall rules.")
 
     def stop(self):
         if(self.proc):
             if(self.proc.returncode == None):
-                print "\tcalling stop on shutdown"
+                print("\tcalling stop on shutdown")
                 self.proc.terminate()
         else:
-            print "\tno proc to shut down, exiting"
+            print("\tno proc to shut down, exiting")
 
     def shutdown(self):
-        print "ctrlport.monitor received shutdown signal"
+        print("ctrlport monitor received shutdown signal")
         if(self.started):
             self.stop()

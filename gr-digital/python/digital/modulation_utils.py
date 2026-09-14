@@ -1,21 +1,9 @@
 #
 # Copyright 2010 Free Software Foundation, Inc.
-# 
+#
 # This file is part of GNU Radio
-# 
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
-# 
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-# 
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, write to the Free Software Foundation, Inc.,
-# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
 
 """
@@ -29,8 +17,10 @@ import inspect
 # Type 1 modulators accept a stream of bytes on their input and produce complex baseband output
 _type_1_modulators = {}
 
+
 def type_1_mods():
     return _type_1_modulators
+
 
 def add_type_1_mod(name, mod_class):
     _type_1_modulators[name] = mod_class
@@ -41,17 +31,22 @@ def add_type_1_mod(name, mod_class):
 # to resolve phase or polarity ambiguities.
 _type_1_demodulators = {}
 
+
 def type_1_demods():
     return _type_1_demodulators
+
 
 def add_type_1_demod(name, demod_class):
     _type_1_demodulators[name] = demod_class
 
+
 # Also record the constellation making functions of the modulations
 _type_1_constellations = {}
 
+
 def type_1_constellations():
     return _type_1_constellations
+
 
 def add_type_1_constellation(name, constellation):
     _type_1_constellations[name] = constellation
@@ -79,15 +74,16 @@ def extract_kwargs_from_options(function, excluded_args, options):
         excluded_args: function arguments that are NOT to be added to the dictionary (sequence of strings)
         options: result of command argument parsing (optparse.Values)
     """
-    
+
     # Try this in C++ ;)
-    args, varargs, varkw, defaults = inspect.getargspec(function)
+    spec = inspect.getfullargspec(function)
     d = {}
-    for kw in [a for a in args if a not in excluded_args]:
+    for kw in [a for a in spec.args if a not in excluded_args]:
         if hasattr(options, kw):
             if getattr(options, kw) is not None:
                 d[kw] = getattr(options, kw)
     return d
+
 
 def extract_kwargs_from_options_for_class(cls, options):
     """

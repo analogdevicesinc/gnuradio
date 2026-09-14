@@ -2,20 +2,10 @@
 Copyright 2015 Free Software Foundation, Inc.
 This file is part of GNU Radio
 
-GNU Radio Companion is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
+SPDX-License-Identifier: GPL-2.0-or-later
 
-GNU Radio Companion is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 """
+
 
 import os
 import sys
@@ -34,18 +24,14 @@ class ExternalEditor(threading.Thread):
 
         self.editor = editor
         self.callback = callback
-        self.tempfile = self._create_tempfile(name, value)
+        self.filename = self._create_tempfile(name, value)
 
     def _create_tempfile(self, name, value):
-        fp = tempfile.NamedTemporaryFile(mode='w', suffix='.py',
-                                         prefix=name + '_')
-        fp.write(value)
-        fp.flush()
-        return fp
-
-    @property
-    def filename(self):
-        return self.tempfile.name
+        with tempfile.NamedTemporaryFile(
+                mode='wb', prefix=name + '_', suffix='.py', delete=False,
+        ) as fp:
+            fp.write(value.encode('utf-8'))
+            return fp.name
 
     def open_editor(self):
         proc = subprocess.Popen(args=(self.editor, self.filename))
@@ -65,23 +51,22 @@ class ExternalEditor(threading.Thread):
                 if mtime > last_change:
                     # print "file monitor: reload trigger for", filename
                     last_change = mtime
-                    with open(filename) as fp:
-                        data = fp.read()
+                    with open(filename, 'rb') as fp:
+                        data = fp.read().decode('utf-8')
                     self.callback(data)
                 time.sleep(1)
 
         except Exception as e:
-            print >> sys.stderr, "file monitor crashed:", str(e)
-        else:
-            # print "file monitor: done with", filename
-            pass
+            print("file monitor crashed:", str(e), file=sys.stderr)
+        finally:
+            try:
+                os.remove(self.filename)
+            except OSError:
+                pass
 
 
 if __name__ == '__main__':
-    def p(data):
-        print data
-
-    e = ExternalEditor('/usr/bin/gedit', "test", "content", p)
+    e = ExternalEditor('/usr/bin/gedit', "test", "content", print)
     e.open_editor()
     e.start()
     time.sleep(15)

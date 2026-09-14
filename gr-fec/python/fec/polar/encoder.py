@@ -2,25 +2,14 @@
 #
 # Copyright 2015 Free Software Foundation, Inc.
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 #
 
+
 import numpy as np
-from common import PolarCommon
-import helper_functions as hf
+from .common import PolarCommon
+from . import helper_functions as hf
 
 
 class PolarEncoder(PolarCommon):
@@ -43,7 +32,8 @@ class PolarEncoder(PolarCommon):
 
     def encode(self, data, is_packed=False):
         if not len(data) == self.K:
-            raise ValueError("len(data)={0} is not equal to k={1}!".format(len(data), self.K))
+            raise ValueError(
+                "len(data)={0} is not equal to k={1}!".format(len(data), self.K))
         if is_packed:
             data = np.unpackbits(data)
         if np.max(data) > 1 or np.min(data) < 0:
@@ -56,7 +46,8 @@ class PolarEncoder(PolarCommon):
 
     def encode_systematic(self, data):
         if not len(data) == self.K:
-            raise ValueError("len(data)={0} is not equal to k={1}!".format(len(data), self.K))
+            raise ValueError(
+                "len(data)={0} is not equal to k={1}!".format(len(data), self.K))
         if np.max(data) > 1 or np.min(data) < 0:
             raise ValueError("can only encode bits!")
 
@@ -99,8 +90,8 @@ def test_pseudo_rate_1_encoder(encoder, ntests, k):
         u_hat = encoder._encode_efficient(fenc)
         if not (u_hat == u).all():
             print('rate-1 encoder/decoder failed')
-            print u
-            print u_hat
+            print(u)
+            print(u_hat)
             return False
     return True
 
@@ -113,12 +104,12 @@ def test_encoder_impls():
     # frozenbits = np.zeros(n - k)
     # frozenbitposition8 = np.array((0, 1, 2, 4), dtype=int)  # keep it!
     frozenbitposition = np.array((0, 1, 2, 3, 4, 5, 8, 9), dtype=int)
-    encoder = PolarEncoder(n, k, frozenbitposition)  #, frozenbits)
-    print 'result:', compare_results(encoder, ntests, k)
+    encoder = PolarEncoder(n, k, frozenbitposition)  # , frozenbits)
+    print('result:', compare_results(encoder, ntests, k))
 
     print('Test rate-1 encoder/decoder chain results')
     r1_test = test_pseudo_rate_1_encoder(encoder, ntests, k)
-    print 'Test rate-1 encoder/decoder:', r1_test
+    print('Test rate-1 encoder/decoder:', r1_test)
     test_systematic_encoder(encoder, ntests, k)
 
 

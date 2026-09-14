@@ -2,27 +2,16 @@
 #
 # Copyright 2015 Free Software Foundation, Inc.
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 #
 
 
-from encoder import PolarEncoder
-from decoder import PolarDecoder
-import channel_construction as cc
-from helper_functions import *
+from .encoder import PolarEncoder
+from .decoder import PolarDecoder
+from . import channel_construction as cc
+import numpy as np
+from .helper_functions import power_of_2_int
 
 import matplotlib.pyplot as plt
 
@@ -32,7 +21,9 @@ def get_frozen_bit_position():
     # frozenbitposition = np.array((0, 1, 2, 3, 4, 5, 8, 9), dtype=int)
     m = 256
     n_frozen = m // 2
-    frozenbitposition = cc.get_frozen_bit_indices_from_z_parameters(cc.bhattacharyya_bounds(0.0, m), n_frozen)
+    frozenbitposition = cc.get_frozen_bit_indices_from_z_parameters(
+        cc.bhattacharyya_bounds(0.0, m), n_frozen
+    )
     print(frozenbitposition)
     return frozenbitposition
 
@@ -50,7 +41,9 @@ def test_enc_dec_chain():
         encoded = encoder.encode(bits)
         rx = decoder.decode(encoded)
         if not is_equal(bits, rx):
-            raise ValueError('Test #', i, 'failed, input and output differ', bits, '!=', rx)
+            raise ValueError(
+                "Test #", i, "failed, input and output differ", bits, "!=", rx
+            )
             return
 
 
@@ -58,13 +51,16 @@ def is_equal(first, second):
     if not (first == second).all():
         result = first == second
         for i in range(len(result)):
-            print '{0:4}: {1:2} == {2:1} = {3}'.format(i, first[i], second[i], result[i])
+            print(
+                "{0:4}: {1:2} == {2:1} = {3}".format(
+                    i, first[i], second[i], result[i])
+            )
         return False
     return True
 
 
 def exact_value(la, lb):
-    return np.log((np.exp(la + lb) + 1) / (np.exp(la) + np.exp(lb)))
+    return np.log((np.exp(la + lb) + 1) / (np.exp(la + np.exp(lb))))
 
 
 def approx_value(la, lb):
@@ -72,11 +68,11 @@ def approx_value(la, lb):
 
 
 def path_metric_exact(last_pm, llr, ui):
-    return last_pm + np.log(1 + np.exp(-1. * llr * (1 - 2 * ui)))
+    return last_pm + np.log(1 + np.exp(-1.0 * llr * (1 - 2 * ui)))
 
 
 def path_metric_approx(last_pm, llr, ui):
-    if ui == int(.5 * (1 - np.sign(llr))):
+    if ui == int(0.5 * (1 - np.sign(llr))):
         return last_pm
     return last_pm + np.abs(llr)
 
@@ -107,15 +103,17 @@ def test_1024_rate_1_code():
         bits = np.random.randint(2, size=k)
         tx = encoder.encode(bits)
         np.random.shuffle(possible_indices)
-        tx[possible_indices[0:num_transitions]] = (tx[possible_indices[0:num_transitions]] + 1) % 2
+        tx[possible_indices[0:num_transitions]] = (
+            tx[possible_indices[0:num_transitions]] + 1
+        ) % 2
         rx = tx
         recv = decoder.decode(rx)
-        channel_counter += (bits == recv)
+        channel_counter += bits == recv
 
-    print channel_counter
+    print(channel_counter)
     print(np.min(channel_counter), np.max(channel_counter))
 
-    np.save('channel_counter_' + str(ntests) + '.npy', channel_counter)
+    np.save("channel_counter_" + str(ntests) + ".npy", channel_counter)
 
 
 def find_good_indices(res, nindices):
@@ -131,16 +129,19 @@ def find_good_indices(res, nindices):
 
 def channel_analysis():
     ntests = 10000
-    filename = 'channel_counter_' + str(ntests) + '.npy'
+    filename = "channel_counter_" + str(ntests) + ".npy"
     channel_counter = np.load(filename)
     print(np.min(channel_counter), np.max(channel_counter))
     channel_counter[0] = np.min(channel_counter)
-    good_indices = find_good_indices(channel_counter, channel_counter.size // 2)
+    good_indices = find_good_indices(
+        channel_counter, channel_counter.size // 2)
     info_bit_positions = np.where(good_indices > 0)
     print(info_bit_positions)
-    frozen_bit_positions = np.delete(np.arange(channel_counter.size), info_bit_positions)
+    frozen_bit_positions = np.delete(
+        np.arange(channel_counter.size), info_bit_positions
+    )
     print(frozen_bit_positions)
-    np.save('frozen_bit_positions_n256_k128_p0.11.npy', frozen_bit_positions)
+    np.save("frozen_bit_positions_n256_k128_p0.11.npy", frozen_bit_positions)
     good_indices *= 2000
     good_indices += 4000
 
@@ -152,38 +153,38 @@ def channel_analysis():
 def merge_first_stage(init_mask):
     merged_frozen_mask = []
     for e in range(0, len(init_mask), 2):
-        v = [init_mask[e]['value'][0], init_mask[e + 1]['value'][0]]
-        s = init_mask[e]['size'] * 2
-        if init_mask[e]['type'] == init_mask[e + 1]['type']:
-            t = init_mask[e]['type']
-            merged_frozen_mask.append({'value': v, 'type': t, 'size': s})
+        v = [init_mask[e]["value"][0], init_mask[e + 1]["value"][0]]
+        s = init_mask[e]["size"] * 2
+        if init_mask[e]["type"] == init_mask[e + 1]["type"]:
+            t = init_mask[e]["type"]
+            merged_frozen_mask.append({"value": v, "type": t, "size": s})
         else:
-            t = 'RPT'
-            merged_frozen_mask.append({'value': v, 'type': t, 'size': s})
+            t = "RPT"
+            merged_frozen_mask.append({"value": v, "type": t, "size": s})
     return merged_frozen_mask
 
 
 def merge_second_stage(init_mask):
     merged_frozen_mask = []
     for e in range(0, len(init_mask), 2):
-        if init_mask[e]['type'] == init_mask[e + 1]['type']:
-            t = init_mask[e]['type']
-            v = init_mask[e]['value']
-            v.extend(init_mask[e + 1]['value'])
-            s = init_mask[e]['size'] * 2
-            merged_frozen_mask.append({'value': v, 'type': t, 'size': s})
-        elif init_mask[e]['type'] == 'ZERO' and init_mask[e + 1]['type'] == 'RPT':
-            t = init_mask[e + 1]['type']
-            v = init_mask[e]['value']
-            v.extend(init_mask[e + 1]['value'])
-            s = init_mask[e]['size'] * 2
-            merged_frozen_mask.append({'value': v, 'type': t, 'size': s})
-        elif init_mask[e]['type'] == 'RPT' and init_mask[e + 1]['type'] == 'ONE':
-            t = 'SPC'
-            v = init_mask[e]['value']
-            v.extend(init_mask[e + 1]['value'])
-            s = init_mask[e]['size'] * 2
-            merged_frozen_mask.append({'value': v, 'type': t, 'size': s})
+        if init_mask[e]["type"] == init_mask[e + 1]["type"]:
+            t = init_mask[e]["type"]
+            v = init_mask[e]["value"]
+            v.extend(init_mask[e + 1]["value"])
+            s = init_mask[e]["size"] * 2
+            merged_frozen_mask.append({"value": v, "type": t, "size": s})
+        elif init_mask[e]["type"] == "ZERO" and init_mask[e + 1]["type"] == "RPT":
+            t = init_mask[e + 1]["type"]
+            v = init_mask[e]["value"]
+            v.extend(init_mask[e + 1]["value"])
+            s = init_mask[e]["size"] * 2
+            merged_frozen_mask.append({"value": v, "type": t, "size": s})
+        elif init_mask[e]["type"] == "RPT" and init_mask[e + 1]["type"] == "ONE":
+            t = "SPC"
+            v = init_mask[e]["value"]
+            v.extend(init_mask[e + 1]["value"])
+            s = init_mask[e]["size"] * 2
+            merged_frozen_mask.append({"value": v, "type": t, "size": s})
         else:
             merged_frozen_mask.append(init_mask[e])
             merged_frozen_mask.append(init_mask[e + 1])
@@ -194,25 +195,27 @@ def merge_stage_n(init_mask):
     merged_frozen_mask = []
     n_elems = len(init_mask) - (len(init_mask) % 2)
     for e in range(0, n_elems, 2):
-        if init_mask[e]['size'] == init_mask[e + 1]['size']:
-            if (init_mask[e]['type'] == 'ZERO' or init_mask[e]['type'] == 'ONE') and init_mask[e]['type'] == init_mask[e + 1]['type']:
-                t = init_mask[e]['type']
-                v = init_mask[e]['value']
-                v.extend(init_mask[e + 1]['value'])
-                s = init_mask[e]['size'] * 2
-                merged_frozen_mask.append({'value': v, 'type': t, 'size': s})
-            elif init_mask[e]['type'] == 'ZERO' and init_mask[e + 1]['type'] == 'RPT':
-                t = init_mask[e + 1]['type']
-                v = init_mask[e]['value']
-                v.extend(init_mask[e + 1]['value'])
-                s = init_mask[e]['size'] * 2
-                merged_frozen_mask.append({'value': v, 'type': t, 'size': s})
-            elif init_mask[e]['type'] == 'SPC' and init_mask[e + 1]['type'] == 'ONE':
-                t = init_mask[e]['type']
-                v = init_mask[e]['value']
-                v.extend(init_mask[e + 1]['value'])
-                s = init_mask[e]['size'] * 2
-                merged_frozen_mask.append({'value': v, 'type': t, 'size': s})
+        if init_mask[e]["size"] == init_mask[e + 1]["size"]:
+            if (
+                init_mask[e]["type"] == "ZERO" or init_mask[e]["type"] == "ONE"
+            ) and init_mask[e]["type"] == init_mask[e + 1]["type"]:
+                t = init_mask[e]["type"]
+                v = init_mask[e]["value"]
+                v.extend(init_mask[e + 1]["value"])
+                s = init_mask[e]["size"] * 2
+                merged_frozen_mask.append({"value": v, "type": t, "size": s})
+            elif init_mask[e]["type"] == "ZERO" and init_mask[e + 1]["type"] == "RPT":
+                t = init_mask[e + 1]["type"]
+                v = init_mask[e]["value"]
+                v.extend(init_mask[e + 1]["value"])
+                s = init_mask[e]["size"] * 2
+                merged_frozen_mask.append({"value": v, "type": t, "size": s})
+            elif init_mask[e]["type"] == "SPC" and init_mask[e + 1]["type"] == "ONE":
+                t = init_mask[e]["type"]
+                v = init_mask[e]["value"]
+                v.extend(init_mask[e + 1]["value"])
+                s = init_mask[e]["size"] * 2
+                merged_frozen_mask.append({"value": v, "type": t, "size": s})
             else:
                 merged_frozen_mask.append(init_mask[e])
                 merged_frozen_mask.append(init_mask[e + 1])
@@ -289,7 +292,7 @@ def find_decoder_subframes(frozen_mask):
         sub_mask = mask.flatten()
         lock_mask = lock.flatten()
 
-    words = {0: 'ZERO', 1: 'ONE', 2: 'RPT', 3: 'SPC'}
+    words = {0: "ZERO", 1: "ONE", 2: "RPT", 3: "SPC"}
     ll = lock_mask[0]
     sub_t = sub_mask[0]
     for i in range(len(frozen_mask)):
@@ -299,18 +302,21 @@ def find_decoder_subframes(frozen_mask):
         # if i % 8 == 0:
         #     print
         if not l == ll or not sub_mask[i] == sub_t:
-            print('--------------------------')
+            print("--------------------------")
         ll = l
         sub_t = sub_mask[i]
-        print('{0:4} lock {1:4} value: {2} in sub {3}'.format(i, 2 ** (l + 1), v, t))
+        print("{0:4} lock {1:4} value: {2} in sub {3}".format(
+            i, 2 ** (l + 1), v, t))
 
 
 def systematic_encoder_decoder_chain_test():
-    print('systematic encoder decoder chain test')
+    print("systematic encoder decoder chain test")
     block_size = int(2 ** 8)
     info_bit_size = block_size // 2
     ntests = 100
-    frozenbitposition = cc.get_frozen_bit_indices_from_z_parameters(cc.bhattacharyya_bounds(0.0, block_size), block_size - info_bit_size)
+    frozenbitposition = cc.get_frozen_bit_indices_from_z_parameters(
+        cc.bhattacharyya_bounds(0.0, block_size), block_size - info_bit_size
+    )
     encoder = PolarEncoder(block_size, info_bit_size, frozenbitposition)
     decoder = PolarDecoder(block_size, info_bit_size, frozenbitposition)
     for i in range(ntests):
@@ -330,7 +336,7 @@ def main():
     # frozenbits = np.zeros(n - k)
     # frozenbitposition8 = np.array((0, 1, 2, 4), dtype=int)
     # frozenbitposition = np.array((0, 1, 2, 3, 4, 5, 8, 9), dtype=int)
-    # print frozenbitposition
+    # print(frozenbitposition)
 
     # test_enc_dec_chain()
     # test_1024_rate_1_code()
@@ -343,5 +349,5 @@ def main():
     systematic_encoder_decoder_chain_test()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

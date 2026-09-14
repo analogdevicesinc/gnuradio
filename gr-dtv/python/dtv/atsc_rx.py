@@ -20,19 +20,21 @@
 # Boston, MA 02111-1307, USA.
 
 from gnuradio import gr, filter, analog
-from atsc_rx_filter import *
+from .atsc_rx_filter import *
+
 
 class atsc_rx(gr.hier_block2):
     def __init__(self, input_rate, sps):
         gr.hier_block2.__init__(self, "atsc_rx",
-                                gr.io_signature(1, 1, gr.sizeof_gr_complex), # Input signature
+                                # Input signature
+                                gr.io_signature(1, 1, gr.sizeof_gr_complex),
                                 gr.io_signature(1, 1, gr.sizeof_char))       # Output signature
 
         # ATSC receiver filter/interpolator
         rx_filt = atsc_rx_filter(input_rate, sps)
 
         # Lock on to pilot tone, shift to DC, then discard Q channel
-        output_rate = ATSC_SYMBOL_RATE*sps
+        output_rate = ATSC_SYMBOL_RATE * sps
         pll = dtv.atsc_fpll(output_rate)
 
         # Remove pilot tone now at DC
@@ -41,7 +43,7 @@ class atsc_rx(gr.hier_block2):
         # Normalize signal to proper constellation amplitude
         agc = analog.agc_ff(1e-5, 4.0)
 
-        # Synchronize bit and segement timing
+        # Synchronize bit and segment timing
         btl = dtv.atsc_sync(output_rate)
 
         # Check for correct field sync
@@ -53,18 +55,29 @@ class atsc_rx(gr.hier_block2):
         # Remove convolutional trellis coding
         vit = dtv.atsc_viterbi_decoder()
 
-	# Remove convolutional interleaving
-	dei = dtv.atsc_deinterleaver()
+        # Remove convolutional interleaving
+        dei = dtv.atsc_deinterleaver()
 
-	# Reed-Solomon decode
-	rsd = dtv.atsc_rs_decoder()
+        # Reed-Solomon decode
+        rsd = dtv.atsc_rs_decoder()
 
-	# Derandomize MPEG2-TS packet
-	der = dtv.atsc_derandomizer()
+        # Derandomize MPEG2-TS packet
+        der = dtv.atsc_derandomizer()
 
-	# Remove padding from packet
-	dep = dtv.atsc_depad()
+        # Remove padding from packet
+        dep = dtv.atsc_depad()
 
         # Connect pipeline
-        self.connect(self, rx_filt, pll, dcr, agc, btl, fsc, equ)
-        self.connect(equ, vit, dei, rsd, der, dep, self)
+        self.connect(self, rx_filt, pll, dcr, agc, btl, fsc)
+        self.connect((fsc, 0), (equ, 0))
+        self.connect((fsc, 1), (equ, 1))
+        self.connect((equ, 0), (vit, 0))
+        self.connect((equ, 1), (vit, 1))
+        self.connect((vit, 0), (dei, 0))
+        self.connect((vit, 1), (dei, 1))
+        self.connect((dei, 0), (rsd, 0))
+        self.connect((dei, 1), (rsd, 1))
+        self.connect((rsd, 0), (der, 0))
+        self.connect((rsd, 1), (der, 1))
+        self.connect((der, 0), (dep, 0))
+        self.connect((dep, 0), (self, 0))

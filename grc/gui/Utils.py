@@ -2,52 +2,20 @@
 Copyright 2008-2011,2015 Free Software Foundation, Inc.
 This file is part of GNU Radio
 
-GNU Radio Companion is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
+SPDX-License-Identifier: GPL-2.0-or-later
 
-GNU Radio Companion is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 """
 
-import pygtk
-pygtk.require('2.0')
-import gtk
-import gobject
 
-from Cheetah.Template import Template
+from sys import platform
+import os
+import numbers
 
-from Constants import POSSIBLE_ROTATIONS, CANVAS_GRID_SIZE
+from gi.repository import GLib
+import cairo
 
-
-def rotate_pixmap(gc, src_pixmap, dst_pixmap, angle=gtk.gdk.PIXBUF_ROTATE_COUNTERCLOCKWISE):
-    """
-    Load the destination pixmap with a rotated version of the source pixmap.
-    The source pixmap will be loaded into a pixbuf, rotated, and drawn to the destination pixmap.
-    The pixbuf is a client-side drawable, where a pixmap is a server-side drawable.
-
-    Args:
-        gc: the graphics context
-        src_pixmap: the source pixmap
-        dst_pixmap: the destination pixmap
-        angle: the angle to rotate by
-    """
-    width, height = src_pixmap.get_size()
-    pixbuf = gtk.gdk.Pixbuf(
-        colorspace=gtk.gdk.COLORSPACE_RGB,
-        has_alpha=False, bits_per_sample=8,
-        width=width, height=height,
-    )
-    pixbuf.get_from_drawable(src_pixmap, src_pixmap.get_colormap(), 0, 0, 0, 0, -1, -1)
-    pixbuf = pixbuf.rotate_simple(angle)
-    dst_pixmap.draw_pixbuf(gc, pixbuf, 0, 0, 0, 0)
+from .canvas.colors import FLOWGRAPH_BACKGROUND_COLOR
+from . import Constants
 
 
 def get_rotated_coordinate(coor, rotation):
@@ -62,9 +30,9 @@ def get_rotated_coordinate(coor, rotation):
         the rotated coordinates
     """
     # handles negative angles
-    rotation = (rotation + 360)%360
-    if rotation not in POSSIBLE_ROTATIONS:
-        raise ValueError('unusable rotation angle "%s"'%str(rotation))
+    rotation = (rotation + 360) % 360
+    if rotation not in Constants.POSSIBLE_ROTATIONS:
+        raise ValueError('unusable rotation angle "%s"' % str(rotation))
     # determine the number of degrees to rotate
     cos_r, sin_r = {
         0: (1, 0), 90: (0, 1), 180: (-1, 0), 270: (0, -1),
@@ -73,7 +41,7 @@ def get_rotated_coordinate(coor, rotation):
     return x * cos_r + y * sin_r, -x * sin_r + y * cos_r
 
 
-def get_angle_from_coordinates((x1, y1), (x2, y2)):
+def get_angle_from_coordinates(p1, p2):
     """
     Given two points, calculate the vector direction from point1 to point2, directions are multiples of 90 degrees.
 
@@ -84,49 +52,137 @@ def get_angle_from_coordinates((x1, y1), (x2, y2)):
     Returns:
         the direction in degrees
     """
+    (x1, y1) = p1
+    (x2, y2) = p2
     if y1 == y2:  # 0 or 180
         return 0 if x2 > x1 else 180
     else:  # 90 or 270
         return 270 if y2 > y1 else 90
 
 
-def encode(value):
-    """Make sure that we pass only valid utf-8 strings into markup_escape_text.
-
-    Older versions of glib seg fault if the last byte starts a multi-byte
-    character.
-    """
-
-    valid_utf8 = value.decode('utf-8', errors='replace').encode('utf-8')
-    return gobject.markup_escape_text(valid_utf8)
-
-
-class TemplateParser(object):
-    def __init__(self):
-        self.cache = {}
-
-    def __call__(self, tmpl_str, **kwargs):
-        """
-        Parse the template string with the given args.
-        Pass in the xml encode method for pango escape chars.
-
-        Args:
-            tmpl_str: the template as a string
-
-        Returns:
-            a string of the parsed template
-        """
-        kwargs['encode'] = encode
-        template = self.cache.setdefault(tmpl_str, Template.compile(tmpl_str))
-        return str(template(namespaces=kwargs))
-
-parse_template = TemplateParser()
-
-
-def align_to_grid(coor):
-    _align = lambda: int(round(x / (1.0 * CANVAS_GRID_SIZE)) * CANVAS_GRID_SIZE)
+def align_to_grid(coor, mode=round):
+    def align(value):
+        return int(mode(value / (1.0 * Constants.CANVAS_GRID_SIZE)) * Constants.CANVAS_GRID_SIZE)
     try:
-        return [_align() for x in coor]
+        return [align(c) for c in coor]
     except TypeError:
         x = coor
-        return _align()
+        return align(coor)
+
+
+def num_to_str(num):
+    """ Display logic for numbers """
+    def eng_notation(value, fmt='g'):
+        """Convert a number to a string in engineering notation.  E.g., 5e-9 -> 5n"""
+        template = '{:' + fmt + '}{}'
+        magnitude = abs(value)
+        for exp, symbol in zip(range(9, -15 - 1, -3), 'GMk munpf'):
+            factor = 10 ** exp
+            if magnitude >= factor:
+                return template.format(value / factor, symbol.strip())
+        return template.format(value, '')
+
+    if isinstance(num, numbers.Complex):
+        num = complex(num)  # Cast to python complex
+        if num == 0:
+            return '0'
+        output = eng_notation(num.real) if num.real else ''
+        output += eng_notation(num.imag, '+g' if output else 'g') + \
+            'j' if num.imag else ''
+        return output
+    else:
+        return str(num)
+
+
+def encode(value):
+    return GLib.markup_escape_text(value)
+
+
+def make_screenshot(flow_graph, file_path, transparent_bg=False):
+    if not file_path:
+        return
+
+    x_min, y_min, x_max, y_max = flow_graph.get_extents()
+    padding = Constants.CANVAS_GRID_SIZE
+    width = x_max - x_min + 2 * padding
+    height = y_max - y_min + 2 * padding
+
+    if file_path.endswith('.png'):
+        psurf = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
+    elif file_path.endswith('.pdf'):
+        psurf = cairo.PDFSurface(file_path, width, height)
+    elif file_path.endswith('.svg'):
+        psurf = cairo.SVGSurface(file_path, width, height)
+    else:
+        raise ValueError('Unknown file format')
+
+    cr = cairo.Context(psurf)
+
+    if not transparent_bg:
+        cr.set_source_rgba(*FLOWGRAPH_BACKGROUND_COLOR)
+        cr.rectangle(0, 0, width, height)
+        cr.fill()
+
+    cr.translate(padding - x_min, padding - y_min)
+
+    flow_graph.create_labels(cr)
+    flow_graph.create_shapes()
+    flow_graph.draw(cr)
+
+    if file_path.endswith('.png'):
+        psurf.write_to_png(file_path)
+    if file_path.endswith('.pdf') or file_path.endswith('.svg'):
+        cr.show_page()
+    psurf.finish()
+
+
+def scale(coor, reverse=False):
+    factor = Constants.DPI_SCALING if not reverse else 1 / Constants.DPI_SCALING
+    return tuple(int(x * factor) for x in coor)
+
+
+def scale_scalar(coor, reverse=False):
+    factor = Constants.DPI_SCALING if not reverse else 1 / Constants.DPI_SCALING
+    return int(coor * factor)
+
+
+def get_modifier_key(angle_brackets=False):
+    """
+    Get the modifier key based on platform.
+
+    Args:
+        angle_brackets: if return the modifier key with <> or not
+
+    Returns:
+        return the string with the modifier key
+    """
+    if platform == "darwin":
+        if angle_brackets:
+            return "<Meta>"
+        else:
+            return "Meta"
+    else:
+        if angle_brackets:
+            return "<Ctrl>"
+        else:
+            return "Ctrl"
+
+
+_nproc = None
+
+
+def get_cmake_nproc():
+    """ Get number of cmake processes for C++ flowgraphs """
+    global _nproc  # Cached result
+    if _nproc:
+        return _nproc
+    try:
+        # See https://docs.python.org/3.8/library/os.html#os.cpu_count
+        _nproc = len(os.sched_getaffinity(0))
+    except:
+        _nproc = os.cpu_count()
+    if not _nproc:
+        _nproc = 1
+
+    _nproc = max(_nproc // 2 - 1, 1)
+    return _nproc

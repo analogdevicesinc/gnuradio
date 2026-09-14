@@ -4,20 +4,8 @@
  *
  * This file is part of GNU Radio
  *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
- * Boston, MA 02110-1301, USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -29,69 +17,70 @@
 #include <gnuradio/io_signature.h>
 
 namespace gr {
-  namespace dtv {
+namespace dtv {
 
-    atsc_deinterleaver::sptr
-    atsc_deinterleaver::make()
-    {
-      return gnuradio::get_initial_sptr
-	(new atsc_deinterleaver_impl());
-    }
+atsc_deinterleaver::sptr atsc_deinterleaver::make()
+{
+    return gnuradio::make_block_sptr<atsc_deinterleaver_impl>();
+}
 
-    atsc_deinterleaver_impl::atsc_deinterleaver_impl()
-      : gr::sync_block("atsc_deinterleaver",
-                       io_signature::make(1, 1, sizeof(atsc_mpeg_packet_rs_encoded)),
-                       io_signature::make(1, 1, sizeof(atsc_mpeg_packet_rs_encoded))),
-        alignment_fifo (156)
-    {
-      m_fifo.resize(52);
+atsc_deinterleaver_impl::atsc_deinterleaver_impl()
+    : gr::sync_block(
+          "atsc_deinterleaver",
+          io_signature::make2(
+              2, 2, ATSC_MPEG_RS_ENCODED_LENGTH * sizeof(uint8_t), sizeof(plinfo)),
+          io_signature::make2(
+              2, 2, ATSC_MPEG_RS_ENCODED_LENGTH * sizeof(uint8_t), sizeof(plinfo))),
+      alignment_fifo(156)
+{
+    m_fifo.reserve(s_interleavers);
 
-      for (int i = 0; i < 52; i++)
-        m_fifo[52 - 1 - i] = new interleaver_fifo<unsigned char>(i * 4);
+    for (int i = 0; i < s_interleavers; i++)
+        m_fifo.emplace_back((s_interleavers - 1 - i) * 4);
 
-      sync();
-    }
+    sync();
+}
 
-    atsc_deinterleaver_impl::~atsc_deinterleaver_impl()
-    {
-      for (int i = 0; i < 52; i++)
-        delete m_fifo[i];
-    }
+atsc_deinterleaver_impl::~atsc_deinterleaver_impl() {}
 
-    void atsc_deinterleaver_impl::reset()
-    {
-      sync();
-      for (int i = 0; i < 52; i++)
-        m_fifo[i]->reset();
-    }
+void atsc_deinterleaver_impl::reset()
+{
+    sync();
 
-    int
-    atsc_deinterleaver_impl::work(int noutput_items,
-                                  gr_vector_const_void_star &input_items,
-                                  gr_vector_void_star &output_items)
-    {
-      const atsc_mpeg_packet_rs_encoded *in = (const atsc_mpeg_packet_rs_encoded *)input_items[0];
-      atsc_mpeg_packet_rs_encoded *out = (atsc_mpeg_packet_rs_encoded *)output_items[0];
+    for (auto& i : m_fifo)
+        i.reset();
+}
 
-      for (int i = 0; i < noutput_items; i++) {
-        assert (in[i].pli.regular_seg_p());
-        plinfo::sanity_check(in[i].pli);
+int atsc_deinterleaver_impl::work(int noutput_items,
+                                  gr_vector_const_void_star& input_items,
+                                  gr_vector_void_star& output_items)
+{
+    auto in = static_cast<const uint8_t*>(input_items[0]);
+    auto out = static_cast<uint8_t*>(output_items[0]);
+    auto plin = static_cast<const plinfo*>(input_items[1]);
+    auto plout = static_cast<plinfo*>(output_items[1]);
+
+
+    for (int i = 0; i < noutput_items; i++) {
+        assert(plin[i].regular_seg_p());
 
         // reset commutator if required using INPUT pipeline info
-        if (in[i].pli.first_regular_seg_p())
-          sync();
+        if (plin[i].first_regular_seg_p())
+            sync();
 
-        // remap OUTPUT pipeline info to reflect 52 data segment end-to-end delay
-        plinfo::delay (out[i].pli, in[i].pli, 52);
+        // remap OUTPUT pipeline info to reflect all data segment end-to-end delay
+        plout[i] = plinfo();
+        plinfo::delay(plout[i], plin[i], s_interleavers);
 
         // now do the actual deinterleaving
-        for (unsigned int j = 0; j < sizeof(in[i].data); j++) {
-          out[i].data[j] = alignment_fifo.stuff(transform (in[i].data[j]));
+        for (unsigned int j = 0; j < ATSC_MPEG_RS_ENCODED_LENGTH; j++) {
+            out[i * ATSC_MPEG_RS_ENCODED_LENGTH + j] =
+                alignment_fifo.stuff(transform(in[i * ATSC_MPEG_RS_ENCODED_LENGTH + j]));
         }
-      }
-
-      return noutput_items;
     }
 
-  } /* namespace dtv */
+    return noutput_items;
+}
+
+} /* namespace dtv */
 } /* namespace gr */

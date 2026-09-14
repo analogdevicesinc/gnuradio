@@ -4,20 +4,8 @@
  *
  * This file is part of GNU Radio
  *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
- * Boston, MA 02110-1301, USA.
  */
 
 #if HAVE_CONFIG_H
@@ -27,44 +15,51 @@
 #include "pack_k_bits_bb_impl.h"
 #include <gnuradio/io_signature.h>
 #include <stdexcept>
-#include <iostream>
 
 namespace gr {
-  namespace blocks {
+namespace blocks {
 
-    pack_k_bits_bb::sptr
-    pack_k_bits_bb::make(unsigned k)
-    {
-      return gnuradio::get_initial_sptr
-        (new pack_k_bits_bb_impl(k));
+pack_k_bits_bb::sptr pack_k_bits_bb::make(unsigned k)
+{
+    return gnuradio::make_block_sptr<pack_k_bits_bb_impl>(k);
+}
+
+pack_k_bits_bb_impl::pack_k_bits_bb_impl(unsigned k)
+    : sync_decimator("pack_k_bits_bb",
+                     io_signature::make(1, 1, sizeof(unsigned char)),
+                     io_signature::make(1, 1, sizeof(unsigned char)),
+                     k),
+      d_pack(k)
+{
+    d_k = k;
+    set_tag_propagation_policy(TPP_CUSTOM);
+}
+
+int pack_k_bits_bb_impl::work(int noutput_items,
+                              gr_vector_const_void_star& input_items,
+                              gr_vector_void_star& output_items)
+{
+    const unsigned char* in = (const unsigned char*)input_items[0];
+    unsigned char* out = (unsigned char*)output_items[0];
+
+    std::vector<tag_t> wintags; // Temp variable to store tags for prop
+
+    // GR_LOG_DEBUG(d_logger, boost::format("Packing Outputs"));
+    d_pack.pack(out, in, noutput_items);
+
+    // Propagate tags
+    get_tags_in_range(wintags, 0, nitems_read(0), nitems_read(0) + (noutput_items * d_k));
+
+    // GR_LOG_DEBUG(d_logger, boost::format("Propagating tags"));
+    std::vector<tag_t>::iterator t;
+    for (t = wintags.begin(); t != wintags.end(); t++) {
+        tag_t new_tag = *t;
+        new_tag.offset = std::floor((double)new_tag.offset / d_k);
+        add_item_tag(0, new_tag);
     }
 
-    pack_k_bits_bb_impl::pack_k_bits_bb_impl(unsigned k)
-      : sync_decimator("pack_k_bits_bb",
-                          io_signature::make(1, 1, sizeof(unsigned char)),
-                          io_signature::make(1, 1, sizeof(unsigned char)),
-                          k)
-    {
-      d_pack = new kernel::pack_k_bits(k);
-    }
+    return noutput_items;
+}
 
-    pack_k_bits_bb_impl::~pack_k_bits_bb_impl()
-    {
-      delete d_pack;
-    }
-
-    int
-    pack_k_bits_bb_impl::work(int noutput_items,
-                              gr_vector_const_void_star &input_items,
-                              gr_vector_void_star &output_items)
-    {
-      const unsigned char *in = (const unsigned char *)input_items[0];
-      unsigned char *out = (unsigned char *)output_items[0];
-
-      d_pack->pack(out, in, noutput_items);
-
-      return noutput_items;
-    }
-
-  } /* namespace blocks */
+} /* namespace blocks */
 } /* namespace gr */

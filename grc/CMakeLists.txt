@@ -1,32 +1,60 @@
-# Copyright 2011,2013 Free Software Foundation, Inc.
+# Copyright 2011,2013,2017 Free Software Foundation, Inc.
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 
 ########################################################################
 # Setup dependencies
 ########################################################################
 include(GrPython)
 
-GR_PYTHON_CHECK_MODULE("python >= 2.5"     sys          "sys.version.split()[0] >= '2.5'"           PYTHON_MIN_VER_FOUND)
-GR_PYTHON_CHECK_MODULE("Cheetah >= 2.0.0"  Cheetah      "Cheetah.Version >= '2.0.0'"                CHEETAH_FOUND)
-GR_PYTHON_CHECK_MODULE("lxml >= 1.3.6"     lxml.etree   "lxml.etree.LXML_VERSION >= (1, 3, 6, 0)"   LXML_FOUND)
-GR_PYTHON_CHECK_MODULE("pygtk >= 2.10.0"   gtk          "gtk.pygtk_version >= (2, 10, 0)"           PYGTK_FOUND)
-GR_PYTHON_CHECK_MODULE("numpy"             numpy        True                                        NUMPY_FOUND)
+message(STATUS "")
+
+GR_PYTHON_CHECK_MODULE_RAW(
+    "PyYAML >= 3.11"
+    "import yaml; assert yaml.__version__ >= '3.11'"
+    PYYAML_FOUND
+)
+
+GR_PYTHON_CHECK_MODULE(
+    "mako >= ${GR_MAKO_MIN_VERSION}"
+    mako
+    "LooseVersion(mako.__version__) >= LooseVersion('${GR_MAKO_MIN_VERSION}')"
+    MAKO_FOUND
+)
+
+GR_PYTHON_CHECK_MODULE_RAW(
+    "pygobject >= 2.28.6"
+    "import gi; assert gi.version_info >= (2, 28, 6)"
+    PYGI_FOUND
+)
+
+GR_PYTHON_CHECK_MODULE_RAW(
+    "Gtk (GI) >= 3.10.8"
+    "import gi; gi.require_version('Gtk', '3.0'); \
+     from gi.repository import Gtk; Gtk.check_version(3, 10, 8)"
+    GTK_GI_FOUND
+)
+
+GR_PYTHON_CHECK_MODULE_RAW(
+    "Cairo (GI) >= 1.0"
+    "import gi; gi.require_foreign('cairo', 'Context')"  # Cairo 1.13.0
+    CAIRO_GI_FOUND
+)
+
+GR_PYTHON_CHECK_MODULE_RAW(
+    "PangoCairo (GI) >= 1.0"
+    "import gi; gi.require_version('PangoCairo', '1.0')"  # pangocairo 1.36.3
+    PANGOCAIRO_GI_FOUND
+)
+
+GR_PYTHON_CHECK_MODULE_RAW(
+    "numpy"
+    "import numpy"
+    NUMPY_FOUND
+)
 
 ########################################################################
 # Register component
@@ -34,10 +62,12 @@ GR_PYTHON_CHECK_MODULE("numpy"             numpy        True                    
 include(GrComponent)
 if(NOT CMAKE_CROSSCOMPILING)
     set(grc_python_deps
-        PYTHON_MIN_VER_FOUND
-        CHEETAH_FOUND
-        LXML_FOUND
-        PYGTK_FOUND
+        PYYAML_FOUND
+        MAKO_FOUND
+        PYGI_FOUND
+        GTK_GI_FOUND
+        CAIRO_GI_FOUND
+        PANGOCAIRO_GI_FOUND
         NUMPY_FOUND
     )
 endif(NOT CMAKE_CROSSCOMPILING)
@@ -48,23 +78,10 @@ GR_REGISTER_COMPONENT("gnuradio-companion" ENABLE_GRC
     ${grc_python_deps}
 )
 
-########################################################################
-# Begin conditional configuration
-########################################################################
 if(ENABLE_GRC)
 
 ########################################################################
-# Setup CPack components
-########################################################################
-include(GrPackage)
-CPACK_COMPONENT("grc"
-    DISPLAY_NAME "GNU Radio Companion"
-    DESCRIPTION  "Graphical flow graph designer"
-    DEPENDS      "runtime_python"
-)
-
-########################################################################
-# Create and install the grc conf file
+# Create and install the grc and grc-docs conf file
 ########################################################################
 file(TO_NATIVE_PATH ${CMAKE_INSTALL_PREFIX}/${GRC_BLOCKS_DIR} blocksdir)
 if(CMAKE_INSTALL_PREFIX STREQUAL "/usr")
@@ -93,17 +110,47 @@ configure_file(
 install(
     FILES ${CMAKE_CURRENT_BINARY_DIR}/grc.conf
     DESTINATION ${GR_PREFSDIR}
-    COMPONENT "grc"
 )
 
-GR_PYTHON_INSTALL(
-    FILES __init__.py
-    DESTINATION ${GR_PYTHON_DIR}/gnuradio/grc
-    COMPONENT "grc"
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/00-grc-docs.conf.in
+    ${CMAKE_CURRENT_BINARY_DIR}/00-grc-docs.conf
+@ONLY)
+
+install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/00-grc-docs.conf
+    DESTINATION ${GR_PREFSDIR}
 )
 
 ########################################################################
-# Appens NSIS commands to set environment variables
+# Install (+ compile) python sources and data files
+########################################################################
+file(GLOB py_files "*.py")
+GR_PYTHON_INSTALL(
+    FILES ${py_files}
+    DESTINATION "${GR_PYTHON_DIR}/gnuradio/grc"
+)
+
+GR_PYTHON_INSTALL(
+    DIRECTORY core
+    DESTINATION "${GR_PYTHON_DIR}/gnuradio/grc"
+    FILES_MATCHING REGEX "\\.(py|dtd|grc|tmpl|png|mako)$"
+)
+
+GR_PYTHON_INSTALL(
+    DIRECTORY gui
+    DESTINATION "${GR_PYTHON_DIR}/gnuradio/grc"
+    FILES_MATCHING REGEX "\\.(py|dtd|grc|tmpl|png|mako)$"
+)
+
+GR_PYTHON_INSTALL(
+    DIRECTORY converter
+    DESTINATION "${GR_PYTHON_DIR}/gnuradio/grc"
+    FILES_MATCHING REGEX "\\.(py|dtd|grc|tmpl|png|mako)$"
+)
+
+########################################################################
+# Append NSIS commands to set environment variables
 ########################################################################
 if(WIN32)
 
@@ -116,30 +163,13 @@ string(REPLACE "\\" "\\\\" GRC_BLOCKS_PATH ${GRC_BLOCKS_PATH})
 file(TO_NATIVE_PATH ${GR_PYTHON_DIR} GR_PYTHON_POSTFIX)
 string(REPLACE "\\" "\\\\" GR_PYTHON_POSTFIX ${GR_PYTHON_POSTFIX})
 
-CPACK_SET(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "${CPACK_NSIS_EXTRA_INSTALL_COMMANDS}
-    #!include \\\"winmessages.nsh\\\"
-    WriteRegStr HKLM ${HLKM_ENV} \\\"GRC_BLOCKS_PATH\\\" \\\"$INSTDIR\\\\${GRC_BLOCKS_PATH}\\\"
-    SendMessage \\\${HWND_BROADCAST} \\\${WM_WININICHANGE} 0 \\\"STR:Environment\\\" /TIMEOUT=5000
-")
-
-CPACK_SET(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "${CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS}
-    #!include \\\"winmessages.nsh\\\"
-    DeleteRegValue HKLM ${HLKM_ENV} \\\"GRC_BLOCKS_PATH\\\"
-    SendMessage \\\${HWND_BROADCAST} \\\${WM_WININICHANGE} 0 \\\"STR:Environment\\\" /TIMEOUT=5000
-")
-
 endif(WIN32)
 
 ########################################################################
 # Add subdirectories
 ########################################################################
-add_subdirectory(base)
 add_subdirectory(blocks)
-add_subdirectory(freedesktop)
-add_subdirectory(grc_gnuradio)
-add_subdirectory(gui)
-add_subdirectory(python)
 add_subdirectory(scripts)
-add_subdirectory(examples)
+add_subdirectory(tests)
 
 endif(ENABLE_GRC)

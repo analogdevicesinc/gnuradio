@@ -4,20 +4,8 @@
  *
  * This file is part of GNU Radio
  *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
- * Boston, MA 02110-1301, USA.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -26,95 +14,113 @@
 
 #include "message_debug_impl.h"
 #include <gnuradio/io_signature.h>
-#include <cstdio>
+#include <iomanip>
 #include <iostream>
+#include <sstream>
 
 namespace gr {
-  namespace blocks {
+namespace blocks {
 
-    message_debug::sptr
-    message_debug::make()
-    {
-      return gnuradio::get_initial_sptr
-        (new message_debug_impl());
-    }
+message_debug::sptr message_debug::make(bool en_uvec)
+{
+    return gnuradio::make_block_sptr<message_debug_impl>(en_uvec);
+}
 
-    void
-    message_debug_impl::print(pmt::pmt_t msg)
-    {
-      std::cout << "******* MESSAGE DEBUG PRINT ********\n";
-      pmt::print(msg);
-      std::cout << "************************************\n";
-    }
+message_debug_impl::message_debug_impl(bool en_uvec)
+    : block("message_debug", io_signature::make(0, 0, 0), io_signature::make(0, 0, 0)),
+      d_en_uvec(en_uvec)
+{
+    message_port_register_in(pmt::mp("print"));
+    set_msg_handler(pmt::mp("print"),
+                    [this](const pmt::pmt_t& msg) { this->print(msg); });
 
-    void
-    message_debug_impl::store(pmt::pmt_t msg)
-    {
-      gr::thread::scoped_lock guard(d_mutex);
-      d_messages.push_back(msg);
-    }
+    message_port_register_in(pmt::mp("store"));
+    set_msg_handler(pmt::mp("store"),
+                    [this](const pmt::pmt_t& msg) { this->store(msg); });
 
-    void
-    message_debug_impl::print_pdu(pmt::pmt_t pdu)
-    {
-      pmt::pmt_t meta = pmt::car(pdu);
-      pmt::pmt_t vector = pmt::cdr(pdu);
-      std::cout << "* MESSAGE DEBUG PRINT PDU VERBOSE *\n";
-      pmt::print(meta);
-      size_t len = pmt::blob_length(vector);
-      std::cout << "pdu_length = " << len << std::endl;
-      std::cout << "contents = " << std::endl;
-      size_t offset(0);
-      const uint8_t* d = (const uint8_t*) pmt::uniform_vector_elements(vector, offset);
-      for(size_t i=0; i<len; i+=16){
-        printf("%04x: ", ((unsigned int)i));
-        for(size_t j=i; j<std::min(i+16,len); j++){
-          printf("%02x ",d[j] );
+    message_port_register_in(pmt::mp("print_pdu"));
+    set_msg_handler(pmt::mp("print_pdu"),
+                    [this](const pmt::pmt_t& msg) { this->print_pdu(msg); });
+}
+
+message_debug_impl::~message_debug_impl() {}
+
+void message_debug_impl::print(const pmt::pmt_t& msg)
+{
+    std::stringstream sout;
+
+    if (pmt::is_pdu(msg)) {
+        const auto& meta = pmt::car(msg);
+        const auto& vector = pmt::cdr(msg);
+
+        sout << "***** VERBOSE PDU DEBUG PRINT ******" << std::endl
+             << pmt::write_string(meta) << std::endl;
+
+        size_t len = pmt::blob_length(vector);
+        if (d_en_uvec) {
+            sout << "pdu length = " << len << " bytes" << std::endl
+                 << "pdu vector contents = " << std::endl;
+            size_t offset(0);
+            const uint8_t* d =
+                (const uint8_t*)pmt::uniform_vector_elements(vector, offset);
+            for (size_t i = 0; i < len; i += 16) {
+                sout << std::hex << std::setw(4) << std::setfill('0')
+                     << static_cast<unsigned int>(i) << ": ";
+                for (size_t j = i; j < std::min(i + 16, len); j++) {
+                    sout << std::hex << std::setw(2) << std::setfill('0')
+                         << static_cast<unsigned int>(d[j]) << " ";
+                }
+                sout << std::endl;
+            }
+        } else {
+            sout << "pdu length = " << len << " bytes (printing disabled)" << std::endl;
         }
 
-        std::cout << std::endl;
-      }
-
-      std::cout << "***********************************\n";
+    } else {
+        sout << "******* MESSAGE DEBUG PRINT ********" << std::endl
+             << pmt::write_string(msg) << std::endl;
     }
 
-    int
-    message_debug_impl::num_messages()
-    {
-      return (int)d_messages.size();
+    sout << "************************************" << std::endl;
+    std::cout << sout.str();
+}
+
+void message_debug_impl::store(const pmt::pmt_t& msg)
+{
+    gr::thread::scoped_lock guard(d_mutex);
+    d_messages.push_back(msg);
+}
+
+// ! DEPRECATED as of 3.10 use print() for all printing!
+void message_debug_impl::print_pdu(const pmt::pmt_t& pdu)
+{
+    if (pmt::is_pdu(pdu)) {
+        GR_LOG_INFO(d_logger,
+                    "The `print_pdu` port is deprecated and will be removed; forwarding "
+                    "to `print`.");
+        this->print(pdu);
+    } else {
+        GR_LOG_INFO(d_logger, "The `print_pdu` port is deprecated and will be removed.");
+        GR_LOG_WARN(d_logger, "Non PDU type message received. Dropping.");
+    }
+}
+
+size_t message_debug_impl::num_messages()
+{
+    gr::thread::scoped_lock guard(d_mutex);
+    return d_messages.size();
+}
+
+pmt::pmt_t message_debug_impl::get_message(size_t i)
+{
+    gr::thread::scoped_lock guard(d_mutex);
+
+    if (i >= d_messages.size()) {
+        throw std::runtime_error("message_debug: index for message out of bounds.");
     }
 
-    pmt::pmt_t
-    message_debug_impl::get_message(int i)
-    {
-      gr::thread::scoped_lock guard(d_mutex);
+    return d_messages[i];
+}
 
-      if((size_t)i >= d_messages.size()) {
-        throw std::runtime_error("message_debug: index for message out of bounds.\n");
-      }
-
-      return d_messages[i];
-    }
-
-    message_debug_impl::message_debug_impl()
-      : block("message_debug",
-                 io_signature::make(0, 0, 0),
-                 io_signature::make(0, 0, 0))
-    {
-      message_port_register_in(pmt::mp("print"));
-      set_msg_handler(pmt::mp("print"), boost::bind(&message_debug_impl::print, this, _1));
-
-      message_port_register_in(pmt::mp("store"));
-      set_msg_handler(pmt::mp("store"), boost::bind(&message_debug_impl::store, this, _1));
-
-      message_port_register_in(pmt::mp("print_pdu"));
-      set_msg_handler(pmt::mp("print_pdu"), boost::bind(&message_debug_impl::print_pdu, this, _1));
-    }
-
-    message_debug_impl::~message_debug_impl()
-    {
-    }
-
-  } /* namespace blocks */
+} /* namespace blocks */
 } /* namespace gr */
-

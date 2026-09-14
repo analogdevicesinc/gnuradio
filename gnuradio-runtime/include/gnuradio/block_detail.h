@@ -4,46 +4,37 @@
  *
  * This file is part of GNU Radio
  *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more detail.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
- * Boston, MA 02110-1301, USA.
  */
 
 #ifndef INCLUDED_GR_RUNTIME_BLOCK_DETAIL_H
 #define INCLUDED_GR_RUNTIME_BLOCK_DETAIL_H
 
 #include <gnuradio/api.h>
-#include <gnuradio/runtime_types.h>
-#include <gnuradio/tpb_detail.h>
-#include <gnuradio/tags.h>
+#include <gnuradio/buffer.h>
+#include <gnuradio/buffer_reader.h>
 #include <gnuradio/high_res_timer.h>
+#include <gnuradio/logger.h>
+#include <gnuradio/runtime_types.h>
+#include <gnuradio/tags.h>
+#include <gnuradio/tpb_detail.h>
 #include <stdexcept>
 
 namespace gr {
 
-  /*!
-   * \brief Implementation details to support the signal processing abstraction
-   * \ingroup internal
-   *
-   * This class contains implementation detail that should be "out of
-   * sight" of almost all users of GNU Radio.  This decoupling also
-   * means that we can make changes to the guts without having to
-   * recompile everything.
-   */
-  class GR_RUNTIME_API block_detail
-  {
-  public:
+/*!
+ * \brief Implementation details to support the signal processing abstraction
+ * \ingroup internal
+ *
+ * This class contains implementation detail that should be "out of
+ * sight" of almost all users of GNU Radio.  This decoupling also
+ * means that we can make changes to the guts without having to
+ * recompile everything.
+ */
+class GR_RUNTIME_API block_detail
+{
+public:
     ~block_detail();
 
     int ninputs() const { return d_ninputs; }
@@ -57,17 +48,17 @@ namespace gr {
     void set_input(unsigned int which, buffer_reader_sptr reader);
     buffer_reader_sptr input(unsigned int which)
     {
-      if(which >= d_ninputs)
-        throw std::invalid_argument("block_detail::input");
-      return d_input[which];
+        if (which >= d_ninputs)
+            throw std::invalid_argument("block_detail::input");
+        return d_input[which];
     }
 
     void set_output(unsigned int which, buffer_sptr buffer);
     buffer_sptr output(unsigned int which)
     {
-      if(which >= d_noutputs)
-        throw std::invalid_argument("block_detail::output");
-      return d_output[which];
+        if (which >= d_noutputs)
+            throw std::invalid_argument("block_detail::output");
+        return d_output[which];
     }
 
     /*!
@@ -116,19 +107,20 @@ namespace gr {
      * \param which_output  an integer of which output stream to attach the tag
      * \param tag the tag object to add
      */
-    void add_item_tag(unsigned int which_output, const tag_t &tag);
+    void add_item_tag(unsigned int which_output, const tag_t& tag);
 
     /*!
      * \brief  Removes a tag from the given input stream.
      *
      * Calls gr::buffer::remove_item_tag().
-     * The tag in question will then no longer appear on subsequent calls of get_tags_in_range().
+     * The tag in question will then no longer appear on subsequent calls of
+     * get_tags_in_range().
      *
      * \param which_input  an integer of which input stream to remove the tag from
      * \param tag the tag object to add
      * \param id The unique block ID (use gr::block::unique_id())
      */
-    void remove_item_tag(unsigned int which_input, const tag_t &tag, long id);
+    void remove_item_tag(unsigned int which_input, const tag_t& tag, long id);
 
     /*!
      * \brief Given a [start,end), returns a vector of all tags in the range.
@@ -145,11 +137,11 @@ namespace gr {
      * \param abs_end      a uint64 count of the end of the range of interest
      * \param id           Block ID
      */
-    void get_tags_in_range(std::vector<tag_t> &v,
+    void get_tags_in_range(std::vector<tag_t>& v,
                            unsigned int which_input,
                            uint64_t abs_start,
                            uint64_t abs_end,
-			   long id);
+                           long id);
 
     /*!
      * \brief Given a [start,end), returns a vector of all tags in the
@@ -170,12 +162,12 @@ namespace gr {
      * \param key          a PMT symbol to select only tags of this key
      * \param id           Block ID
      */
-    void get_tags_in_range(std::vector<tag_t> &v,
+    void get_tags_in_range(std::vector<tag_t>& v,
                            unsigned int which_input,
                            uint64_t abs_start,
                            uint64_t abs_end,
-			   const pmt::pmt_t &key,
-			   long id);
+                           const pmt::pmt_t& key,
+                           long id);
 
     /*!
      * \brief Set core affinity of block to the cores in the vector
@@ -184,7 +176,7 @@ namespace gr {
      * \param mask a vector of ints of the core numbers available to
      * this block.
      */
-    void set_processor_affinity(const std::vector<int> &mask);
+    void set_processor_affinity(const std::vector<int>& mask);
 
     /*!
      * \brief Unset core affinity.
@@ -203,8 +195,21 @@ namespace gr {
      */
     int set_thread_priority(int priority);
 
-    bool                    threaded;  // set if thread is currently running.
-    gr::thread::gr_thread_t thread;    // portable thread handle
+    /*!
+     * Post general_work() cleanup to decrement the active counts for all inputs
+     * and outputs.
+     */
+    void post_work_cleanup()
+    {
+        // Decrement active counts for all inputs and outputs
+        for (int i = 0; i < noutputs(); i++)
+            output(i)->decrement_active();
+        for (int i = 0; i < ninputs(); i++)
+            input(i)->buffer()->decrement_active();
+    }
+
+    bool threaded;                  // set if thread is currently running.
+    gr::thread::gr_thread_t thread; // portable thread handle
 
     void start_perf_counters();
     void stop_perf_counters(int noutput_items, int nproduced);
@@ -238,17 +243,24 @@ namespace gr {
 
     float pc_work_time_total();
 
-    tpb_detail d_tpb;	// used by thread-per-block scheduler
+    tpb_detail d_tpb; // used by thread-per-block scheduler
     int d_produce_or;
+
+    int consumed() const;
+
+    // necessary because stupidly block_executor.cc's "propagate_tags" is a function, not
+    // any class member
+    gr::logger_ptr d_logger, d_debug_logger;
 
     // ----------------------------------------------------------------------------
 
-  private:
-    unsigned int                    d_ninputs;
-    unsigned int                    d_noutputs;
+private:
+    unsigned int d_ninputs;
+    unsigned int d_noutputs;
     std::vector<buffer_reader_sptr> d_input;
-    std::vector<buffer_sptr>        d_output;
-    bool                            d_done;
+    std::vector<buffer_sptr> d_output;
+    bool d_done;
+    int d_consumed;
 
     // Performance counters
     float d_ins_noutput_items;
@@ -278,15 +290,14 @@ namespace gr {
 
     friend struct tpb_detail;
 
-    friend GR_RUNTIME_API block_detail_sptr
-      make_block_detail(unsigned int ninputs, unsigned int noutputs);
-  };
+    friend GR_RUNTIME_API block_detail_sptr make_block_detail(unsigned int ninputs,
+                                                              unsigned int noutputs);
+};
 
-  GR_RUNTIME_API block_detail_sptr
-  make_block_detail(unsigned int ninputs, unsigned int noutputs);
+GR_RUNTIME_API block_detail_sptr make_block_detail(unsigned int ninputs,
+                                                   unsigned int noutputs);
 
-  GR_RUNTIME_API long
-  block_detail_ncurrently_allocated();
+GR_RUNTIME_API long block_detail_ncurrently_allocated();
 
 } /* namespace gr */
 

@@ -1,451 +1,152 @@
 /* -*- c++ -*- */
 /*
  * Copyright 2012 Free Software Foundation, Inc.
+ * Copyright 2021 Marcus Müller
  *
  * This file is part of GNU Radio
  *
- * GNU Radio is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3, or (at your option)
- * any later version.
+ * SPDX-License-Identifier: GPL-3.0-or-later
  *
- * GNU Radio is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with GNU Radio; see the file COPYING.  If not, write to
- * the Free Software Foundation, Inc., 51 Franklin Street,
- * Boston, MA 02110-1301, USA.
  */
 
-/*******************************************************************************
-* Author: Mark Plett
-* Description:
-*   The gr_log module wraps the log4cpp library for logging in gnuradio.
-*******************************************************************************/
-
+#include <spdlog/common.h>
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include <gnuradio/logger.h>
 #include <gnuradio/prefs.h>
-#include <stdexcept>
-#include <algorithm>
 
+#include <spdlog/async.h>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/sinks/dist_sink.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/spdlog.h>
 
-#ifdef ENABLE_GR_LOG
-#ifdef HAVE_LOG4CPP
+#include <memory>
 
 namespace gr {
+logging::logging()
+    : _default_level(spdlog::level::from_str(
+          prefs::singleton()->get_string("LOG", "log_level", "off"))),
+      _debug_level(spdlog::level::from_str(
+          prefs::singleton()->get_string("LOG", "debug_level", "off"))),
+      _default_backend(std::make_shared<spdlog::sinks::dist_sink_mt>()),
+      _debug_backend(std::make_shared<spdlog::sinks::dist_sink_mt>())
+{
+    _default_backend->set_level(_default_level);
+    _debug_backend->set_level(_debug_level);
 
-  bool logger_config::logger_configured(false);
 
-  /************************ BEGIN LOG4CPP HELPERS ***********************/
-  /* Logger config class.  This is a singleton that controls how
-   * log4cpp is configured If watch_period>0 a thread is started to
-   * watch teh config file for changes.
-   */
+    auto debug_console_sink = std::make_shared<spdlog::sinks::stderr_color_sink_st>();
+    _debug_backend->add_sink(debug_console_sink);
 
-  // Getters of logger_config
-  logger_config&
-  logger_config::get_instance(void)
-  {
-    static logger_config instance;
-    return instance;
-  }
+    const auto pref = prefs::singleton();
+    const auto default_file = pref->get_string("LOG", "log_file", "");
 
-  std::string
-  logger_config::get_filename()
-  {
-    logger_config& in=get_instance();
-    return in.filename;
-  }
+    if (default_file == "stderr") {
+        auto console_sink = std::make_shared<spdlog::sinks::stderr_color_sink_st>();
+        _default_backend->add_sink(console_sink);
+    } else if ((!default_file.empty()) && default_file != "stdout") {
+        auto file_sink =
+            std::make_shared<spdlog::sinks::basic_file_sink_st>(default_file, true);
+        _default_backend->add_sink(file_sink);
+    }
 
-  unsigned int
-  logger_config::get_watch_period()
-  {
-    logger_config& in=get_instance();
-    return in.watch_period;
-  }
+    if (default_file == "stdout") {
+        auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_st>();
+        _default_backend->add_sink(console_sink);
+    }
+}
 
-  // Method to watch config file for changes
-  void
-  logger_config::watch_file(std::string filename, unsigned int watch_period)
-  {
-    std::time_t last_write(boost::filesystem::last_write_time(filename));
-    std::time_t current_time(0);
-    while(true) {
-      try {
-        current_time = boost::filesystem::last_write_time(filename);
-        if(current_time>last_write) {
-          //std::cout<<"GNURadio Reloading logger configuration:"<<filename<<std::endl;
-          last_write = current_time;
-          // Should we wipe out all old configuration or just add the
-          //     new?  Just adding...  logger_reset_config();
-          logger_configured = logger_load_config(filename);
+
+logging& logging::singleton()
+{
+    static logging the_only_one;
+    return the_only_one;
+}
+
+spdlog::sink_ptr logging::default_backend() const { return _default_backend; }
+void logging::add_default_sink(const spdlog::sink_ptr& sink)
+{
+    _default_backend->add_sink(sink);
+};
+void logging::add_debug_sink(const spdlog::sink_ptr& sink)
+{
+    _debug_backend->add_sink(sink);
+};
+
+void logging::add_default_console_sink()
+{
+    add_default_sink(std::make_shared<spdlog::sinks::stdout_color_sink_st>());
+}
+
+void logging::add_debug_console_sink()
+{
+    add_debug_sink(std::make_shared<spdlog::sinks::stdout_color_sink_st>());
+}
+
+logger::logger(const std::string& logger_name)
+    : _name(logger_name),
+      d_logger(
+          std::make_shared<spdlog::logger>(_name, logging::singleton().default_backend()))
+{
+    d_logger->set_level(logging::singleton().default_level());
+    // gr::log :%p: %c{1} - %m%n
+    //         :level: block alias - message
+    d_logger->set_pattern(logging::default_pattern);
+}
+
+log_level logger::get_level() const { return d_logger->level(); }
+
+const std::string logger::get_string_level() const
+{
+    const auto view = spdlog::level::to_string_view(d_logger->level());
+    return std::string(view.begin(), view.end());
+}
+
+void logger::get_level(std::string& level) const { level = get_string_level(); }
+void logger::set_level(const log_level level) { d_logger->set_level(level); }
+
+void logger::set_level(const std::string& level)
+{
+    auto parsed_level = spdlog::level::from_str(level);
+    if (parsed_level == spdlog::level::off) {
+        if (level == "notice") {
+            parsed_level = spdlog::level::info;
+        } else if (level == "warn") {
+            // older versions of spdlog don't convert this themselves
+            parsed_level = spdlog::level::warn;
+        } else if (level == "crit" || level == "alert" || level == "fatal" ||
+                   level == "emerg") {
+            parsed_level = spdlog::level::critical;
         }
-        boost::this_thread::sleep(boost::posix_time::time_duration(0,0,watch_period,0));
-      }
-      catch(const boost::thread_interrupted&) {
-        std::cout<<"GNURadio leaving logger config file watch."<<std::endl;
-        break;
-      }
     }
-  }
-
-  // Method to load the confifuration.  It only loads if the filename
-  // or watch has changed
-  void
-  logger_config::load_config(std::string filename,unsigned int watch_period)
-  {
-    logger_config& instance = get_instance();
-    // Only reconfigure if filename or watch has changed
-    if(!logger_configured) {
-      instance.filename = filename;
-      instance.watch_period = watch_period;
-      // Stop any file watching thread
-      if(instance.watch_thread!=NULL)
-        stop_watch();
-      // Load configuration
-      //std::cout<<"GNURadio Loading logger configuration:"<<instance.filename<<std::endl;
-      logger_configured = logger_load_config(instance.filename);
-      // Start watch if required
-      if(instance.watch_period>0) {
-        instance.watch_thread = new boost::thread(watch_file, instance.filename,
-                                                  instance.watch_period);
-      }
-    }
-  }
-
-  // Method to stop the watcher thread
-  void
-  logger_config::stop_watch()
-  {
-    logger_config& instance = get_instance();
-    if(instance.watch_thread) {
-      instance.watch_thread->interrupt();
-      instance.watch_thread->join();
-      delete(instance.watch_thread);
-      instance.watch_thread=NULL;
-    }
-  }
-
-  // Method to reset logger configuration
-  void
-  logger_config::reset_config(void)
-  {
-    logger_config& instance = get_instance();
-    stop_watch();
-    std::vector<log4cpp::Category*> *loggers = log4cpp::Category::getCurrentCategories();
-    std::vector<log4cpp::Category*>::iterator logger = loggers->begin();
-    // We can't destroy categories but we can neuter them by removing all appenders.
-    for(;logger!=loggers->end();logger++) {
-      (*logger)->removeAllAppenders();
-    }
-    instance.filename = std::string("");
-    instance.watch_period = 0;
-    logger_configured = false;
-  }
-
-  /***************** Functions to call log4cpp methods *************************/
-
-  logger_ptr
-  logger_get_logger(std::string name)
-  {
-    if(log4cpp::Category::exists(name)) {
-      logger_ptr logger = &log4cpp::Category::getInstance(name);
-      return logger;
-    }
-    else {
-      logger_ptr logger = &log4cpp::Category::getInstance(name);
-      logger->setPriority(log4cpp::Priority::NOTSET);
-      return logger;
-    }
-  }
-
-  bool
-  logger_load_config(const std::string &config_filename)
-  {
-    if(config_filename.size() != 0) {
-      try {
-        log4cpp::PropertyConfigurator::configure(config_filename);
-        return true;
-      }
-      catch(log4cpp::ConfigureFailure &e) {
-        std::cerr << "Logger config failed :" << e.what() << std::endl;
-      }
-    }
-    return false;
-  }
-
-  void
-  logger_set_level(logger_ptr logger, const std::string &level)
-  {
-    std::string nocase = level;
-    std::transform(level.begin(), level.end(), nocase.begin(), ::tolower);
-
-    if(nocase == "off" || nocase == "notset")
-      logger_set_level(logger, log4cpp::Priority::NOTSET);
-    else if(nocase == "all" || nocase == "debug")
-      logger_set_level(logger, log4cpp::Priority::DEBUG);
-    else if(nocase == "info")
-      logger_set_level(logger, log4cpp::Priority::INFO);
-    else if(nocase == "notice")
-      logger_set_level(logger, log4cpp::Priority::NOTICE);
-    else if(nocase == "warn")
-      logger_set_level(logger, log4cpp::Priority::WARN);
-    else if(nocase == "error")
-      logger_set_level(logger, log4cpp::Priority::ERROR);
-    else if(nocase == "crit")
-      logger_set_level(logger, log4cpp::Priority::CRIT);
-    else if(nocase == "alert")
-      logger_set_level(logger, log4cpp::Priority::ALERT);
-    else if(nocase=="fatal")
-      logger_set_level(logger, log4cpp::Priority::FATAL);
-    else if(nocase == "emerg")
-      logger_set_level(logger, log4cpp::Priority::EMERG);
-    else
-      throw std::runtime_error("logger_set_level: Bad level type.\n");
-  }
-
-  void
-  logger_set_level(logger_ptr logger, log4cpp::Priority::Value level)
-  {
-    logger->setPriority(level);
-  }
-
-  void
-  logger_get_level(logger_ptr logger, std::string &level)
-  {
-    log4cpp::Priority::Value levelPtr = logger->getPriority();
-    if(levelPtr == log4cpp::Priority::NOTSET) level = "notset";
-    if(levelPtr == log4cpp::Priority::DEBUG) level = "debug";
-    if(levelPtr == log4cpp::Priority::INFO) level = "info";
-    if(levelPtr == log4cpp::Priority::NOTICE) level = "notice";
-    if(levelPtr == log4cpp::Priority::WARN) level = "warn";
-    if(levelPtr == log4cpp::Priority::ERROR) level = "error";
-    if(levelPtr == log4cpp::Priority::CRIT) level = "crit";
-    if(levelPtr == log4cpp::Priority::ALERT) level = "alert";
-    if(levelPtr == log4cpp::Priority::FATAL) level = "fatal";
-    if(levelPtr == log4cpp::Priority::EMERG) level = "emerg";
-  }
-
-  void
-  logger_get_level(logger_ptr logger,log4cpp::Priority::Value level)
-  {
-    level = logger->getPriority();
-  }
-
-  void
-  logger_add_console_appender(logger_ptr logger, std::string target, std::string pattern)
-  {
-    log4cpp::PatternLayout* layout = new log4cpp::PatternLayout();
-    log4cpp::Appender* app;
-    if(target=="stdout")
-      app = new log4cpp::OstreamAppender("ConsoleAppender::",&std::cout);
-    else
-      app = new log4cpp::OstreamAppender("ConsoleAppender::",&std::cerr);
-
-    layout->setConversionPattern(pattern);
-    app->setLayout(layout);
-    logger->setAppender(app);
-  }
-
-  void
-  logger_set_console_appender(logger_ptr logger, std::string target, std::string pattern)
-  {
-    logger->removeAllAppenders();
-    logger_add_console_appender(logger, target, pattern);
-  }
-
-  void
-  logger_add_file_appender(logger_ptr logger, std::string filename,
-                           bool append, std::string pattern)
-  {
-    log4cpp::PatternLayout* layout = new log4cpp::PatternLayout();
-    log4cpp::Appender* app = new
-      log4cpp::FileAppender("FileAppender::"+filename,
-                            filename);
-    layout->setConversionPattern(pattern);
-    app->setLayout(layout);
-    logger->setAppender(app);
-  }
-
-  void
-  logger_set_file_appender(logger_ptr logger, std::string filename,
-                           bool append, std::string pattern)
-  {
-    logger->removeAllAppenders();
-    logger_add_file_appender(logger, filename, append, pattern);
-  }
-
-  void
-  logger_add_rollingfile_appender(logger_ptr logger, std::string filename,
-                                  size_t filesize, int bkup_index, bool append,
-                                  mode_t mode, std::string pattern)
-  {
-    log4cpp::PatternLayout* layout = new log4cpp::PatternLayout();
-    log4cpp::Appender* app = new
-      log4cpp::RollingFileAppender("RollFileAppender::" + filename, filename,
-                                   filesize, bkup_index, append, mode);
-    layout->setConversionPattern(pattern);
-    app->setLayout(layout);
-    logger->setAppender(app);
-  }
-
-  std::vector<std::string>
-  logger_get_logger_names(void)
-  {
-    std::vector<std::string> names;
-    std::vector<log4cpp::Category*> *loggers = log4cpp::Category::getCurrentCategories();
-    std::vector<log4cpp::Category*>::iterator logger = loggers->begin();
-
-    for(;logger!=loggers->end();logger++) {
-      names.push_back((*logger)->getName());
-    }
-    return names;
-  }
-
-} /* namespace gr */
-
-#endif /* HAVE_LOG4CPP */
-
-/****** Start Methods to provide Python the capabilities of the macros ********/
-void
-gr_logger_config(const std::string config_filename, unsigned int watch_period)
-{
-  GR_CONFIG_AND_WATCH_LOGGER(config_filename, watch_period);
+    d_logger->set_level(parsed_level);
 }
 
-std::vector<std::string>
-gr_logger_get_logger_names(void)
+const std::string& logger::name() const { return _name; }
+void logger::set_name(const std::string& name)
 {
-  std::vector<std::string> names;
-  GR_GET_LOGGER_NAMES(names);
-  return names;
+    _name = name;
+    d_logger->set_pattern(logging::default_pattern);
 }
 
-void
-gr_logger_reset_config(void)
+bool configure_default_loggers(gr::logger_ptr& l,
+                               gr::logger_ptr& d,
+                               const std::string& name)
 {
-  GR_RESET_CONFIGURATION();
-}
-
-// Remaining capability provided by gr::logger class in gnuradio/logger.h
-
-#else /* ENABLE_GR_LOG */
-
-/****** Start Methods to provide Python the capabilities of the macros ********/
-void
-gr_logger_config(const std::string config_filename, unsigned int watch_period)
-{
-  //NOP
-}
-
-std::vector<std::string>
-gr_logger_get_logger_names(void)
-{
-  return std::vector<std::string>(1, "");
-}
-
-void
-gr_logger_reset_config(void)
-{
-  //NOP
-}
-
-#endif /* ENABLE_GR_LOG */
-
-
-namespace gr {
-
-  bool
-  configure_default_loggers(gr::logger_ptr &l, gr::logger_ptr &d,
-                            const std::string name)
-  {
-#ifdef ENABLE_GR_LOG
-#ifdef HAVE_LOG4CPP
-    prefs *p = prefs::singleton();
-    std::string config_file = p->get_string("LOG", "log_config", "");
-    std::string log_level = p->get_string("LOG", "log_level", "off");
-    std::string log_file = p->get_string("LOG", "log_file", "");
-    std::string debug_level = p->get_string("LOG", "debug_level", "off");
-    std::string debug_file = p->get_string("LOG", "debug_file", "");
-
-    GR_CONFIG_LOGGER(config_file);
-
-    GR_LOG_GETLOGGER(LOG, "gr_log." + name);
-    GR_LOG_SET_LEVEL(LOG, log_level);
-    if(log_file.size() > 0) {
-      if(log_file == "stdout") {
-        GR_LOG_SET_CONSOLE_APPENDER(LOG, "cout","gr::log :%p: %c{1} - %m%n");
-      }
-      else if(log_file == "stderr") {
-        GR_LOG_SET_CONSOLE_APPENDER(LOG, "cerr","gr::log :%p: %c{1} - %m%n");
-      }
-      else {
-        GR_LOG_SET_FILE_APPENDER(LOG, log_file , true,"%r :%p: %c{1} - %m%n");
-      }
+    if (l == nullptr) {
+        l = std::make_shared<gr::logger_ptr::element_type>(name);
     }
-    l = LOG;
-
-    GR_LOG_GETLOGGER(DLOG, "gr_log_debug." + name);
-    GR_LOG_SET_LEVEL(DLOG, debug_level);
-    if(debug_file.size() > 0) {
-      if(debug_file == "stdout") {
-        GR_LOG_SET_CONSOLE_APPENDER(DLOG, "cout","gr::debug :%p: %c{1} - %m%n");
-      }
-      else if(debug_file == "stderr") {
-        GR_LOG_SET_CONSOLE_APPENDER(DLOG, "cerr", "gr::debug :%p: %c{1} - %m%n");
-      }
-      else {
-        GR_LOG_SET_FILE_APPENDER(DLOG, debug_file, true, "%r :%p: %c{1} - %m%n");
-      }
+    if (d == nullptr) {
+        d = std::make_shared<gr::logger_ptr::element_type>(name);
     }
-    d = DLOG;
+    l->set_level(logging::singleton().default_level());
+    d->set_level(logging::singleton().debug_level());
+    l->set_name(name);
+    d->set_name(name);
     return true;
-#endif /* HAVE_LOG4CPP */
-
-#else /* ENABLE_GR_LOG */
-    l = NULL;
-    d = NULL;
-    return false;
-#endif /* ENABLE_GR_LOG */
-    return false;
-  }
-
-  bool
-  update_logger_alias(const std::string &name, const std::string &alias)
-  {
-#ifdef ENABLE_GR_LOG
-#ifdef HAVE_LOG4CPP
-    prefs *p = prefs::singleton();
-    std::string log_file = p->get_string("LOG", "log_file", "");
-    std::string debug_file = p->get_string("LOG", "debug_file", "");
-
-    GR_LOG_GETLOGGER(LOG, "gr_log." + name);
-    if(log_file.size() > 0) {
-      if(log_file == "stdout") {
-        boost::format str("gr::log :%%p: %1% - %%m%%n");
-        GR_LOG_SET_CONSOLE_APPENDER(LOG, "cout", boost::str(str % alias));
-      }
-      else if(log_file == "stderr") {
-        boost::format str("gr::log :%%p: %1% - %%m%%n");
-        GR_LOG_SET_CONSOLE_APPENDER(LOG, "cerr", boost::str(str % alias));
-      }
-      else {
-        boost::format str("%%r :%%p: %1% - %%m%%n");
-        GR_LOG_SET_FILE_APPENDER(LOG, log_file, true, boost::str(str % alias));
-      }
-    }
-    return true;
-#endif /* HAVE_LOG4CPP */
-#endif /* ENABLE_GR_LOG */
-
-    return false;
-  }
+}
 
 } /* namespace gr */

@@ -1,35 +1,23 @@
 #
-# Copyright 2005,2007,2012 Free Software Foundation, Inc.
+# Copyright 2005,2007,2012,2020 Free Software Foundation, Inc.
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 #
 
-from gnuradio import gr, filter
-from fm_emph import fm_deemph
+
 import math
 
-try:
-    from gnuradio import analog
-except ImportError:
-    import analog_swig as analog
+from gnuradio import gr, filter, fft
+
+from . import analog_python as analog
+from .fm_emph import fm_deemph
+
 
 class wfm_rcv(gr.hier_block2):
-    def __init__ (self, quad_rate, audio_decimation):
+    def __init__(self, quad_rate, audio_decimation):
         """
         Hierarchical block for demodulating a broadcast FM signal.
 
@@ -40,16 +28,19 @@ class wfm_rcv(gr.hier_block2):
             quad_rate: input sample rate of complex baseband input. (float)
             audio_decimation: how much to decimate quad_rate to get to audio. (integer)
         """
-	gr.hier_block2.__init__(self, "wfm_rcv",
-				gr.io_signature(1, 1, gr.sizeof_gr_complex), # Input signature
-				gr.io_signature(1, 1, gr.sizeof_float))      # Output signature
+        gr.hier_block2.__init__(self, "wfm_rcv",
+                                # Input signature
+                                gr.io_signature(1, 1, gr.sizeof_gr_complex),
+                                gr.io_signature(1, 1, gr.sizeof_float))      # Output signature
+        if audio_decimation != int(audio_decimation):
+            raise ValueError("audio_decimation needs to be an integer")
+        audio_decimation = int(audio_decimation)
 
         volume = 20.
 
         max_dev = 75e3
-        fm_demod_gain = quad_rate/(2*math.pi*max_dev)
+        fm_demod_gain = quad_rate / (2 * math.pi * max_dev)
         audio_rate = quad_rate / audio_decimation
-
 
         # We assign to self so that outsiders can grab the demodulator
         # if they need to.  E.g., to plot its output.
@@ -64,10 +55,11 @@ class wfm_rcv(gr.hier_block2):
         width_of_transition_band = audio_rate / 32
         audio_coeffs = filter.firdes.low_pass(1.0,            # gain
                                               quad_rate,      # sampling rate
-                                              audio_rate/2 - width_of_transition_band,
+                                              audio_rate / 2 - width_of_transition_band,
                                               width_of_transition_band,
-                                              filter.firdes.WIN_HAMMING)
+                                              fft.window.WIN_HAMMING)
         # input: float; output: float
-        self.audio_filter = filter.fir_filter_fff(audio_decimation, audio_coeffs)
+        self.audio_filter = filter.fir_filter_fff(
+            audio_decimation, audio_coeffs)
 
-        self.connect (self, self.fm_demod, self.audio_filter, self.deemph, self)
+        self.connect(self, self.fm_demod, self.audio_filter, self.deemph, self)

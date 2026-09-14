@@ -3,30 +3,16 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
-#
+
 
 from gnuradio import gr, filter
-from fm_emph import fm_deemph
+from .fm_emph import fm_deemph
 from math import pi
 
-try:
-    from gnuradio import analog
-except ImportError:
-    import analog_swig as analog
+from . import analog_python as analog
 
 
 class fm_demod_cf(gr.hier_block2):
@@ -48,13 +34,15 @@ class fm_demod_cf(gr.hier_block2):
         gain: gain applied to audio output (default = 1.0) (float)
         tau: deemphasis time constant (default = 75e-6), specify tau=0.0 to prevent deemphasis (float)
     """
+
     def __init__(self, channel_rate, audio_decim, deviation,
                  audio_pass, audio_stop, gain=1.0, tau=75e-6):
         gr.hier_block2.__init__(self, "fm_demod_cf",
-                                gr.io_signature(1, 1, gr.sizeof_gr_complex),  # Input signature
+                                # Input signature
+                                gr.io_signature(1, 1, gr.sizeof_gr_complex),
                                 gr.io_signature(1, 1, gr.sizeof_float))       # Output signature
 
-        k = channel_rate/(2*pi*deviation)
+        k = channel_rate / (2 * pi * deviation)
         QUAD = analog.quadrature_demod_cf(k)
 
         audio_taps = filter.optfir.low_pass(
@@ -86,6 +74,7 @@ class demod_20k0f3e_cf(fm_demod_cf):
         sample_rate: incoming sample rate of the FM baseband (integer)
         audio_decim: input to output decimation rate (integer)
     """
+
     def __init__(self, channel_rate, audio_decim):
         fm_demod_cf.__init__(self, channel_rate, audio_decim,
                              5000,  # Deviation
@@ -105,9 +94,9 @@ class demod_200kf3e_cf(fm_demod_cf):
         sample_rate: incoming sample rate of the FM baseband (integer)
         audio_decim: input to output decimation rate (integer)
     """
+
     def __init__(self, channel_rate, audio_decim):
         fm_demod_cf.__init__(self, channel_rate, audio_decim,
                              75000,  # Deviation
                              15000,  # Audio passband
-                             16000,  # Audio stopband
-                             20.0)   # Audio gain
+                             16000)  # Audio stopband

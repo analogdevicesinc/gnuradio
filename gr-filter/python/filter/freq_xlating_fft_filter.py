@@ -3,20 +3,7 @@
 #
 # Copyright 2013 Sylvain Munaut <tnt@246tNt.com>
 #
-# This is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
-#
-# This software is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this software; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
 
 import math
@@ -25,10 +12,10 @@ import cmath
 from gnuradio import gr
 from gnuradio.blocks import rotator_cc
 
-from filter_swig import fft_filter_ccc
+from .filter_python import fft_filter_ccc
 
 
-__all__ = [ 'freq_xlating_fft_filter_ccc' ]
+__all__ = ['freq_xlating_fft_filter_ccc']
 
 
 class freq_xlating_fft_filter_ccc(gr.hier_block2):
@@ -42,10 +29,10 @@ class freq_xlating_fft_filter_ccc(gr.hier_block2):
         )
 
         # Save args
-        self.decim       = decim
-        self.taps        = taps
+        self.decim = decim
+        self.taps = taps
         self.center_freq = center_freq
-        self.samp_rate   = samp_rate
+        self.samp_rate = samp_rate
 
         # Sub blocks
         self._filter = fft_filter_ccc(decim, taps)
@@ -57,7 +44,7 @@ class freq_xlating_fft_filter_ccc(gr.hier_block2):
         self._refresh()
 
     def _rotate_taps(self, taps, phase_inc):
-        return [ x * cmath.exp(i * phase_inc * 1j) for i,x in enumerate(taps) ]
+        return [x * cmath.exp(i * phase_inc * 1j) for i, x in enumerate(taps)]
 
     def _refresh(self):
         phase_inc = (2.0 * math.pi * self.center_freq) / self.samp_rate

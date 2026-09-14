@@ -3,33 +3,23 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 #
 
-from runtime_swig import top_block_swig, \
-    top_block_wait_unlocked, top_block_run_unlocked, \
-    top_block_start_unlocked, top_block_stop_unlocked, \
-    top_block_unlock_unlocked, dot_graph_tb
 
-#import gnuradio.gr.gr_threading as _threading
-import gr_threading as _threading
+from .gr_python import (top_block_pb,
+                        top_block_wait_unlocked, top_block_run_unlocked,
+                        top_block_start_unlocked, top_block_stop_unlocked,
+                        top_block_unlock_unlocked)  # , dot_graph_tb)
 
-from hier_block2 import hier_block2
+from .hier_block2 import hier_block2
+import threading
 
-class _top_block_waiter(_threading.Thread):
+from .hier_block2 import hier_block2
+
+
+class _top_block_waiter(threading.Thread):
     """
     This kludge allows ^C to interrupt top_block.run and top_block.wait
 
@@ -42,7 +32,7 @@ class _top_block_waiter(_threading.Thread):
     thread), we create a separate thread that does the blocking wait,
     and then use the thread that called wait to do a slow poll of an
     event queue.  That thread, which is executing "wait" below is
-    interruptable, and if it sees a KeyboardInterrupt, executes a stop
+    interruptible, and if it sees a KeyboardInterrupt, executes a stop
     on the top_block, then goes back to waiting for it to complete.
     This ensures that the unlocked wait that was in progress (in the
     _top_block_waiter thread) can complete, release its mutex and back
@@ -50,13 +40,14 @@ class _top_block_waiter(_threading.Thread):
     things occur like leaving the USRP transmitter sending a carrier.
 
     See also top_block.wait (below), which uses this class to implement
-    the interruptable wait.
+    the interruptible wait.
     """
+
     def __init__(self, tb):
-        _threading.Thread.__init__(self)
+        threading.Thread.__init__(self)
         self.setDaemon(1)
         self.tb = tb
-        self.event = _threading.Event()
+        self.event = threading.Event()
         self.start()
 
     def run(self):
@@ -94,12 +85,12 @@ class top_block(hier_block2):
     python subclassing.
     """
 
-    def __init__(self, name="top_block"):
+    def __init__(self, name="top_block", catch_exceptions=True):
         """
         Create a top block with a given name.
         """
         # not calling hier_block2.__init__, we set our own _impl
-        self._impl = top_block_swig(name)
+        self._impl = top_block_pb(name, catch_exceptions)
         self.handle_sigint = True
 
     def start(self, max_noutput_items=10000000):
@@ -133,8 +124,8 @@ class top_block(hier_block2):
         """
         _top_block_waiter(self._impl).wait(self.handle_sigint)
 
-    def dot_graph(self):
-        """
-        Return graph representation in dot language
-        """
-        return dot_graph_tb(self._impl)
+    # def dot_graph(self):
+    #     """
+    #     Return graph representation in dot language
+    #     """
+    #     return dot_graph_tb(self._impl)

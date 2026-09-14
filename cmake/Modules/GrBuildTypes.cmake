@@ -2,20 +2,8 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 
 if(DEFINED __INCLUDED_GR_BUILD_TYPES_CMAKE)
     return()
@@ -29,7 +17,7 @@ set(__INCLUDED_GR_BUILD_TYPES_CMAKE TRUE)
 #  - RelWithDebInfo: -O3 -g
 #  - MinSizeRel: -Os
 
-# Addtional Build Types, defined below:
+# Additional Build Types, defined below:
 #  - NoOptWithASM: -O0 -g -save-temps
 #  - O2WithASM: -O2 -g -save-temps
 #  - O3WithASM: -O3 -g -save-temps
@@ -38,7 +26,7 @@ set(__INCLUDED_GR_BUILD_TYPES_CMAKE TRUE)
 # build type below, make sure to add it to this list.
 list(APPEND AVAIL_BUILDTYPES
   None Debug Release RelWithDebInfo MinSizeRel
-  NoOptWithASM O2WithASM O3WithASM
+  Coverage NoOptWithASM O2WithASM O3WithASM
 )
 
 ########################################################################
@@ -50,7 +38,7 @@ list(APPEND AVAIL_BUILDTYPES
 # known build types in AVAIL_BUILDTYPES. If the build type is found,
 # the function exits immediately. If nothing is found by the end of
 # checking all available build types, we exit with an error and list
-# the avialable build types.
+# the available build types.
 ########################################################################
 function(GR_CHECK_BUILD_TYPE settype)
   STRING(TOUPPER ${settype} _settype)
@@ -63,6 +51,36 @@ function(GR_CHECK_BUILD_TYPE settype)
   # Build type not found; error out
   message(FATAL_ERROR "Build type '${settype}' not valid, must be one of: ${AVAIL_BUILDTYPES}")
 endfunction(GR_CHECK_BUILD_TYPE)
+
+########################################################################
+# For GCC and Clang, we can set a build type:
+#
+# -DCMAKE_BUILD_TYPE=Coverage
+#
+# This type uses no optimization (-O0), outputs debug symbols (-g) and
+# creates .gcda files while running functions in built executables and
+# libraries.
+# NOTE: This is not defined on Windows systems.
+########################################################################
+if(NOT WIN32)
+  SET(CMAKE_CXX_FLAGS_COVERAGE "-Wall -pedantic -pthread -g -O0 -fprofile-arcs -ftest-coverage" CACHE STRING
+    "Flags used by the C++ compiler during Coverage builds." FORCE)
+  SET(CMAKE_C_FLAGS_COVERAGE "-Wall -pedantic -pthread -g -O0 -fprofile-arcs -ftest-coverage" CACHE STRING
+    "Flags used by the C compiler during Coverage builds." FORCE)
+  SET(CMAKE_EXE_LINKER_FLAGS_COVERAGE
+    "-Wl,--warn-unresolved-symbols,--warn-once,-lgcov" CACHE STRING
+    "Flags used for linking binaries during Coverage builds." FORCE)
+  SET(CMAKE_SHARED_LINKER_FLAGS_COVERAGE
+    "-Wl,--warn-unresolved-symbols,--warn-once,-lgcov" CACHE STRING
+    "Flags used by the shared lib linker during Coverage builds." FORCE)
+
+  MARK_AS_ADVANCED(
+    CMAKE_CXX_FLAGS_COVERAGE
+    CMAKE_C_FLAGS_COVERAGE
+    CMAKE_EXE_LINKER_FLAGS_COVERAGE
+    CMAKE_SHARED_LINKER_FLAGS_COVERAGE)
+endif(NOT WIN32)
+
 
 ########################################################################
 # For GCC and Clang, we can set a build type:

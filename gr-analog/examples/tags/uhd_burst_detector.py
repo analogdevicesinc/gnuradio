@@ -4,20 +4,8 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 #
 
 from gnuradio import eng_notation
@@ -25,9 +13,10 @@ from gnuradio import gr
 from gnuradio import filter, analog, blocks
 from gnuradio import uhd
 from gnuradio.fft import window
-from gnuradio.eng_option import eng_option
+from gnuradio.eng_arg import eng_float
 from gnuradio.filter import firdes
-from optparse import OptionParser
+from argparse import ArgumentParser
+
 
 class uhd_burst_detector(gr.top_block):
     def __init__(self, uhd_address, options):
@@ -54,24 +43,24 @@ class uhd_burst_detector(gr.top_block):
         self.tagger = blocks.burst_tagger(gr.sizeof_gr_complex)
 
         # Dummy signaler to collect a burst on known periods
-        data = 1000*[0,] + 1000*[1,]
+        data = 1000 * [0, ] + 1000 * [1, ]
         self.signal = blocks.vector_source_s(data, True)
 
         # Energy detector to get signal burst
-        ## use squelch to detect energy
-        self.det  = analog.simple_squelch_cc(self.threshold, 0.01)
-        ## convert to mag squared (float)
+        # use squelch to detect energy
+        self.det = analog.simple_squelch_cc(self.threshold, 0.01)
+        # convert to mag squared (float)
         self.c2m = blocks.complex_to_mag_squared()
-        ## average to debounce
+        # average to debounce
         self.avg = filter.single_pole_iir_filter_ff(0.01)
-        ## rescale signal for conversion to short
+        # rescale signal for conversion to short
         self.scale = blocks.multiply_const_ff(2**16)
-        ## signal input uses shorts
+        # signal input uses shorts
         self.f2s = blocks.float_to_short()
 
         # Use file sink burst tagger to capture bursts
-        self.fsnk = blocks.tagged_file_sink(gr.sizeof_gr_complex, self.samp_rate)
-
+        self.fsnk = blocks.tagged_file_sink(
+            gr.sizeof_gr_complex, self.samp_rate)
 
         ##################################################
         # Connections
@@ -93,25 +82,26 @@ class uhd_burst_detector(gr.top_block):
         self.samp_rate = samp_rate
         self.uhd_src_0.set_samp_rate(self.samp_rate)
 
+
 if __name__ == '__main__':
-    parser = OptionParser(option_class=eng_option, usage="%prog: [options]")
-    parser.add_option("-a", "--address", type="string", default="addr=192.168.10.2",
-                      help="select address of the device [default=%default]")
-    #parser.add_option("-A", "--antenna", default=None,
+    parser = ArgumentParser()
+    parser.add_argument("-a", "--address", default="addr=192.168.10.2",
+                        help="select address of the device [default=%(default)r]")
+    # parser.add_argument("-A", "--antenna", default=None,
     #                  help="select Rx Antenna (only on RFX-series boards)")
-    parser.add_option("-f", "--freq", type="eng_float", default=450e6,
-                      help="set frequency to FREQ", metavar="FREQ")
-    parser.add_option("-g", "--gain", type="eng_float", default=0,
-                      help="set gain in dB [default=%default]")
-    parser.add_option("-R", "--samp-rate", type="eng_float", default=200000,
-                      help="set USRP sample rate [default=%default]")
-    parser.add_option("-t", "--threshold", type="float", default=-60,
-                      help="Set the detection power threshold (dBm) [default=%default")
-    parser.add_option("-T", "--trigger", action="store_true", default=False,
-                      help="Use internal trigger instead of detector [default=%default]")
-    (options, args) = parser.parse_args()
+    parser.add_argument("-f", "--freq", type=eng_float, default=450e6,
+                        help="set frequency to FREQ", metavar="FREQ")
+    parser.add_argument("-g", "--gain", type=eng_float, default=0,
+                        help="set gain in dB [default=%(default)r]")
+    parser.add_argument("-R", "--samp-rate", type=eng_float, default=200000,
+                        help="set USRP sample rate [default=%(default)r]")
+    parser.add_argument("-t", "--threshold", type=float, default=-60,
+                        help="Set the detection power threshold (dBm) [default=%(default)r")
+    parser.add_argument("-T", "--trigger", action="store_true", default=False,
+                        help="Use internal trigger instead of detector [default=%(default)r]")
+    args = parser.parse_args()
 
-    uhd_addr = options.address
+    uhd_addr = args.address
 
-    tb = uhd_burst_detector(uhd_addr, options)
+    tb = uhd_burst_detector(uhd_addr, args)
     tb.run()

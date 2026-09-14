@@ -3,24 +3,14 @@
 #
 # This file is part of GNU Radio
 #
-# GNU Radio is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3, or (at your option)
-# any later version.
+# SPDX-License-Identifier: GPL-3.0-or-later
 #
-# GNU Radio is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with GNU Radio; see the file COPYING.  If not, write to
-# the Free Software Foundation, Inc., 51 Franklin Street,
-# Boston, MA 02110-1301, USA.
 #
 
-import blocks_swig as blocks
 from gnuradio import gr
+
+from . import blocks_python as blocks
+
 
 class stream_to_vector_decimator(gr.hier_block2):
     """
@@ -42,11 +32,12 @@ class stream_to_vector_decimator(gr.hier_block2):
         self._sample_rate = sample_rate
 
         gr.hier_block2.__init__(self, "stream_to_vector_decimator",
-                                gr.io_signature(1, 1, item_size),         # Input signature
-                                gr.io_signature(1, 1, item_size*vec_len)) # Output signature
+                                # Input signature
+                                gr.io_signature(1, 1, item_size),
+                                gr.io_signature(1, 1, item_size * vec_len))  # Output signature
 
         s2v = blocks.stream_to_vector(item_size, vec_len)
-        self.one_in_n = blocks.keep_one_in_n(item_size*vec_len, 1)
+        self.one_in_n = blocks.keep_one_in_n(item_size * vec_len, 1)
         self._update_decimator()
         self.connect(self, s2v, self.one_in_n, self)
 
@@ -81,7 +72,7 @@ class stream_to_vector_decimator(gr.hier_block2):
         self.one_in_n.set_n(self._decim)
 
     def _update_decimator(self):
-        self.set_decimation(self._sample_rate/self._vec_len/self._vec_rate)
+        self.set_decimation(self._sample_rate / self._vec_len / self._vec_rate)
 
     def decimation(self):
         """
@@ -99,4 +90,4 @@ class stream_to_vector_decimator(gr.hier_block2):
         """
         Returns actual frame rate
         """
-        return self._sample_rate/self._vec_len/self._decim
+        return self._sample_rate / self._vec_len / self._decim
